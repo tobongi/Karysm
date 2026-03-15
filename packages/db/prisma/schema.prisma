@@ -1,0 +1,437 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USERS ====================
+
+enum UserRole {
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  email         String?
+  name          String
+  avatar        String?
+  role          UserRole  @default(CLIENT)
+  isVerified    Boolean   @default(false)
+  locale        String    @default("fr")
+  lat           Float?
+  lng           Float?
+  pushToken     String?
+
+  provider      Provider?
+  bookings      Booking[]       @relation("ClientBookings")
+  reviews       Review[]
+  favorites     Favorite[]
+  refreshTokens RefreshToken[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([phone])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  userAgent String?
+  ipAddress String?
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ==================== PROVIDERS ====================
+
+enum ProviderStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+model Provider {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id])
+  displayName     String
+  slug            String         @unique
+  bio             String?
+  status          ProviderStatus @default(PENDING)
+
+  city            String
+  commune         String?
+  address         String?
+  lat             Float?
+  lng             Float?
+  mobileRadius    Int            @default(10)
+  isMobile        Boolean        @default(true)
+
+  whatsappNumber  String?
+  instagramHandle String?
+
+  payoutPhone     String?
+  currency        String         @default("CDF")
+
+  idVerified      Boolean        @default(false)
+  portfolioCount  Int            @default(0)
+
+  avgRating       Float          @default(0)
+  totalReviews    Int            @default(0)
+  totalBookings   Int            @default(0)
+  responseRate    Float          @default(0)
+
+  googleCalendarId   String?
+  googleRefreshToken String?
+  googleCalendarSync Boolean      @default(false)
+
+  services        Service[]
+  availability    Availability[]
+  portfolio       PortfolioItem[]
+  bookings        Booking[]       @relation("ProviderBookings")
+  wallet          ProviderWallet?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([city])
+  @@index([status])
+  @@index([avgRating])
+  @@map("providers")
+}
+
+// ==================== SERVICES ====================
+
+model ServiceCategory {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  nameEn   String?
+  icon     String?
+  slug     String    @unique
+  sortOrder Int      @default(0)
+
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id           String          @id @default(cuid())
+  providerId   String
+  provider     Provider        @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  categoryId   String
+  category     ServiceCategory @relation(fields: [categoryId], references: [id])
+  name         String
+  description  String?
+  durationMin  Int
+  priceMin     Int
+  priceMax     Int?
+  isActive     Boolean         @default(true)
+  sortOrder    Int             @default(0)
+
+  bookings     Booking[]
+
+  @@index([providerId])
+  @@index([categoryId])
+  @@map("services")
+}
+
+// ==================== AVAILABILITY ====================
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+model Availability {
+  id          String    @id @default(cuid())
+  providerId  String
+  provider    Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  dayOfWeek   DayOfWeek
+  startTime   String
+  endTime     String
+  isActive    Boolean   @default(true)
+
+  @@unique([providerId, dayOfWeek])
+  @@index([providerId])
+  @@map("availability")
+}
+
+model AvailabilityException {
+  id          String    @id @default(cuid())
+  providerId  String
+  date        DateTime  @db.Date
+  isBlocked   Boolean   @default(true)
+  startTime   String?
+  endTime     String?
+  reason      String?
+
+  @@unique([providerId, date])
+  @@map("availability_exceptions")
+}
+
+// ==================== BOOKINGS ====================
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  DEPOSIT_PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  DISPUTED
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  ref             String        @unique
+  clientId        String
+  client          User          @relation("ClientBookings", fields: [clientId], references: [id])
+  providerId      String
+  provider        Provider      @relation("ProviderBookings", fields: [providerId], references: [id])
+  serviceId       String
+  service         Service       @relation(fields: [serviceId], references: [id])
+
+  date            DateTime      @db.Date
+  startTime       String
+  endTime         String
+
+  locationType    String        @default("CLIENT")
+  locationAddress String?
+  locationLat     Float?
+  locationLng     Float?
+
+  agreedPrice     Int
+  currency        String        @default("CDF")
+  depositAmount   Int?
+  depositPaid     Boolean       @default(false)
+
+  transportRequested Boolean    @default(false)
+  transportId     String?       @unique
+  transport       TransportRequest?
+
+  status          BookingStatus @default(REQUESTED)
+  cancelReason    String?
+  cancelledBy     String?
+
+  clientNotes     String?
+  providerNotes   String?
+
+  paymentIntents  PaymentIntent[]
+  review          Review?
+
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([providerId])
+  @@index([date])
+  @@index([status])
+  @@map("bookings")
+}
+
+// ==================== PAYMENTS ====================
+
+enum PaymentIntentStatus {
+  CREATED
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+model PaymentIntent {
+  id            String              @id @default(cuid())
+  bookingId     String
+  booking       Booking             @relation(fields: [bookingId], references: [id])
+  amount        Int
+  currency      String              @default("CDF")
+  type          String              @default("DEPOSIT")
+  method        String              @default("MOMO")
+  status        PaymentIntentStatus @default(CREATED)
+  externalRef   String?
+  expiresAt     DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([bookingId])
+  @@index([externalRef])
+  @@map("payment_intents")
+}
+
+model ProviderWallet {
+  id               String    @id @default(cuid())
+  providerId       String    @unique
+  provider         Provider  @relation(fields: [providerId], references: [id])
+  availableBalance Int       @default(0)
+  pendingBalance   Int       @default(0)
+  currency         String    @default("CDF")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  transactions     WalletTransaction[]
+  payouts          Payout[]
+
+  @@map("provider_wallets")
+}
+
+model WalletTransaction {
+  id           String   @id @default(cuid())
+  walletId     String
+  wallet       ProviderWallet @relation(fields: [walletId], references: [id])
+  type         String
+  amount       Int
+  balanceAfter Int
+  bookingId    String?
+  description  String?
+  createdAt    DateTime @default(now())
+
+  @@index([walletId])
+  @@map("wallet_transactions")
+}
+
+model Payout {
+  id               String   @id @default(cuid())
+  walletId         String
+  wallet           ProviderWallet @relation(fields: [walletId], references: [id])
+  providerId       String
+  amount           Int
+  fee              Int
+  grossAmount      Int
+  currency         String   @default("CDF")
+  status           String   @default("PENDING")
+  destinationPhone String
+  externalRef      String?
+  failureReason    String?
+  processedAt      DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([providerId])
+  @@index([status])
+  @@map("payouts")
+}
+
+// ==================== REVIEWS ====================
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  clientId   String
+  client     User     @relation(fields: [clientId], references: [id])
+  providerId String
+  rating     Int
+  comment    String?
+  photos     String[]
+  tags       String[]
+  isVisible  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([providerId])
+  @@map("reviews")
+}
+
+// ==================== PORTFOLIO ====================
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  providerId  String
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  caption     String?
+  serviceTag  String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([providerId])
+  @@map("portfolio_items")
+}
+
+// ==================== FAVORITES ====================
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  providerId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, providerId])
+  @@map("favorites")
+}
+
+// ==================== TRANSPORT ====================
+
+enum TransportStatus {
+  REQUESTED
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+model TransportRequest {
+  id             String          @id @default(cuid())
+  bookingId      String          @unique
+  booking        Booking         @relation(fields: [bookingId], references: [id])
+  method         String          @default("WHATSAPP")
+  pickupAddress  String
+  pickupLat      Float?
+  pickupLng      Float?
+  dropoffAddress String
+  dropoffLat     Float?
+  dropoffLng     Float?
+  estimatedCost  Int
+  actualCost     Int?
+  status         TransportStatus @default(REQUESTED)
+  driverPhone    String?
+  driverName     String?
+  notes          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("transport_requests")
+}
+
+// ==================== ADMIN ====================
+
+model Admin {
+  id       String   @id @default(cuid())
+  name     String
+  email    String   @unique
+  password String
+  role     String   @default("SUPPORT")
+  isActive Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("admins")
+}

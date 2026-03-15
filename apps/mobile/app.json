@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Tokoss",
+    "slug": "tokoss",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "tokoss",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#FAFAF8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tokoss.app"
+    },
+    "android": {
+      "package": "com.tokoss.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FAFAF8"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router"]
+  }
+}
