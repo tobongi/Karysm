@@ -7,7 +7,7 @@ const DEV_API = Platform.select({
   default: 'http://localhost:3001/api',
 });
 
-const API_URL = __DEV__ ? DEV_API : 'https://api.tokoss.com/api';
+const API_URL = __DEV__ ? DEV_API : 'https://tokoss-production.up.railway.app/api';
 
 let authToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;

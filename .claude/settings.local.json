@@ -21,7 +21,8 @@
       "Bash(pnpm install:*)",
       "Bash(npx tsx:*)",
       "Bash(gh auth:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(len\\(d[''''data'''']\\), ''''categories''''\\)\")"
     ]
   }
 }
