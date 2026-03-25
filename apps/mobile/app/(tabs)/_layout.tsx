@@ -55,6 +55,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="beauty"
+        options={{
+          title: 'Beauté AI',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="✨" focused={focused} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',

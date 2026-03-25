@@ -61,6 +61,10 @@ function AppContent() {
         <Stack.Screen name="settings/edit-profile" options={{ title: 'Modifier le profil' }} />
         <Stack.Screen name="kyc/index" options={{ title: 'Vérification KYC' }} />
         <Stack.Screen name="wallet/index" options={{ title: 'Portefeuille' }} />
+        <Stack.Screen name="ai/skin-capture" options={{ title: 'Analyse de peau' }} />
+        <Stack.Screen name="ai/skin-results/[id]" options={{ title: 'Résultats peau' }} />
+        <Stack.Screen name="ai/hair-capture" options={{ title: 'Analyse cheveux' }} />
+        <Stack.Screen name="ai/hair-results/[id]" options={{ title: 'Résultats cheveux' }} />
       </Stack>
     </>
   );

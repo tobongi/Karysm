@@ -35,6 +35,8 @@ model User {
   refreshTokens RefreshToken[]
   notifications Notification[]
   requests      BeautyRequest[] @relation("ClientRequests")
+  skinAnalyses  SkinAnalysis[]
+  hairAnalyses  HairAnalysis[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -557,4 +559,73 @@ model Proposal {
   @@index([requestId])
   @@index([providerId])
   @@map("proposals")
+}
+
+// ==================== AI ANALYSIS ====================
+
+model SkinAnalysis {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  selfieUrl         String
+
+  // Monk Scale
+  monkTone          Int?     // 1-10
+  undertone         String?  // WARM, COOL, NEUTRAL
+
+  // LAB / ITA
+  labL              Float?
+  labA              Float?
+  labB              Float?
+  itaAngle          Float?
+  melaninIndex      Float?
+
+  // Conditions (0-100)
+  hydration         Int?
+  sebum             Int?
+  pores             Int?
+  wrinkles          Int?
+  spots             Int?
+  acne              Int?
+  hyperpigmentation Int?
+  uniformity        Int?
+
+  overallScore      Int?
+  recommendations   Json?
+  rawResponse       Json?
+  processingTime    Int?
+  consentDataset    Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("skin_analyses")
+}
+
+model HairAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  photoUrl        String
+
+  hairType        String?  // 3A, 3B, 3C, 4A, 4B, 4C
+  porosity        String?  // LOW, MEDIUM, HIGH
+  density         String?  // LOW, MEDIUM, HIGH
+  thickness       String?  // FINE, MEDIUM, COARSE
+  dryness         Int?
+  elasticity      Int?
+  shrinkage       Int?
+  scalpCondition  String?  // HEALTHY, DRY, OILY, FLAKY
+  currentStyle    String?  // AFRO, BRAIDS, CORNROWS, LOCS, TWA, etc.
+
+  overallScore    Int?
+  recommendations Json?
+  rawResponse     Json?
+  processingTime  Int?
+  consentDataset  Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("hair_analyses")
 }

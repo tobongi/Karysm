@@ -19,6 +19,7 @@ import userRoutes from './routes/user.routes';
 import notificationRoutes from './routes/notification.routes';
 import kycRoutes from './routes/kyc.routes';
 import walletRoutes from './routes/wallet.routes';
+import aiRoutes from './routes/ai.routes';
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/kyc', kycRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handler
 app.use(errorHandler);

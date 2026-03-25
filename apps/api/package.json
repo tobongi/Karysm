@@ -9,6 +9,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.13.15",
     "@prisma/client": "^6.4.0",
     "@tokoss/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
