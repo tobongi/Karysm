@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npx prisma:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(curl -s http://localhost:3001/api/categories)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"http://localhost:3001/api/search?pageSize=2\")",
+      "Bash(curl -s http://localhost:3001/api/search?pageSize=2)",
+      "Bash(curl:*)",
+      "Bash(npx expo:*)",
+      "Bash(wc:*)",
+      "Bash(start:*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d[''''data''''][''''items''''][0], indent=2\\)\\)\")",
+      "Bash(cat:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(ls C:/Users/glaib/tokoss/node_modules/.pnpm/lodash*/node_modules/lodash/lodash.js)",
+      "Bash(pnpm install:*)",
+      "Bash(npx tsx:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)"
+    ]
+  }
+}

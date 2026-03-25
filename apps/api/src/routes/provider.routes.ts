@@ -5,11 +5,12 @@ import { authMiddleware, requireRole } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { providerProfileSchema, serviceSchema, availabilitySchema } from '../schemas';
 import { NotFoundError, ConflictError } from '../lib/errors';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
 // POST /api/provider/register — Become a provider
-router.post('/register', authMiddleware, validateBody(providerProfileSchema), async (req: Request, res: Response) => {
+router.post('/register', authMiddleware, validateBody(providerProfileSchema), asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
   const existing = await prisma.provider.findUnique({ where: { userId } });
@@ -32,20 +33,20 @@ router.post('/register', authMiddleware, validateBody(providerProfileSchema), as
   });
 
   res.status(201).json({ success: true, data: provider });
-});
+}));
 
 // GET /api/provider/profile
-router.get('/profile', authMiddleware, requireRole('PROVIDER'), async (req: Request, res: Response) => {
+router.get('/profile', authMiddleware, requireRole('PROVIDER'), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({
     where: { userId: req.user!.userId },
     include: { services: true, availability: true, wallet: true },
   });
   if (!provider) throw new NotFoundError('Provider');
   res.json({ success: true, data: provider });
-});
+}));
 
 // PUT /api/provider/profile
-router.put('/profile', authMiddleware, requireRole('PROVIDER'), validateBody(providerProfileSchema), async (req: Request, res: Response) => {
+router.put('/profile', authMiddleware, requireRole('PROVIDER'), validateBody(providerProfileSchema), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -54,10 +55,10 @@ router.put('/profile', authMiddleware, requireRole('PROVIDER'), validateBody(pro
     data: req.body,
   });
   res.json({ success: true, data: updated });
-});
+}));
 
 // POST /api/provider/services
-router.post('/services', authMiddleware, requireRole('PROVIDER'), validateBody(serviceSchema), async (req: Request, res: Response) => {
+router.post('/services', authMiddleware, requireRole('PROVIDER'), validateBody(serviceSchema), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -65,10 +66,10 @@ router.post('/services', authMiddleware, requireRole('PROVIDER'), validateBody(s
     data: { providerId: provider.id, ...req.body },
   });
   res.status(201).json({ success: true, data: service });
-});
+}));
 
 // GET /api/provider/services
-router.get('/services', authMiddleware, requireRole('PROVIDER'), async (req: Request, res: Response) => {
+router.get('/services', authMiddleware, requireRole('PROVIDER'), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -78,10 +79,10 @@ router.get('/services', authMiddleware, requireRole('PROVIDER'), async (req: Req
     orderBy: { sortOrder: 'asc' },
   });
   res.json({ success: true, data: services });
-});
+}));
 
 // PUT /api/provider/services/:id
-router.put('/services/:id', authMiddleware, requireRole('PROVIDER'), validateBody(serviceSchema), async (req: Request, res: Response) => {
+router.put('/services/:id', authMiddleware, requireRole('PROVIDER'), validateBody(serviceSchema), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -90,10 +91,10 @@ router.put('/services/:id', authMiddleware, requireRole('PROVIDER'), validateBod
 
   const updated = await prisma.service.update({ where: { id: service.id }, data: req.body });
   res.json({ success: true, data: updated });
-});
+}));
 
 // DELETE /api/provider/services/:id
-router.delete('/services/:id', authMiddleware, requireRole('PROVIDER'), async (req: Request, res: Response) => {
+router.delete('/services/:id', authMiddleware, requireRole('PROVIDER'), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -102,10 +103,10 @@ router.delete('/services/:id', authMiddleware, requireRole('PROVIDER'), async (r
 
   await prisma.service.delete({ where: { id: service.id } });
   res.json({ success: true });
-});
+}));
 
 // PUT /api/provider/availability
-router.put('/availability', authMiddleware, requireRole('PROVIDER'), validateBody(availabilitySchema), async (req: Request, res: Response) => {
+router.put('/availability', authMiddleware, requireRole('PROVIDER'), validateBody(availabilitySchema), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
 
@@ -120,6 +121,6 @@ router.put('/availability', authMiddleware, requireRole('PROVIDER'), validateBod
 
   const availability = await prisma.availability.findMany({ where: { providerId: provider.id } });
   res.json({ success: true, data: availability });
-});
+}));
 
 export default router;

@@ -23,7 +23,7 @@ export default function ProfileTab() {
 
       <View style={styles.section}>
         {!isProvider && (
-          <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/services')}>
+          <Pressable style={styles.menuItem} onPress={() => router.push('/provider-register')}>
             <Text style={styles.menuEmoji}>💼</Text>
             <Text style={styles.menuText}>Devenir prestataire</Text>
             <Text style={styles.menuArrow}>›</Text>
@@ -43,9 +43,14 @@ export default function ProfileTab() {
               <Text style={styles.menuArrow}>›</Text>
             </Pressable>
             <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/earnings')}>
-              <Text style={styles.menuEmoji}>💰</Text>
+              <Text style={styles.menuEmoji}>{'\uD83D\uDCB0'}</Text>
               <Text style={styles.menuText}>Mes revenus</Text>
-              <Text style={styles.menuArrow}>›</Text>
+              <Text style={styles.menuArrow}>{'\u203A'}</Text>
+            </Pressable>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/request/browse' as any)}>
+              <Text style={styles.menuEmoji}>{'\uD83D\uDCCB'}</Text>
+              <Text style={styles.menuText}>Demandes ouvertes</Text>
+              <Text style={styles.menuArrow}>{'\u203A'}</Text>
             </Pressable>
           </>
         )}
@@ -79,10 +84,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginBottom: 12,
   },
   avatarText: { fontSize: 32, fontWeight: '700', color: colors.white },
-  name: { fontSize: 22, fontWeight: '700', color: colors.text },
+  name: { fontSize: 22, fontWeight: '700', color: colors.accent },
   phone: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   providerBadge: {
-    marginTop: 8, backgroundColor: 'rgba(224,122,95,0.1)',
+    marginTop: 8, backgroundColor: colors.primaryGhost,
     paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100,
   },
   providerBadgeText: { fontSize: 13, fontWeight: '600', color: colors.primary },

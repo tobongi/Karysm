@@ -3,11 +3,12 @@ import { prisma } from '../lib/prisma';
 import { validateQuery } from '../middleware/validate';
 import { searchSchema } from '../schemas';
 import { parsePagination } from '@tokoss/shared';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
 // GET /api/search
-router.get('/', validateQuery(searchSchema), async (req: Request, res: Response) => {
+router.get('/', validateQuery(searchSchema), asyncHandler(async (req: Request, res: Response) => {
   const { q, category, lat, lng, radius = 10, minRating, maxPrice, sort = 'distance' } = req.query as any;
   const { page, pageSize, skip, take } = parsePagination(req.query as any);
 
@@ -89,10 +90,10 @@ router.get('/', validateQuery(searchSchema), async (req: Request, res: Response)
       totalPages: Math.ceil(total / pageSize),
     },
   });
-});
+}));
 
 // GET /api/search/providers/:slug
-router.get('/providers/:slug', async (req: Request, res: Response) => {
+router.get('/providers/:slug', asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({
     where: { slug: req.params.slug as string },
     include: {
@@ -108,7 +109,7 @@ router.get('/providers/:slug', async (req: Request, res: Response) => {
   }
 
   res.json({ success: true, data: provider });
-});
+}));
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;

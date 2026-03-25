@@ -12,9 +12,17 @@ export default function Login() {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [loading, setLoading] = useState(false);
 
+  // Demo mode: bypass API when it's not running
+  const DEMO_MODE = false;
+
   async function handleSendOTP() {
-    if (phone.length < 9) return;
+    if (phone.length < 3) return;
     setLoading(true);
+    if (DEMO_MODE) {
+      setStep('otp');
+      setLoading(false);
+      return;
+    }
     try {
       await api('/auth/otp/send', { method: 'POST', body: JSON.stringify({ phone }) });
       setStep('otp');
@@ -27,6 +35,16 @@ export default function Login() {
   async function handleVerifyOTP() {
     if (otp.length !== 4) return;
     setLoading(true);
+    if (DEMO_MODE && otp === '1234') {
+      await login(
+        'demo-token',
+        'demo-refresh',
+        { id: 'demo-user', name: 'Client Demo', phone, role: 'CLIENT' }
+      );
+      router.replace('/(tabs)');
+      setLoading(false);
+      return;
+    }
     try {
       const res: any = await api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) });
       if (res.isNewUser) {
@@ -90,7 +108,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
-  logo: { fontSize: 40, fontWeight: '800', color: colors.primary, textAlign: 'center', marginBottom: 8 },
+  logo: { fontSize: 40, fontWeight: '800', color: colors.accent, textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginBottom: 48 },
   label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
   input: {

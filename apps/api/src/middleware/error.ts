@@ -1,6 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AppError } from '../lib/errors';
 import { ZodError } from 'zod';
+
+// Wrap async route handlers to catch errors and pass to errorHandler
+export function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => Promise<any>): RequestHandler {
+  return (req, res, next) => fn(req, res, next).catch(next);
+}
 
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
   console.error('[Error]', err.message);

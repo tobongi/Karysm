@@ -33,6 +33,7 @@ model User {
   reviews       Review[]
   favorites     Favorite[]
   refreshTokens RefreshToken[]
+  requests      BeautyRequest[] @relation("ClientRequests")
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -85,6 +86,7 @@ model Provider {
 
   whatsappNumber  String?
   instagramHandle String?
+  tiktokHandle    String?
 
   payoutPhone     String?
   currency        String         @default("CDF")
@@ -144,6 +146,7 @@ model Service {
   priceMax     Int?
   isActive     Boolean         @default(true)
   sortOrder    Int             @default(0)
+  socialLinks  String[]        // URLs Instagram/TikTok de prestations passées
 
   bookings     Booking[]
 
@@ -434,4 +437,83 @@ model Admin {
   createdAt DateTime @default(now())
 
   @@map("admins")
+}
+
+// ==================== BEAUTY REQUESTS (Upwork mode) ====================
+
+enum BeautyRequestStatus {
+  OPEN
+  IN_REVIEW
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+  COMPLETED
+}
+
+model BeautyRequest {
+  id              String              @id @default(cuid())
+  clientId        String
+  client          User                @relation("ClientRequests", fields: [clientId], references: [id])
+
+  title           String
+  description     String
+  categoryId      String
+
+  photos          String[]
+  selfieUrl       String?
+
+  budgetMin       Int
+  budgetMax       Int
+  currency        String              @default("CDF")
+  preferredDate   DateTime?           @db.Date
+  flexibleDate    Boolean             @default(false)
+  locationType    String              @default("CLIENT")
+  locationAddress String?
+  locationLat     Float?
+  locationLng     Float?
+  city            String
+
+  status          BeautyRequestStatus @default(OPEN)
+
+  proposals       Proposal[]
+
+  expiresAt       DateTime
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([clientId])
+  @@index([city])
+  @@index([status])
+  @@map("beauty_requests")
+}
+
+enum ProposalStatus {
+  PENDING
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model Proposal {
+  id              String          @id @default(cuid())
+  requestId       String
+  request         BeautyRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  providerId      String
+
+  price           Int
+  currency        String          @default("CDF")
+  message         String
+  estimatedDuration Int
+  portfolioSamples String[]
+
+  status          ProposalStatus  @default(PENDING)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([requestId, providerId])
+  @@index([requestId])
+  @@index([providerId])
+  @@map("proposals")
 }

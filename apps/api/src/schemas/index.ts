@@ -92,3 +92,52 @@ export const searchSchema = z.object({
   page: z.coerce.number().optional(),
   pageSize: z.coerce.number().optional(),
 });
+
+// ==================== BEAUTY REQUESTS ====================
+
+export const createBeautyRequestSchema = z.object({
+  title: z.string().min(3).max(200),
+  description: z.string().min(10).max(2000),
+  categoryId: z.string(),
+  photos: z.array(z.string()).max(6).optional(),
+  selfieUrl: z.string().optional(),
+  budgetMin: z.number().min(0),
+  budgetMax: z.number().min(0),
+  currency: z.enum(['CDF', 'XAF']).optional(),
+  preferredDate: z.string().optional(),
+  flexibleDate: z.boolean().optional(),
+  locationType: z.enum(['CLIENT', 'PROVIDER', 'FLEXIBLE']).optional(),
+  locationAddress: z.string().optional(),
+  locationLat: z.number().optional(),
+  locationLng: z.number().optional(),
+  city: z.string().min(2),
+});
+
+export const updateBeautyRequestSchema = z.object({
+  title: z.string().min(3).max(200).optional(),
+  description: z.string().min(10).max(2000).optional(),
+  photos: z.array(z.string()).max(6).optional(),
+  selfieUrl: z.string().optional(),
+  budgetMin: z.number().min(0).optional(),
+  budgetMax: z.number().min(0).optional(),
+  preferredDate: z.string().optional(),
+  flexibleDate: z.boolean().optional(),
+  locationType: z.enum(['CLIENT', 'PROVIDER', 'FLEXIBLE']).optional(),
+  locationAddress: z.string().optional(),
+  city: z.string().min(2).optional(),
+});
+
+export const createProposalSchema = z.object({
+  price: z.number().min(0),
+  currency: z.enum(['CDF', 'XAF']).optional(),
+  message: z.string().min(5).max(2000),
+  estimatedDuration: z.number().min(5).max(480),
+  portfolioSamples: z.array(z.string()).max(5).optional(),
+});
+
+export const browseRequestsSchema = z.object({
+  city: z.string().optional(),
+  category: z.string().optional(),
+  page: z.coerce.number().optional(),
+  pageSize: z.coerce.number().optional(),
+});

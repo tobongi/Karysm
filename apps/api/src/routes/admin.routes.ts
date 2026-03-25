@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authMiddleware, requireRole } from '../middleware/auth';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
 router.use(authMiddleware, requireRole('ADMIN'));
 
 // GET /api/admin/stats
-router.get('/stats', async (_req: Request, res: Response) => {
+router.get('/stats', asyncHandler(async (_req: Request, res: Response) => {
   const [totalProviders, activeProviders, pendingProviders, totalBookings, totalUsers] = await Promise.all([
     prisma.provider.count(),
     prisma.provider.count({ where: { status: 'ACTIVE' } }),
@@ -27,10 +28,10 @@ router.get('/stats', async (_req: Request, res: Response) => {
       totalUsers,
     },
   });
-});
+}));
 
 // GET /api/admin/providers
-router.get('/providers', async (req: Request, res: Response) => {
+router.get('/providers', asyncHandler(async (req: Request, res: Response) => {
   const status = req.query.status as string | undefined;
   const where: any = {};
   if (status) where.status = status;
@@ -42,20 +43,20 @@ router.get('/providers', async (req: Request, res: Response) => {
   });
 
   res.json({ success: true, data: providers });
-});
+}));
 
 // PATCH /api/admin/providers/:id
-router.patch('/providers/:id', async (req: Request, res: Response) => {
+router.patch('/providers/:id', asyncHandler(async (req: Request, res: Response) => {
   const { status } = req.body;
   const provider = await prisma.provider.update({
     where: { id: req.params.id as string },
     data: { status },
   });
   res.json({ success: true, data: provider });
-});
+}));
 
 // GET /api/admin/bookings
-router.get('/bookings', async (req: Request, res: Response) => {
+router.get('/bookings', asyncHandler(async (req: Request, res: Response) => {
   const bookings = await prisma.booking.findMany({
     include: {
       service: true,
@@ -66,6 +67,6 @@ router.get('/bookings', async (req: Request, res: Response) => {
     take: 50,
   });
   res.json({ success: true, data: bookings });
-});
+}));
 
 export default router;

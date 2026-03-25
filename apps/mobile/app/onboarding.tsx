@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   slide: { width, paddingHorizontal: 40, justifyContent: 'center', alignItems: 'center', flex: 1 },
   emoji: { fontSize: 80, marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.text, textAlign: 'center', marginBottom: 16 },
+  title: { fontSize: 28, fontWeight: '700', color: colors.accent, textAlign: 'center', marginBottom: 16 },
   subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
   footer: { paddingHorizontal: 40, paddingBottom: 60 },
   dots: { flexDirection: 'row', justifyContent: 'center', marginBottom: 32 },

@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
 // POST /api/favorites/:providerId — Toggle favorite
-router.post('/:providerId', authMiddleware, async (req: Request, res: Response) => {
+router.post('/:providerId', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const providerId = req.params.providerId as string;
 
@@ -20,10 +21,10 @@ router.post('/:providerId', authMiddleware, async (req: Request, res: Response) 
 
   await prisma.favorite.create({ data: { userId, providerId } });
   res.json({ success: true, favorited: true });
-});
+}));
 
 // GET /api/favorites
-router.get('/', authMiddleware, async (req: Request, res: Response) => {
+router.get('/', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const favorites = await prisma.favorite.findMany({
     where: { userId: req.user!.userId },
     select: {
@@ -43,6 +44,6 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
   });
 
   res.json({ success: true, data: providers });
-});
+}));
 
 export default router;

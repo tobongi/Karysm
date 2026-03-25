@@ -13,6 +13,8 @@ import categoryRoutes from './routes/category.routes';
 import reviewRoutes from './routes/review.routes';
 import favoriteRoutes from './routes/favorite.routes';
 import adminRoutes from './routes/admin.routes';
+import uploadRoutes from './routes/upload.routes';
+import requestRoutes from './routes/request.routes';
 
 const app = express();
 
@@ -25,7 +27,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '55mb' }));
 
 // Rate limiting
 const limiter = rateLimit({ windowMs: 60 * 1000, max: 100 });
@@ -45,6 +47,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/requests', requestRoutes);
 
 // Error handler
 app.use(errorHandler);

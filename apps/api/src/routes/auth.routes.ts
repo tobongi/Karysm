@@ -4,6 +4,7 @@ import { normalizePhone } from '@tokoss/shared';
 import { ValidationError, NotFoundError } from '../lib/errors';
 import { generateToken, generateRefreshToken, authMiddleware } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
+import { asyncHandler } from '../middleware/error';
 import { otpSendSchema, otpVerifySchema, registerSchema, refreshSchema } from '../schemas';
 
 const router = Router();
@@ -14,21 +15,21 @@ const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 const DEMO_OTP = process.env.DEMO_OTP || '1234';
 
 // POST /api/auth/otp/send
-router.post('/otp/send', validateBody(otpSendSchema), async (req: Request, res: Response) => {
+router.post('/otp/send', validateBody(otpSendSchema), asyncHandler(async (req: Request, res: Response) => {
   const phone = normalizePhone(req.body.phone);
 
-  // Generate 4-digit OTP
-  const otp = process.env.NODE_ENV === 'development' ? DEMO_OTP : String(Math.floor(1000 + Math.random() * 9000));
+  // Generate 4-digit OTP (use DEMO_OTP in dev — NODE_ENV=production only in prod)
+  const otp = process.env.NODE_ENV === 'production' ? String(Math.floor(1000 + Math.random() * 9000)) : DEMO_OTP;
   otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
   // TODO: Send OTP via Africa's Talking SMS
   console.log(`[OTP] ${phone}: ${otp}`);
 
   res.json({ success: true, message: 'OTP sent' });
-});
+}));
 
 // POST /api/auth/otp/verify
-router.post('/otp/verify', validateBody(otpVerifySchema), async (req: Request, res: Response) => {
+router.post('/otp/verify', validateBody(otpVerifySchema), asyncHandler(async (req: Request, res: Response) => {
   const phone = normalizePhone(req.body.phone);
   const { otp } = req.body;
 
@@ -64,10 +65,10 @@ router.post('/otp/verify', validateBody(otpVerifySchema), async (req: Request, r
     refreshToken,
     user: { id: user.id, name: user.name, phone: user.phone, role: user.role, avatar: user.avatar },
   });
-});
+}));
 
 // POST /api/auth/register
-router.post('/register', validateBody(registerSchema), async (req: Request, res: Response) => {
+router.post('/register', validateBody(registerSchema), asyncHandler(async (req: Request, res: Response) => {
   const phone = normalizePhone(req.body.phone);
   const { name, otp } = req.body;
 
@@ -103,10 +104,10 @@ router.post('/register', validateBody(registerSchema), async (req: Request, res:
     refreshToken,
     user: { id: user.id, name: user.name, phone: user.phone, role: user.role },
   });
-});
+}));
 
 // POST /api/auth/refresh
-router.post('/refresh', validateBody(refreshSchema), async (req: Request, res: Response) => {
+router.post('/refresh', validateBody(refreshSchema), asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
 
   const stored = await prisma.refreshToken.findUnique({
@@ -125,10 +126,10 @@ router.post('/refresh', validateBody(refreshSchema), async (req: Request, res: R
   });
 
   res.json({ success: true, token });
-});
+}));
 
 // POST /api/auth/logout
-router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
+router.post('/logout', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
   if (refreshToken) {
     await prisma.refreshToken.updateMany({
@@ -137,6 +138,6 @@ router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
     });
   }
   res.json({ success: true });
-});
+}));
 
 export default router;

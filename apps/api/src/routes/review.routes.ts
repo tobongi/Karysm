@@ -4,11 +4,12 @@ import { authMiddleware } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { reviewSchema } from '../schemas';
 import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
 // POST /api/reviews
-router.post('/', authMiddleware, validateBody(reviewSchema), async (req: Request, res: Response) => {
+router.post('/', authMiddleware, validateBody(reviewSchema), asyncHandler(async (req: Request, res: Response) => {
   const clientId = req.user!.userId;
   const { bookingId, rating, comment, photos, tags } = req.body;
 
@@ -48,16 +49,16 @@ router.post('/', authMiddleware, validateBody(reviewSchema), async (req: Request
   });
 
   res.status(201).json({ success: true, data: review });
-});
+}));
 
 // GET /api/reviews/provider/:providerId
-router.get('/provider/:providerId', async (req: Request, res: Response) => {
+router.get('/provider/:providerId', asyncHandler(async (req: Request, res: Response) => {
   const reviews = await prisma.review.findMany({
     where: { providerId: req.params.providerId as string, isVisible: true },
     include: { client: { select: { name: true, avatar: true } } },
     orderBy: { createdAt: 'desc' },
   });
   res.json({ success: true, data: reviews });
-});
+}));
 
 export default router;

@@ -5,11 +5,12 @@ import { authMiddleware } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { createBookingSchema, updateBookingStatusSchema } from '../schemas';
 import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors';
+import { asyncHandler } from '../middleware/error';
 
 const router = Router();
 
 // POST /api/bookings
-router.post('/', authMiddleware, validateBody(createBookingSchema), async (req: Request, res: Response) => {
+router.post('/', authMiddleware, validateBody(createBookingSchema), asyncHandler(async (req: Request, res: Response) => {
   const clientId = req.user!.userId;
   const { providerId, serviceId, date, startTime, locationType, locationAddress, locationLat, locationLng, clientNotes, transportRequested } = req.body;
 
@@ -65,10 +66,10 @@ router.post('/', authMiddleware, validateBody(createBookingSchema), async (req: 
   // TODO: Send WhatsApp notification to provider
 
   res.status(201).json({ success: true, data: booking });
-});
+}));
 
 // GET /api/bookings/mine
-router.get('/mine', authMiddleware, async (req: Request, res: Response) => {
+router.get('/mine', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const role = (req.query.role as string) || 'client';
   const status = req.query.status as string | undefined;
@@ -101,10 +102,10 @@ router.get('/mine', authMiddleware, async (req: Request, res: Response) => {
   });
 
   res.json({ success: true, data: bookings });
-});
+}));
 
 // GET /api/bookings/:id
-router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
+router.get('/:id', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id as string },
     include: {
@@ -127,10 +128,10 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   }
 
   res.json({ success: true, data: booking });
-});
+}));
 
 // PATCH /api/bookings/:id/status
-router.patch('/:id/status', authMiddleware, validateBody(updateBookingStatusSchema), async (req: Request, res: Response) => {
+router.patch('/:id/status', authMiddleware, validateBody(updateBookingStatusSchema), asyncHandler(async (req: Request, res: Response) => {
   const booking = await prisma.booking.findUnique({ where: { id: req.params.id as string } });
   if (!booking) throw new NotFoundError('Booking');
 
@@ -165,6 +166,6 @@ router.patch('/:id/status', authMiddleware, validateBody(updateBookingStatusSche
   }
 
   res.json({ success: true, data: updated });
-});
+}));
 
 export default router;

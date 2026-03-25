@@ -1,73 +1,485 @@
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../src/theme/colors';
+import { api } from '../../../src/lib/api';
+import { useAuth } from '../../../src/lib/auth-context';
+import { showAlert, showConfirm } from '../../../src/lib/alert';
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  REQUESTED:    { label: 'En attente',    color: colors.warning, bg: 'rgba(245,158,11,0.1)' },
+  CONFIRMED:    { label: 'Confirmée',     color: colors.success, bg: 'rgba(16,185,129,0.1)' },
+  DEPOSIT_PAID: { label: 'Acompte payé',  color: '#8B5CF6',      bg: 'rgba(139,92,246,0.1)' },
+  IN_PROGRESS:  { label: 'En cours',      color: colors.primary, bg: 'rgba(124,58,237,0.1)' },
+  COMPLETED:    { label: 'Terminée',      color: colors.textMuted, bg: 'rgba(156,163,175,0.1)' },
+  CANCELLED:    { label: 'Annulée',       color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
+  NO_SHOW:      { label: 'Absent',        color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
+  DISPUTED:     { label: 'En litige',     color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
+};
+
+function formatPrice(amount: number | null | undefined, currency: string) {
+  if (amount == null) return '';
+  const symbol = currency === 'CDF' ? 'FC' : 'FCFA';
+  return `${amount.toLocaleString('fr-FR')} ${symbol}`;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+interface BookingData {
+  id: string;
+  ref: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  agreedPrice: number;
+  currency: string;
+  depositAmount: number | null;
+  depositPaid: boolean;
+  locationType: string;
+  locationAddress: string | null;
+  clientNotes: string | null;
+  providerNotes: string | null;
+  cancelReason: string | null;
+  transportRequested: boolean;
+  confirmedAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  service: {
+    name: string;
+    durationMin: number;
+    category: { name: string };
+  };
+  provider: {
+    id: string;
+    displayName: string;
+    slug: string;
+    city: string;
+    commune: string | null;
+    isMobile: boolean;
+    whatsappNumber: string | null;
+    user: { name: string; avatar: string | null; phone: string };
+  };
+  client: {
+    name: string;
+    phone: string;
+  };
+  review: any | null;
+}
 
 export default function BookingDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
+  const [booking, setBooking] = useState<BookingData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchBooking = useCallback(async () => {
+    try {
+      const res: any = await api(`/bookings/${id}`);
+      setBooking(res.data);
+    } catch (e: any) {
+      console.error('Fetch booking error:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchBooking();
+  }, [fetchBooking]);
+
+  async function handleStatusChange(newStatus: string, confirmMsg: string) {
+    showConfirm('Confirmer', confirmMsg, async () => {
+      setActionLoading(true);
+      try {
+        await api(`/bookings/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus }),
+        });
+        fetchBooking();
+      } catch (e: any) {
+        showAlert('Erreur', e.message);
+      }
+      setActionLoading(false);
+    });
+  }
+
+  function openWhatsApp(phone: string) {
+    const cleaned = phone.replace(/[^0-9]/g, '');
+    Linking.openURL(`https://wa.me/${cleaned}`);
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>😕</Text>
+        <Text style={styles.errorText}>Réservation introuvable</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Retour</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const status = STATUS_CONFIG[booking.status] || { label: booking.status, color: colors.textMuted, bg: 'rgba(0,0,0,0.05)' };
+  const isClient = booking.client && user?.phone === booking.client.phone;
+  const isProvider = booking.provider?.user && user?.phone === booking.provider.user.phone;
+  const isPending = booking.status === 'REQUESTED';
+  const isConfirmed = booking.status === 'CONFIRMED';
+  const isInProgress = booking.status === 'IN_PROGRESS';
+  const canCancel = ['REQUESTED', 'CONFIRMED', 'DEPOSIT_PAID'].includes(booking.status);
+  const isFinished = ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(booking.status);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.card}>
-        <Text style={styles.ref}>TKS-A3B7C2</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>Confirme</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchBooking(); }} tintColor={colors.primary} />}
+    >
+      {/* ── Success banner for new bookings ── */}
+      {isPending && isClient && (
+        <View style={styles.successBanner}>
+          <Text style={styles.successIcon}>✅</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.successTitle}>Demande envoyée !</Text>
+            <Text style={styles.successText}>Le prestataire va confirmer votre réservation.</Text>
+          </View>
+        </View>
+      )}
+
+      {/* ── Ref + Status ── */}
+      <View style={styles.headerCard}>
+        <Text style={styles.ref}>{booking.ref}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+          <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
         </View>
       </View>
 
+      {/* ── Provider info ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Prestataire</Text>
-        <Text style={styles.value}>Marie Tresses</Text>
-        <Text style={styles.subvalue}>Coiffure · Gombe, Kinshasa</Text>
+        <Text style={styles.sectionLabel}>PRESTATAIRE</Text>
+        <Pressable style={styles.providerRow} onPress={() => router.push(`/provider/${booking.provider.slug}`)}>
+          <View style={styles.providerAvatar}>
+            <Text style={styles.providerAvatarText}>
+              {booking.provider.displayName[0]?.toUpperCase()}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.providerName}>{booking.provider.displayName}</Text>
+            <Text style={styles.providerLocation}>
+              {booking.provider.commune ? `${booking.provider.commune}, ` : ''}{booking.provider.city}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
       </View>
 
+      {/* ── Service ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Service</Text>
-        <Text style={styles.value}>Tresses collees</Text>
-        <Text style={styles.subvalue}>90 min</Text>
+        <Text style={styles.sectionLabel}>SERVICE</Text>
+        <Text style={styles.value}>{booking.service.name}</Text>
+        <Text style={styles.subvalue}>{booking.service.category?.name} · {booking.service.durationMin} min</Text>
       </View>
 
+      {/* ── Date & Heure ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Date & Heure</Text>
-        <Text style={styles.value}>📅 20 mars 2026 a 14:00</Text>
+        <Text style={styles.sectionLabel}>DATE & HEURE</Text>
+        <Text style={styles.value}>📅 {formatDate(booking.date)}</Text>
+        <Text style={styles.subvalue}>🕐 {booking.startTime} — {booking.endTime}</Text>
       </View>
 
+      {/* ── Lieu ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Lieu</Text>
-        <Text style={styles.value}>🏠 A domicile</Text>
+        <Text style={styles.sectionLabel}>LIEU</Text>
+        <Text style={styles.value}>
+          {booking.locationType === 'CLIENT' ? '🏠 À domicile' : '📍 Chez le prestataire'}
+        </Text>
+        {booking.locationAddress && (
+          <Text style={styles.subvalue}>{booking.locationAddress}</Text>
+        )}
       </View>
 
+      {/* ── Prix ── */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Prix</Text>
-        <Text style={styles.priceValue}>5 000 FC</Text>
-        <Text style={styles.subvalue}>Acompte: 1 500 FC (30%)</Text>
+        <Text style={styles.sectionLabel}>PRIX</Text>
+        <Text style={styles.priceValue}>{formatPrice(booking.agreedPrice, booking.currency)}</Text>
+        {booking.depositAmount && (
+          <Text style={styles.subvalue}>
+            Acompte : {formatPrice(booking.depositAmount, booking.currency)} (30%)
+            {booking.depositPaid ? ' ✅ Payé' : ' ⏳ En attente'}
+          </Text>
+        )}
       </View>
 
-      <Pressable style={styles.cancelButton}>
-        <Text style={styles.cancelText}>Annuler la reservation</Text>
-      </Pressable>
+      {/* ── Notes ── */}
+      {booking.clientNotes && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>NOTES</Text>
+          <Text style={styles.subvalue}>{booking.clientNotes}</Text>
+        </View>
+      )}
+
+      {booking.providerNotes && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>NOTES DU PRESTATAIRE</Text>
+          <Text style={styles.subvalue}>{booking.providerNotes}</Text>
+        </View>
+      )}
+
+      {/* ── Cancel reason ── */}
+      {booking.cancelReason && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>RAISON D'ANNULATION</Text>
+          <Text style={[styles.subvalue, { color: colors.error }]}>{booking.cancelReason}</Text>
+        </View>
+      )}
+
+      {/* ── Actions ── */}
+      <View style={styles.actions}>
+        {/* WhatsApp contact */}
+        {booking.provider.whatsappNumber && !isFinished && (
+          <Pressable
+            style={styles.whatsappButton}
+            onPress={() => openWhatsApp(booking.provider.whatsappNumber!)}
+          >
+            <Text style={styles.whatsappText}>💬 Contacter sur WhatsApp</Text>
+          </Pressable>
+        )}
+
+        {/* Provider actions */}
+        {isProvider && isPending && (
+          <Pressable
+            style={styles.confirmButton}
+            disabled={actionLoading}
+            onPress={() => handleStatusChange('CONFIRMED', 'Confirmer cette réservation ?')}
+          >
+            <Text style={styles.confirmButtonText}>
+              {actionLoading ? 'Chargement...' : '✅ Confirmer la réservation'}
+            </Text>
+          </Pressable>
+        )}
+
+        {isProvider && (isConfirmed || booking.status === 'DEPOSIT_PAID') && (
+          <Pressable
+            style={styles.confirmButton}
+            disabled={actionLoading}
+            onPress={() => handleStatusChange('IN_PROGRESS', 'Démarrer le service ?')}
+          >
+            <Text style={styles.confirmButtonText}>
+              {actionLoading ? 'Chargement...' : '▶️ Démarrer le service'}
+            </Text>
+          </Pressable>
+        )}
+
+        {isProvider && isInProgress && (
+          <Pressable
+            style={styles.confirmButton}
+            disabled={actionLoading}
+            onPress={() => handleStatusChange('COMPLETED', 'Marquer le service comme terminé ?')}
+          >
+            <Text style={styles.confirmButtonText}>
+              {actionLoading ? 'Chargement...' : '✅ Service terminé'}
+            </Text>
+          </Pressable>
+        )}
+
+        {/* Cancel (both client and provider) */}
+        {canCancel && (
+          <Pressable
+            style={styles.cancelButton}
+            disabled={actionLoading}
+            onPress={() => handleStatusChange('CANCELLED', 'Êtes-vous sûr de vouloir annuler ?')}
+          >
+            <Text style={styles.cancelText}>Annuler la réservation</Text>
+          </Pressable>
+        )}
+
+        {/* Leave review */}
+        {isClient && booking.status === 'COMPLETED' && !booking.review && (
+          <Pressable style={styles.reviewButton}>
+            <Text style={styles.reviewButtonText}>⭐ Laisser un avis</Text>
+          </Pressable>
+        )}
+
+        {/* Rebook */}
+        {isFinished && isClient && (
+          <Pressable
+            style={styles.rebookButton}
+            onPress={() => router.push(`/booking/${booking.provider.id}?slug=${booking.provider.slug}`)}
+          >
+            <Text style={styles.rebookButtonText}>🔄 Réserver à nouveau</Text>
+          </Pressable>
+        )}
+      </View>
+
+      {/* ── Timeline ── */}
+      <View style={styles.timeline}>
+        <Text style={styles.sectionLabel}>HISTORIQUE</Text>
+        <TimelineItem label="Demande créée" date={booking.createdAt} />
+        {booking.confirmedAt && <TimelineItem label="Confirmée" date={booking.confirmedAt} />}
+        {booking.completedAt && <TimelineItem label="Terminée" date={booking.completedAt} />}
+        {booking.cancelledAt && <TimelineItem label="Annulée" date={booking.cancelledAt} />}
+      </View>
     </ScrollView>
+  );
+}
+
+function TimelineItem({ label, date }: { label: string; date: string }) {
+  const d = new Date(date);
+  const timeStr = `${d.getDate()}/${d.getMonth() + 1} à ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  return (
+    <View style={styles.timelineItem}>
+      <View style={styles.timelineDot} />
+      <Text style={styles.timelineLabel}>{label}</Text>
+      <Text style={styles.timelineDate}>{timeStr}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 20 },
-  card: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: colors.card, padding: 16, borderRadius: 14, marginBottom: 20,
-    borderWidth: 1, borderColor: colors.border,
+  content: { padding: 20, paddingBottom: 40 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  errorText: { fontSize: 16, color: colors.textMuted },
+  backButton: { marginTop: 16, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
+  backButtonText: { color: '#FFFFFF', fontWeight: '600' },
+
+  // Success banner
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 16,
   },
-  ref: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
-  statusBadge: { backgroundColor: '#10B98120', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 },
-  statusText: { fontSize: 13, fontWeight: '600', color: colors.success },
+  successIcon: { fontSize: 24, marginRight: 12 },
+  successTitle: { fontSize: 16, fontWeight: '700', color: colors.success },
+  successText: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+
+  // Header
+  headerCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ref: { fontSize: 15, fontWeight: '700', color: colors.accent },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 },
+  statusText: { fontSize: 13, fontWeight: '600' },
+
+  // Provider row
+  providerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  providerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: colors.primaryBorder,
+  },
+  providerAvatarText: { fontSize: 18, fontWeight: '700', color: colors.primary },
+  providerName: { fontSize: 16, fontWeight: '600', color: colors.accent },
+  providerLocation: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  chevron: { fontSize: 24, color: colors.textMuted },
+
+  // Sections
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 12, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', marginBottom: 6 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 1, marginBottom: 8 },
   value: { fontSize: 16, fontWeight: '600', color: colors.text },
-  subvalue: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
-  priceValue: { fontSize: 24, fontWeight: '700', color: colors.primary },
-  cancelButton: {
-    marginTop: 20, paddingVertical: 14, alignItems: 'center',
-    borderRadius: 12, borderWidth: 1, borderColor: colors.error,
+  subvalue: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+  priceValue: { fontSize: 28, fontWeight: '800', color: colors.terracotta },
+
+  // Actions
+  actions: { marginTop: 8, gap: 12 },
+  whatsappButton: {
+    backgroundColor: '#25D366',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
   },
-  cancelText: { fontSize: 16, fontWeight: '600', color: colors.error },
+  whatsappText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  confirmButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  confirmButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  cancelButton: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  cancelText: { fontSize: 15, fontWeight: '600', color: colors.error },
+  reviewButton: {
+    backgroundColor: colors.primaryGhost,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+  },
+  reviewButtonText: { fontSize: 15, fontWeight: '600', color: colors.primary },
+  rebookButton: {
+    backgroundColor: colors.card,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  rebookButtonText: { fontSize: 15, fontWeight: '600', color: colors.accent },
+
+  // Timeline
+  timeline: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  timelineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    marginRight: 12,
+  },
+  timelineLabel: { fontSize: 14, fontWeight: '500', color: colors.text, flex: 1 },
+  timelineDate: { fontSize: 12, color: colors.textMuted },
 });

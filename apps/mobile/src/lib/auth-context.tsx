@@ -16,6 +16,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (token: string, refreshToken: string, user: AuthUser) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updatedUser: AuthUser) => Promise<void>;
   isProvider: boolean;
 }
 
@@ -52,6 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem('tokoss_user', JSON.stringify(newUser));
   }
 
+  async function updateUser(updatedUser: AuthUser) {
+    setUser(updatedUser);
+    await AsyncStorage.setItem('tokoss_user', JSON.stringify(updatedUser));
+  }
+
   async function logout() {
     setToken(null);
     setAuthToken(null);
@@ -60,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isProvider: user?.role === 'PROVIDER' }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout, updateUser, isProvider: user?.role === 'PROVIDER' }}>
       {children}
     </AuthContext.Provider>
   );

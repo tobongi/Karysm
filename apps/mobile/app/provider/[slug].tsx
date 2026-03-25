@@ -1,169 +1,672 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
+import { api } from '../../src/lib/api';
 
-// Mock provider data
-const MOCK_PROVIDER = {
-  id: 'p1',
-  displayName: 'Marie Tresses',
-  slug: 'marie-tresses',
-  bio: 'Coiffeuse professionnelle avec 8 ans d\'experience. Specialisee en tresses africaines, tissages et soins capillaires.',
-  city: 'Kinshasa',
-  commune: 'Gombe',
-  avgRating: 4.8,
-  totalReviews: 24,
-  totalBookings: 156,
-  isMobile: true,
-  mobileRadius: 15,
-  services: [
-    { id: 's1', name: 'Tresses collees', durationMin: 90, priceMin: 5000, priceMax: 8000, category: 'Coiffure' },
-    { id: 's2', name: 'Tissage complet', durationMin: 120, priceMin: 12000, priceMax: 20000, category: 'Coiffure' },
-    { id: 's3', name: 'Locs twist', durationMin: 60, priceMin: 4000, priceMax: null, category: 'Coiffure' },
-    { id: 's4', name: 'Soin keratine', durationMin: 45, priceMin: 7000, priceMax: null, category: 'Coiffure' },
-  ],
-  reviews: [
-    { id: 'r1', clientName: 'Sophie K.', rating: 5, comment: 'Excellent travail, tres professionnelle !', date: '2026-03-10' },
-    { id: 'r2', clientName: 'Grace M.', rating: 4, comment: 'Bon resultat, ponctuelle.', date: '2026-03-05' },
-  ],
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface ServiceCategory {
+  name: string;
+  icon: string;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  durationMin: number;
+  priceMin: number;
+  priceMax: number | null;
+  category: ServiceCategory;
+}
+
+interface Availability {
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+}
+
+interface Provider {
+  id: string;
+  displayName: string;
+  slug: string;
+  bio: string | null;
+  status: string;
+  city: string;
+  commune: string | null;
+  lat: number | null;
+  lng: number | null;
+  isMobile: boolean;
+  mobileRadius: number | null;
+  whatsappNumber: string | null;
+  instagramHandle: string | null;
+  currency: string;
+  idVerified: boolean;
+  avgRating: number;
+  totalReviews: number;
+  totalBookings: number;
+  responseRate: number;
+  services: Service[];
+  availability: Availability[];
+  portfolio: any[];
+  user: { name: string; avatar: string | null };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatPrice(amount: number, currency: string): string {
+  const symbol = currency === 'CDF' ? 'FC' : 'FCFA';
+  return `${amount.toLocaleString('fr-FR')} ${symbol}`;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function getMainCategory(services: Service[]): string | null {
+  if (services.length === 0) return null;
+  // Most common category
+  const counts: Record<string, number> = {};
+  for (const s of services) {
+    const cat = s.category?.name ?? 'Autre';
+    counts[cat] = (counts[cat] || 0) + 1;
+  }
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+const DAY_LABELS: Record<string, string> = {
+  MON: 'Lun',
+  TUE: 'Mar',
+  WED: 'Mer',
+  THU: 'Jeu',
+  FRI: 'Ven',
+  SAT: 'Sam',
+  SUN: 'Dim',
 };
+
+const ALL_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function ProviderProfile() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const provider = MOCK_PROVIDER; // TODO: fetch from API
-  const [activeTab, setActiveTab] = useState<'services' | 'reviews' | 'portfolio'>('services');
+
+  const [provider, setProvider] = useState<Provider | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchProvider = useCallback(async () => {
+    try {
+      setError(null);
+      const res: any = await api(`/search/providers/${slug}`);
+      if (res.success && res.data) {
+        setProvider(res.data);
+      } else {
+        setError('Prestataire introuvable');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Impossible de charger le profil');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    fetchProvider();
+  }, [fetchProvider]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchProvider();
+  }, [fetchProvider]);
+
+  // --- Loading state ---
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Chargement...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // --- Error state ---
+  if (error || !provider) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <Text style={styles.errorEmoji}>😕</Text>
+        <Text style={styles.errorTitle}>Prestataire introuvable</Text>
+        <Text style={styles.errorSubtitle}>{error || 'Ce profil n\'existe pas ou a été supprimé.'}</Text>
+        <Pressable style={styles.retryButton} onPress={fetchProvider}>
+          <Text style={styles.retryButtonText}>Réessayer</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
+  const specialty = getMainCategory(provider.services);
+  const activeDays = new Set(
+    provider.availability.filter((a) => a.isActive).map((a) => a.dayOfWeek),
+  );
+
+  const openWhatsApp = () => {
+    if (provider.whatsappNumber) {
+      const cleaned = provider.whatsappNumber.replace(/[^0-9+]/g, '');
+      Linking.openURL(`https://wa.me/${cleaned.replace('+', '')}`);
+    }
+  };
+
+  const openInstagram = () => {
+    if (provider.instagramHandle) {
+      const handle = provider.instagramHandle.replace('@', '');
+      Linking.openURL(`https://instagram.com/${handle}`);
+    }
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Hero */}
-      <View style={styles.hero}>
-        <Text style={styles.heroEmoji}>💇‍♀️</Text>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.nameRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{provider.displayName}</Text>
-            <Text style={styles.location}>📍 {provider.commune}, {provider.city}</Text>
-          </View>
-          <View style={styles.ratingBox}>
-            <Text style={styles.ratingNumber}>{provider.avgRating}</Text>
-            <Text style={styles.ratingStar}>⭐</Text>
-            <Text style={styles.reviewCount}>({provider.totalReviews})</Text>
-          </View>
-        </View>
-
-        {provider.isMobile && (
-          <View style={styles.mobileBanner}>
-            <Text style={styles.mobileBannerText}>🏠 Se deplace dans un rayon de {provider.mobileRadius} km</Text>
-          </View>
-        )}
-
-        <Text style={styles.bio}>{provider.bio}</Text>
-
-        {/* Tabs */}
-        <View style={styles.tabs}>
-          {(['services', 'reviews', 'portfolio'] as const).map(t => (
-            <Pressable key={t} style={[styles.tab, activeTab === t && styles.tabActive]} onPress={() => setActiveTab(t)}>
-              <Text style={[styles.tabText, activeTab === t && styles.tabTextActive]}>
-                {t === 'services' ? 'Services' : t === 'reviews' ? 'Avis' : 'Photos'}
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        {/* ── Avatar + Name ── */}
+        <View style={styles.header}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {getInitials(provider.displayName)}
               </Text>
-            </Pressable>
-          ))}
+            </View>
+          </View>
+
+          <View style={styles.nameRow}>
+            <Text style={styles.displayName}>{provider.displayName}</Text>
+            {provider.idVerified && (
+              <Text style={styles.verifiedBadge}>✅</Text>
+            )}
+          </View>
+
+          {specialty && (
+            <Text style={styles.specialty}>{specialty}</Text>
+          )}
+
+          <Text style={styles.ratingLine}>
+            ⭐ {provider.avgRating.toFixed(1)} ({provider.totalReviews})
+            {provider.commune ? `  ·  📍 ${provider.commune}, ${provider.city}` : `  ·  📍 ${provider.city}`}
+          </Text>
         </View>
 
-        {/* Services */}
-        {activeTab === 'services' && (
-          <View style={styles.servicesList}>
-            {provider.services.map(service => (
-              <Pressable
-                key={service.id}
-                style={styles.serviceCard}
-                onPress={() => router.push({ pathname: '/booking/[providerId]', params: { providerId: provider.id, serviceId: service.id } })}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.serviceName}>{service.name}</Text>
-                  <Text style={styles.serviceDuration}>{service.durationMin} min</Text>
-                </View>
-                <View style={styles.servicePriceBox}>
+        {/* ── Stats Row ── */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{provider.totalReviews}</Text>
+            <Text style={styles.statLabel}>Avis</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{provider.totalBookings}</Text>
+            <Text style={styles.statLabel}>Réservations</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {Math.round(provider.responseRate * 100)}%
+            </Text>
+            <Text style={styles.statLabel}>Réponse</Text>
+          </View>
+        </View>
+
+        {/* ── CTA Button ── */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.ctaButton,
+            pressed && styles.ctaButtonPressed,
+          ]}
+          onPress={() => router.push(`/booking/${provider.id}?slug=${provider.slug}`)}
+        >
+          <Text style={styles.ctaButtonText}>Réserver</Text>
+        </Pressable>
+
+        {/* ── Badges ── */}
+        {provider.isMobile && (
+          <View style={styles.badgesRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                🏠 Se déplace{provider.mobileRadius ? ` · ${provider.mobileRadius} km` : ''}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── À propos ── */}
+        {provider.bio ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>À propos</Text>
+            <Text style={styles.bioText}>{provider.bio}</Text>
+          </View>
+        ) : null}
+
+        {/* ── Services ── */}
+        {provider.services.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Services</Text>
+            <View style={styles.servicesList}>
+              {provider.services.map((service) => (
+                <View key={service.id} style={styles.serviceRow}>
+                  <View style={styles.serviceInfo}>
+                    <Text style={styles.serviceName}>{service.name}</Text>
+                    <Text style={styles.serviceDuration}>
+                      {service.durationMin} min
+                    </Text>
+                  </View>
                   <Text style={styles.servicePrice}>
-                    {service.priceMin.toLocaleString()}{service.priceMax ? ` - ${service.priceMax.toLocaleString()}` : ''} FC
+                    {service.priceMax
+                      ? `${formatPrice(service.priceMin, provider.currency)} - ${formatPrice(service.priceMax, provider.currency)}`
+                      : formatPrice(service.priceMin, provider.currency)}
                   </Text>
-                  <Text style={styles.bookBtn}>Reserver →</Text>
                 </View>
-              </Pressable>
-            ))}
+              ))}
+            </View>
           </View>
         )}
 
-        {/* Reviews */}
-        {activeTab === 'reviews' && (
-          <View style={styles.reviewsList}>
-            {provider.reviews.map(review => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewAuthor}>{review.clientName}</Text>
-                  <Text style={styles.reviewStars}>{'⭐'.repeat(review.rating)}</Text>
-                </View>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-                <Text style={styles.reviewDate}>{review.date}</Text>
-              </View>
-            ))}
+        {/* ── Disponibilités ── */}
+        {provider.availability.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Disponibilités</Text>
+            <View style={styles.daysRow}>
+              {ALL_DAYS.map((day) => {
+                const isActive = activeDays.has(day);
+                return (
+                  <View
+                    key={day}
+                    style={[
+                      styles.dayChip,
+                      isActive ? styles.dayChipActive : styles.dayChipInactive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.dayChipText,
+                        isActive
+                          ? styles.dayChipTextActive
+                          : styles.dayChipTextInactive,
+                      ]}
+                    >
+                      {DAY_LABELS[day] || day}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            {/* Show time range for active days */}
+            {provider.availability
+              .filter((a) => a.isActive)
+              .slice(0, 1)
+              .map((a) => (
+                <Text key={a.dayOfWeek} style={styles.availabilityTime}>
+                  {a.startTime} — {a.endTime}
+                </Text>
+              ))}
           </View>
         )}
 
-        {/* Portfolio */}
-        {activeTab === 'portfolio' && (
-          <View style={styles.portfolioEmpty}>
-            <Text style={styles.emptyEmoji}>📸</Text>
-            <Text style={styles.emptyText}>Photos a venir</Text>
+        {/* ── Contact ── */}
+        {(provider.whatsappNumber || provider.instagramHandle) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Contact</Text>
+            <View style={styles.contactRow}>
+              {provider.whatsappNumber && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.whatsappButton,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={openWhatsApp}
+                >
+                  <Text style={styles.whatsappButtonText}>💬 WhatsApp</Text>
+                </Pressable>
+              )}
+              {provider.instagramHandle && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.instagramButton,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={openInstagram}
+                >
+                  <Text style={styles.instagramButtonText}>
+                    📷 {provider.instagramHandle}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         )}
-      </View>
-    </ScrollView>
+
+        {/* Bottom spacer */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  hero: { height: 200, backgroundColor: '#F0ECE8', justifyContent: 'center', alignItems: 'center' },
-  heroEmoji: { fontSize: 60 },
-  content: { padding: 20 },
-  nameRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
-  name: { fontSize: 24, fontWeight: '700', color: colors.text },
-  location: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  ratingBox: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingNumber: { fontSize: 18, fontWeight: '700', color: colors.text },
-  ratingStar: { fontSize: 16 },
-  reviewCount: { fontSize: 13, color: colors.textMuted },
-  mobileBanner: {
-    backgroundColor: 'rgba(224,122,95,0.08)', padding: 12, borderRadius: 10, marginBottom: 16,
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  mobileBannerText: { fontSize: 13, color: colors.primary, fontWeight: '500' },
-  bio: { fontSize: 15, color: colors.textSecondary, lineHeight: 22, marginBottom: 20 },
-  tabs: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: colors.card },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  tabTextActive: { color: colors.white },
-  servicesList: { gap: 10 },
-  serviceCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card,
-    padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  serviceName: { fontSize: 16, fontWeight: '600', color: colors.text },
-  serviceDuration: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  servicePriceBox: { alignItems: 'flex-end' },
-  servicePrice: { fontSize: 15, fontWeight: '700', color: colors.primary },
-  bookBtn: { fontSize: 12, color: colors.primary, fontWeight: '600', marginTop: 4 },
-  reviewsList: { gap: 12 },
-  reviewCard: { backgroundColor: colors.card, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
-  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  reviewAuthor: { fontSize: 15, fontWeight: '600', color: colors.text },
-  reviewStars: { fontSize: 14 },
-  reviewComment: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  reviewDate: { fontSize: 12, color: colors.textMuted, marginTop: 8 },
-  portfolioEmpty: { alignItems: 'center', paddingTop: 40 },
-  emptyEmoji: { fontSize: 40, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: colors.textMuted },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+
+  // --- Centered states (loading / error) ---
+  centered: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
+  errorEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  retryButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  // --- Header ---
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatarContainer: {
+    marginBottom: 14,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primaryGhost,
+    borderWidth: 2,
+    borderColor: colors.primaryBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  displayName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  verifiedBadge: {
+    fontSize: 16,
+  },
+  specialty: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  ratingLine: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+
+  // --- Stats ---
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.accent,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+
+  // --- CTA ---
+  ctaButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  ctaButtonPressed: {
+    backgroundColor: colors.primaryDark,
+  },
+  ctaButtonText: {
+    color: colors.white,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+
+  // --- Badges ---
+  badgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  badge: {
+    backgroundColor: colors.primaryGhost,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 100,
+  },
+  badgeText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+
+  // --- Sections ---
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.accent,
+    marginBottom: 12,
+  },
+  bioText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+
+  // --- Services ---
+  servicesList: {
+    gap: 8,
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  serviceInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  serviceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  serviceDuration: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  servicePrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.terracotta,
+  },
+
+  // --- Availability ---
+  daysRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  dayChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 100,
+  },
+  dayChipActive: {
+    backgroundColor: colors.primary,
+  },
+  dayChipInactive: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dayChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dayChipTextActive: {
+    color: colors.white,
+  },
+  dayChipTextInactive: {
+    color: colors.textMuted,
+  },
+  availabilityTime: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+
+  // --- Contact ---
+  contactRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  whatsappButton: {
+    flex: 1,
+    backgroundColor: '#25D366',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  whatsappButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  instagramButton: {
+    flex: 1,
+    backgroundColor: colors.card,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  instagramButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '500',
+  },
 });
