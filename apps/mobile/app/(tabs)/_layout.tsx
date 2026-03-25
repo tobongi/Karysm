@@ -1,6 +1,14 @@
-import { Text as RNText } from 'react-native';
+import { View, Text as RNText, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { colors } from '../../src/theme/colors';
+
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  return (
+    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+      <RNText style={styles.iconText}>{emoji}</RNText>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   return (
@@ -11,11 +19,13 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 65,
+          borderTopWidth: 1,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 6,
+          paddingTop: 6,
+          height: Platform.OS === 'ios' ? 80 : 60,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+        tabBarItemStyle: { paddingVertical: 4 },
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.accent,
         headerTitleStyle: { fontWeight: '700' },
@@ -26,7 +36,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Explorer',
-          tabBarIcon: ({ focused }) => <RNText style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>🔍</RNText>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} />,
           headerShown: false,
         }}
       />
@@ -34,23 +44,39 @@ export default function TabLayout() {
         name="bookings"
         options={{
           title: 'Réservations',
-          tabBarIcon: ({ focused }) => <RNText style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>📅</RNText>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: 'Notifs',
-          tabBarIcon: ({ focused }) => <RNText style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>🔔</RNText>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ focused }) => <RNText style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>👤</RNText>,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: colors.primaryGhost,
+  },
+  iconText: {
+    fontSize: 20,
+  },
+});
