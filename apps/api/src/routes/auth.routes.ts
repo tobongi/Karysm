@@ -18,8 +18,8 @@ const DEMO_OTP = process.env.DEMO_OTP || '1234';
 router.post('/otp/send', validateBody(otpSendSchema), asyncHandler(async (req: Request, res: Response) => {
   const phone = normalizePhone(req.body.phone);
 
-  // Generate 4-digit OTP (use DEMO_OTP in dev — NODE_ENV=production only in prod)
-  const otp = process.env.NODE_ENV === 'production' ? String(Math.floor(1000 + Math.random() * 9000)) : DEMO_OTP;
+  // Use DEMO_OTP if set (dev + staging), otherwise generate random OTP (requires SMS service)
+  const otp = process.env.DEMO_OTP || String(Math.floor(1000 + Math.random() * 9000));
   otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
   // TODO: Send OTP via Africa's Talking SMS
