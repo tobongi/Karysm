@@ -15,6 +15,10 @@ import favoriteRoutes from './routes/favorite.routes';
 import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
 import requestRoutes from './routes/request.routes';
+import userRoutes from './routes/user.routes';
+import notificationRoutes from './routes/notification.routes';
+import kycRoutes from './routes/kyc.routes';
+import walletRoutes from './routes/wallet.routes';
 
 const app = express();
 
@@ -49,6 +53,10 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/kyc', kycRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Error handler
 app.use(errorHandler);

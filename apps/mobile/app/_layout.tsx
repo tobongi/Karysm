@@ -1,8 +1,32 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Platform, StyleSheet } from 'react-native';
-import { AuthProvider } from '../src/lib/auth-context';
+import { AuthProvider, useAuth } from '../src/lib/auth-context';
 import { colors } from '../src/theme/colors';
+import { registerForPushNotifications, addNotificationResponseListener } from '../src/lib/notifications';
+import { router } from 'expo-router';
+
+function PushNotificationSetup() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      registerForPushNotifications();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const subscription = addNotificationResponseListener((bookingId) => {
+      if (bookingId) {
+        router.push(`/booking/detail/${bookingId}`);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  return null;
+}
 
 function AppContent() {
   return (
@@ -32,6 +56,11 @@ function AppContent() {
         <Stack.Screen name="request/create" options={{ title: 'Nouvelle demande' }} />
         <Stack.Screen name="request/[id]" options={{ title: 'Demande' }} />
         <Stack.Screen name="request/browse" options={{ title: 'Demandes ouvertes' }} />
+        <Stack.Screen name="booking/review/[bookingId]" options={{ title: 'Laisser un avis' }} />
+        <Stack.Screen name="favorites" options={{ title: 'Favoris' }} />
+        <Stack.Screen name="settings/edit-profile" options={{ title: 'Modifier le profil' }} />
+        <Stack.Screen name="kyc/index" options={{ title: 'Vérification KYC' }} />
+        <Stack.Screen name="wallet/index" options={{ title: 'Portefeuille' }} />
       </Stack>
     </>
   );
@@ -40,6 +69,7 @@ function AppContent() {
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <PushNotificationSetup />
       {Platform.OS === 'web' ? (
         <View style={styles.webShell}>
           <View style={styles.webDevice}>

@@ -16,26 +16,25 @@ import { useAuth } from '../../src/lib/auth-context';
 
 // --- Types ---
 
-interface BookingItem {
+interface DbNotification {
   id: string;
-  status: string;
-  date: string;
-  startTime?: string;
-  service?: { name: string };
-  provider?: { displayName: string };
-  client?: { name: string };
+  type: string;
+  title: string;
+  body: string;
+  data: { bookingId?: string } | null;
+  readAt: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
-interface Notification {
+interface DisplayNotification {
   id: string;
   icon: string;
   title: string;
   description: string;
   time: string;
-  sortDate: string;
-  bookingId: string;
+  bookingId: string | null;
+  isRead: boolean;
+  dbId: string | null; // null if generated client-side
 }
 
 // --- Helpers ---
@@ -45,7 +44,7 @@ function timeAgo(dateStr: string): string {
   const d = new Date(dateStr);
   const diffMs = now.getTime() - d.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "A l'instant";
+  if (diffMin < 1) return "À l'instant";
   if (diffMin < 60) return `Il y a ${diffMin}min`;
   const diffH = Math.floor(diffMin / 60);
   if (diffH < 24) return `Il y a ${diffH}h`;
@@ -54,223 +53,58 @@ function timeAgo(dateStr: string): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-function isTomorrow(dateStr: string): boolean {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const d = new Date(dateStr);
-  return (
-    d.getFullYear() === tomorrow.getFullYear() &&
-    d.getMonth() === tomorrow.getMonth() &&
-    d.getDate() === tomorrow.getDate()
-  );
-}
+const TYPE_ICONS: Record<string, string> = {
+  BOOKING_REQUESTED: '📣',
+  BOOKING_CONFIRMED: '✅',
+  BOOKING_IN_PROGRESS: '▶️',
+  BOOKING_COMPLETED: '🎉',
+  BOOKING_CANCELLED: '❌',
+  REVIEW_RECEIVED: '⭐',
+  KYC_APPROVED: '✅',
+  KYC_REJECTED: '❌',
+};
 
-function buildNotificationsFromBookings(
-  bookings: BookingItem[],
-  role: 'client' | 'provider'
-): Notification[] {
-  const notifications: Notification[] = [];
-
-  for (const b of bookings) {
-    const serviceName = b.service?.name || 'Service';
-    const providerName = b.provider?.displayName || 'Prestataire';
-    const clientName = b.client?.name || 'Client';
-    const timeStr = b.startTime ? ` a ${b.startTime}` : '';
-
-    if (role === 'client') {
-      switch (b.status) {
-        case 'REQUESTED':
-          notifications.push({
-            id: `${b.id}-requested`,
-            icon: '\uD83D\uDCC5',
-            title: 'Nouvelle reservation',
-            description: `Vous avez reserve ${serviceName} avec ${providerName}`,
-            time: timeAgo(b.createdAt),
-            sortDate: b.createdAt,
-            bookingId: b.id,
-          });
-          break;
-        case 'CONFIRMED':
-        case 'DEPOSIT_PAID':
-          notifications.push({
-            id: `${b.id}-confirmed`,
-            icon: '\u2705',
-            title: 'Reservation confirmee',
-            description: `${providerName} a confirme votre RDV`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          // Check if tomorrow for reminder
-          if (isTomorrow(b.date)) {
-            notifications.push({
-              id: `${b.id}-reminder`,
-              icon: '\u23F0',
-              title: 'Rappel',
-              description: `RDV demain: ${serviceName} avec ${providerName}${timeStr}`,
-              time: timeAgo(b.updatedAt),
-              sortDate: b.date,
-              bookingId: b.id,
-            });
-          }
-          break;
-        case 'IN_PROGRESS':
-          notifications.push({
-            id: `${b.id}-inprogress`,
-            icon: '\u2705',
-            title: 'Reservation confirmee',
-            description: `${providerName} a confirme votre RDV`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          break;
-        case 'COMPLETED':
-          notifications.push({
-            id: `${b.id}-completed`,
-            icon: '\uD83C\uDF89',
-            title: 'Service termine',
-            description: `${serviceName} avec ${providerName} termine`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          break;
-        case 'CANCELLED':
-          notifications.push({
-            id: `${b.id}-cancelled`,
-            icon: '\u274C',
-            title: 'Annulation',
-            description: `Reservation annulee`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          break;
-      }
-    } else {
-      // Provider notifications
-      switch (b.status) {
-        case 'REQUESTED':
-          notifications.push({
-            id: `${b.id}-provider-new`,
-            icon: '\uD83D\uDCE3',
-            title: 'Nouvelle demande',
-            description: `${clientName} a reserve ${serviceName}`,
-            time: timeAgo(b.createdAt),
-            sortDate: b.createdAt,
-            bookingId: b.id,
-          });
-          break;
-        case 'CONFIRMED':
-        case 'DEPOSIT_PAID':
-          notifications.push({
-            id: `${b.id}-provider-confirmed`,
-            icon: '\u2705',
-            title: 'Reservation confirmee',
-            description: `RDV avec ${clientName} pour ${serviceName}`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          if (isTomorrow(b.date)) {
-            notifications.push({
-              id: `${b.id}-provider-reminder`,
-              icon: '\u23F0',
-              title: 'Rappel',
-              description: `RDV demain: ${serviceName} avec ${clientName}${timeStr}`,
-              time: timeAgo(b.updatedAt),
-              sortDate: b.date,
-              bookingId: b.id,
-            });
-          }
-          break;
-        case 'COMPLETED':
-          notifications.push({
-            id: `${b.id}-provider-completed`,
-            icon: '\uD83C\uDF89',
-            title: 'Service termine',
-            description: `${serviceName} avec ${clientName} termine`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          break;
-        case 'CANCELLED':
-          notifications.push({
-            id: `${b.id}-provider-cancelled`,
-            icon: '\u274C',
-            title: 'Annulation',
-            description: `Reservation avec ${clientName} annulee`,
-            time: timeAgo(b.updatedAt),
-            sortDate: b.updatedAt,
-            bookingId: b.id,
-          });
-          break;
-      }
-    }
-  }
-
-  return notifications;
+function mapDbNotification(n: DbNotification): DisplayNotification {
+  return {
+    id: n.id,
+    icon: TYPE_ICONS[n.type] || '🔔',
+    title: n.title,
+    description: n.body,
+    time: timeAgo(n.createdAt),
+    bookingId: n.data?.bookingId || null,
+    isRead: !!n.readAt,
+    dbId: n.id,
+  };
 }
 
 // --- Component ---
 
 export default function MessagesTab() {
-  const { user, isLoading: authLoading, isProvider } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { user, isLoading: authLoading } = useAuth();
+  const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
+      setUnreadCount(0);
       setLoading(false);
       return;
     }
 
     try {
-      const allNotifications: Notification[] = [];
-
-      // Fetch client bookings (upcoming + past)
-      const [upcomingRes, pastRes] = await Promise.all([
-        api<{ bookings: BookingItem[] }>('/bookings/mine?status=upcoming').catch(() => ({ bookings: [] })),
-        api<{ bookings: BookingItem[] }>('/bookings/mine?status=past').catch(() => ({ bookings: [] })),
-      ]);
-
-      const clientUpcoming = upcomingRes.bookings || [];
-      const clientPast = pastRes.bookings || [];
-      allNotifications.push(
-        ...buildNotificationsFromBookings([...clientUpcoming, ...clientPast], 'client')
-      );
-
-      // If user is provider, also fetch provider bookings
-      if (isProvider) {
-        const [provUpcoming, provPast] = await Promise.all([
-          api<{ bookings: BookingItem[] }>('/bookings/mine?role=provider&status=upcoming').catch(() => ({ bookings: [] })),
-          api<{ bookings: BookingItem[] }>('/bookings/mine?role=provider&status=past').catch(() => ({ bookings: [] })),
-        ]);
-
-        const providerUpcoming = provUpcoming.bookings || [];
-        const providerPast = provPast.bookings || [];
-        allNotifications.push(
-          ...buildNotificationsFromBookings([...providerUpcoming, ...providerPast], 'provider')
-        );
-      }
-
-      // Sort newest first
-      allNotifications.sort(
-        (a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime()
-      );
-
-      setNotifications(allNotifications);
+      const res: any = await api('/notifications?limit=50');
+      const dbNotifs: DbNotification[] = res.data || [];
+      setNotifications(dbNotifs.map(mapDbNotification));
+      setUnreadCount(res.unreadCount || 0);
     } catch {
-      // Silently fail — show empty state
       setNotifications([]);
     } finally {
       setLoading(false);
     }
-  }, [user, isProvider]);
+  }, [user]);
 
   useEffect(() => {
     setLoading(true);
@@ -283,23 +117,41 @@ export default function MessagesTab() {
     setRefreshing(false);
   }, [fetchNotifications]);
 
+  async function handleMarkAllRead() {
+    try {
+      await api('/notifications/read-all', { method: 'PATCH' });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch {}
+  }
+
+  async function handlePress(item: DisplayNotification) {
+    // Mark as read
+    if (!item.isRead && item.dbId) {
+      api(`/notifications/${item.dbId}/read`, { method: 'PATCH' }).catch(() => {});
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+    // Navigate to booking detail
+    if (item.bookingId) {
+      router.push(`/booking/detail/${item.bookingId}`);
+    }
+  }
+
   // --- Not logged in ---
   if (!authLoading && !user) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Activite</Text>
+          <Text style={styles.headerTitle}>Activité</Text>
         </View>
         <View style={styles.centerContent}>
-          <Text style={styles.emptyEmoji}>{'\uD83D\uDD12'}</Text>
-          <Text style={styles.emptyTitle}>Connectez-vous pour voir votre activite</Text>
-          <Text style={styles.emptyText}>
-            Vos notifications apparaitront ici
-          </Text>
-          <Pressable
-            style={styles.loginButton}
-            onPress={() => router.push('/auth/login')}
-          >
+          <Text style={styles.emptyEmoji}>🔒</Text>
+          <Text style={styles.emptyTitle}>Connectez-vous pour voir votre activité</Text>
+          <Text style={styles.emptyText}>Vos notifications apparaîtront ici</Text>
+          <Pressable style={styles.loginButton} onPress={() => router.push('/auth/login')}>
             <Text style={styles.loginButtonText}>Se connecter</Text>
           </Pressable>
         </View>
@@ -312,7 +164,7 @@ export default function MessagesTab() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Activite</Text>
+          <Text style={styles.headerTitle}>Activité</Text>
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -322,51 +174,63 @@ export default function MessagesTab() {
   }
 
   // --- Notification item ---
-  const renderItem = ({ item }: { item: Notification }) => (
+  const renderItem = ({ item }: { item: DisplayNotification }) => (
     <Pressable
       style={({ pressed }) => [
         styles.notifCard,
+        !item.isRead && styles.notifCardUnread,
         pressed && styles.notifCardPressed,
       ]}
-      onPress={() => router.push(`/booking/detail/${item.bookingId}`)}
+      onPress={() => handlePress(item)}
     >
-      <View style={styles.notifIcon}>
+      <View style={[styles.notifIcon, !item.isRead && styles.notifIconUnread]}>
         <Text style={styles.notifIconText}>{item.icon}</Text>
       </View>
       <View style={styles.notifContent}>
-        <Text style={styles.notifTitle}>{item.title}</Text>
+        <Text style={[styles.notifTitle, !item.isRead && styles.notifTitleUnread]}>
+          {item.title}
+        </Text>
         <Text style={styles.notifDescription} numberOfLines={2}>
           {item.description}
         </Text>
         <Text style={styles.notifTime}>{item.time}</Text>
       </View>
+      {!item.isRead && <View style={styles.unreadDot} />}
     </Pressable>
   );
 
   // --- Empty state ---
   const renderEmpty = () => (
     <View style={styles.centerContent}>
-      <Text style={styles.emptyEmoji}>{'\uD83D\uDD14'}</Text>
-      <Text style={styles.emptyTitle}>Aucune activite pour le moment</Text>
-      <Text style={styles.emptyText}>
-        Vos notifications apparaitront ici
-      </Text>
+      <Text style={styles.emptyEmoji}>🔔</Text>
+      <Text style={styles.emptyTitle}>Aucune activité pour le moment</Text>
+      <Text style={styles.emptyText}>Vos notifications apparaîtront ici</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Activite</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Activité</Text>
+          {unreadCount > 0 && (
+            <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
+              <Text style={styles.markAllText}>Tout lire</Text>
+            </Pressable>
+          )}
+        </View>
+        {unreadCount > 0 && (
+          <Text style={styles.unreadLabel}>
+            {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
+          </Text>
+        )}
       </View>
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={
-          notifications.length === 0 ? styles.emptyList : styles.list
-        }
+        contentContainerStyle={notifications.length === 0 ? styles.emptyList : styles.list}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -395,10 +259,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
     color: colors.accent,
+  },
+  markAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+    backgroundColor: colors.primaryGhost,
+  },
+  markAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  unreadLabel: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+    marginTop: 4,
   },
   centerContent: {
     flex: 1,
@@ -422,6 +308,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
+  },
+  notifCardUnread: {
+    backgroundColor: '#F5F0FF',
+    borderColor: colors.primaryBorder,
   },
   notifCardPressed: {
     backgroundColor: colors.cardHover,
@@ -435,6 +326,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
+  notifIconUnread: {
+    backgroundColor: 'rgba(124,58,237,0.15)',
+  },
   notifIconText: {
     fontSize: 20,
   },
@@ -447,6 +341,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 3,
   },
+  notifTitleUnread: {
+    fontWeight: '700',
+  },
   notifDescription: {
     fontSize: 13,
     color: colors.textSecondary,
@@ -456,6 +353,13 @@ const styles = StyleSheet.create({
   notifTime: {
     fontSize: 12,
     color: colors.textMuted,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    marginLeft: 8,
   },
   emptyEmoji: {
     fontSize: 48,

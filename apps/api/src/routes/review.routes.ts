@@ -5,6 +5,7 @@ import { validateBody } from '../middleware/validate';
 import { reviewSchema } from '../schemas';
 import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors';
 import { asyncHandler } from '../middleware/error';
+import { createNotification } from '../lib/notifications';
 
 const router = Router();
 
@@ -47,6 +48,25 @@ router.post('/', authMiddleware, validateBody(reviewSchema), asyncHandler(async 
       totalReviews: stats._count.rating,
     },
   });
+
+  // Notify provider about the new review
+  const provider = await prisma.provider.findUnique({
+    where: { id: booking.providerId },
+    select: { userId: true },
+  });
+  const client = await prisma.user.findUnique({
+    where: { id: clientId },
+    select: { name: true },
+  });
+  if (provider) {
+    createNotification({
+      userId: provider.userId,
+      type: 'REVIEW_RECEIVED',
+      title: 'Nouvel avis reçu',
+      body: `${client?.name || 'Un client'} vous a donné ${rating} étoile${rating > 1 ? 's' : ''}`,
+      data: { bookingId },
+    }).catch(err => console.error('Review notification error:', err));
+  }
 
   res.status(201).json({ success: true, data: review });
 }));

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Linking,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -110,13 +111,25 @@ const ALL_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 // Component
 // ---------------------------------------------------------------------------
 
+interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  photos: string[];
+  tags: string[];
+  createdAt: string;
+  client: { name: string; avatar: string | null };
+}
+
 export default function ProviderProfile() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
 
   const [provider, setProvider] = useState<Provider | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const fetchProvider = useCallback(async () => {
     try {
@@ -124,6 +137,11 @@ export default function ProviderProfile() {
       const res: any = await api(`/search/providers/${slug}`);
       if (res.success && res.data) {
         setProvider(res.data);
+        // Fetch reviews
+        try {
+          const reviewsRes: any = await api(`/reviews/provider/${res.data.id}`);
+          setReviews(reviewsRes.data || []);
+        } catch {}
       } else {
         setError('Prestataire introuvable');
       }
@@ -372,6 +390,86 @@ export default function ProviderProfile() {
                 </Pressable>
               )}
             </View>
+          </View>
+        )}
+
+        {/* ── Avis ── */}
+        {reviews.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Avis ({provider.totalReviews})
+            </Text>
+
+            {/* Rating distribution */}
+            <View style={styles.ratingDistribution}>
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = reviews.filter((r) => r.rating === star).length;
+                const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                return (
+                  <View key={star} style={styles.ratingRow}>
+                    <Text style={styles.ratingRowStar}>{star} ★</Text>
+                    <View style={styles.ratingBar}>
+                      <View style={[styles.ratingBarFill, { width: `${pct}%` }]} />
+                    </View>
+                    <Text style={styles.ratingRowCount}>{count}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Review list */}
+            {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => (
+              <View key={review.id} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.reviewAvatar}>
+                    <Text style={styles.reviewAvatarText}>
+                      {review.client.name[0]?.toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.reviewName}>{review.client.name}</Text>
+                    <Text style={styles.reviewDate}>
+                      {new Date(review.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                  <Text style={styles.reviewStars}>
+                    {'★'.repeat(review.rating)}
+                    {'☆'.repeat(5 - review.rating)}
+                  </Text>
+                </View>
+                {review.comment && (
+                  <Text style={styles.reviewComment}>{review.comment}</Text>
+                )}
+                {review.tags.length > 0 && (
+                  <View style={styles.reviewTags}>
+                    {review.tags.map((tag) => (
+                      <View key={tag} style={styles.reviewTag}>
+                        <Text style={styles.reviewTagText}>{tag.replace('_', ' ')}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {review.photos.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
+                    {review.photos.map((url, i) => (
+                      <Image key={i} source={{ uri: url }} style={styles.reviewPhoto} />
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
+            ))}
+
+            {reviews.length > 3 && !showAllReviews && (
+              <Pressable style={styles.showAllButton} onPress={() => setShowAllReviews(true)}>
+                <Text style={styles.showAllText}>
+                  Voir tous les avis ({reviews.length})
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
 
@@ -668,5 +766,127 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     fontWeight: '500',
+  },
+
+  // --- Reviews ---
+  ratingDistribution: {
+    marginBottom: 16,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ratingRowStar: {
+    width: 32,
+    fontSize: 12,
+    color: colors.terracotta,
+    fontWeight: '600',
+  },
+  ratingBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: colors.cardHover,
+    borderRadius: 3,
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+  ratingBarFill: {
+    height: '100%',
+    backgroundColor: colors.terracotta,
+    borderRadius: 3,
+  },
+  ratingRowCount: {
+    width: 20,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'right',
+  },
+
+  reviewCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 10,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  reviewAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  reviewName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  reviewDate: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  reviewStars: {
+    fontSize: 14,
+    color: colors.terracotta,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  reviewTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  reviewTag: {
+    backgroundColor: colors.primaryGhost,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+  },
+  reviewTagText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  reviewPhotos: {
+    marginTop: 4,
+  },
+  reviewPhoto: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  showAllButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  showAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

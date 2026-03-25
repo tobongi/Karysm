@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
+import MapView from '../../src/components/MapView';
 
 const SERVICE_CATEGORIES = [
   { slug: 'coiffure', name: 'Coiffure', icon: '💇‍♀️' },
@@ -51,6 +52,7 @@ export default function ExplorerTab() {
   const [providers, setProviders] = useState<ProviderResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -94,8 +96,16 @@ export default function ExplorerTab() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Tokoss</Text>
-          <Text style={styles.headerSubtitle}>Beauté & bien-être en Afrique</Text>
+          <View>
+            <Text style={styles.headerTitle}>Tokoss</Text>
+            <Text style={styles.headerSubtitle}>Beauté & bien-être en Afrique</Text>
+          </View>
+          <Pressable
+            style={styles.viewToggle}
+            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
+          >
+            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '🗺️' : '📋'}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.searchBar}>
@@ -147,6 +157,28 @@ export default function ExplorerTab() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : viewMode === 'map' ? (
+          <View style={styles.mapContainer}>
+              <MapView
+                pins={providers
+                  .filter(p => p.services[0]?.category)
+                  .map(p => ({
+                    id: p.id,
+                    slug: p.slug,
+                    displayName: p.displayName,
+                    lat: (p as any).lat || 0,
+                    lng: (p as any).lng || 0,
+                    avgRating: p.avgRating || 0,
+                    category: p.services[0]?.category?.name,
+                  }))
+                  .filter(p => p.lat !== 0 && p.lng !== 0)
+                }
+                onPinPress={(slug) => router.push(`/provider/${slug}`)}
+              />
+            <Text style={styles.mapCount}>
+              {providers.length} prestataire{providers.length !== 1 ? 's' : ''}
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -245,7 +277,7 @@ const styles = StyleSheet.create({
     maxWidth: Platform.OS === 'web' ? 480 : undefined,
     alignSelf: 'center',
   },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headerTitle: { fontSize: 28, fontWeight: '800', color: colors.accent },
   headerSubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
   searchBar: {
@@ -391,4 +423,14 @@ const styles = StyleSheet.create({
   requestBannerTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
   requestBannerSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
   requestBannerArrow: { fontSize: 24, color: colors.primary, fontWeight: '700' },
+  // View toggle
+  viewToggle: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: colors.primaryBorder,
+  },
+  viewToggleText: { fontSize: 18 },
+  // Map
+  mapContainer: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
+  mapCount: { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
 });

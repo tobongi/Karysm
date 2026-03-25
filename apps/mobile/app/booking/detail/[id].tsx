@@ -311,9 +311,25 @@ export default function BookingDetail() {
           </Pressable>
         )}
 
+        {/* Existing review */}
+        {booking.review && (
+          <View style={styles.existingReview}>
+            <Text style={styles.sectionLabel}>VOTRE AVIS</Text>
+            <Text style={styles.existingReviewStars}>
+              {'★'.repeat(booking.review.rating)}{'☆'.repeat(5 - booking.review.rating)}
+            </Text>
+            {booking.review.comment && (
+              <Text style={styles.subvalue}>{booking.review.comment}</Text>
+            )}
+          </View>
+        )}
+
         {/* Leave review */}
         {isClient && booking.status === 'COMPLETED' && !booking.review && (
-          <Pressable style={styles.reviewButton}>
+          <Pressable
+            style={styles.reviewButton}
+            onPress={() => router.push(`/booking/review/${booking.id}?providerName=${encodeURIComponent(booking.provider.displayName)}`)}
+          >
             <Text style={styles.reviewButtonText}>⭐ Laisser un avis</Text>
           </Pressable>
         )}
@@ -465,6 +481,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   rebookButtonText: { fontSize: 15, fontWeight: '600', color: colors.accent },
+
+  // Existing review
+  existingReview: { marginBottom: 20 },
+  existingReviewStars: { fontSize: 20, color: colors.terracotta, marginBottom: 4 },
 
   // Timeline
   timeline: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border },

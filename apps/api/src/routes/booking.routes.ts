@@ -6,6 +6,7 @@ import { validateBody } from '../middleware/validate';
 import { createBookingSchema, updateBookingStatusSchema } from '../schemas';
 import { NotFoundError, ValidationError, ForbiddenError } from '../lib/errors';
 import { asyncHandler } from '../middleware/error';
+import { notifyBookingEvent } from '../lib/notifications';
 
 const router = Router();
 
@@ -63,7 +64,16 @@ router.post('/', authMiddleware, validateBody(createBookingSchema), asyncHandler
     include: { service: true, provider: { include: { user: { select: { name: true } } } } },
   });
 
-  // TODO: Send WhatsApp notification to provider
+  // Send notification to provider
+  const client = await prisma.user.findUnique({ where: { id: clientId }, select: { name: true } });
+  notifyBookingEvent(
+    { id: booking.id, clientId, providerId, ref: booking.ref },
+    provider.userId,
+    provider.displayName,
+    client?.name || 'Client',
+    service.name,
+    'REQUESTED',
+  ).catch(err => console.error('Notification error:', err));
 
   res.status(201).json({ success: true, data: booking });
 }));
@@ -163,6 +173,26 @@ router.patch('/:id/status', authMiddleware, validateBody(updateBookingStatusSche
       where: { id: booking.providerId },
       data: { totalBookings: { increment: 1 } },
     });
+  }
+
+  // Send notification
+  const provider = await prisma.provider.findUnique({
+    where: { id: booking.providerId },
+    select: { userId: true, displayName: true },
+  });
+  const client = await prisma.user.findUnique({
+    where: { id: booking.clientId },
+    select: { name: true },
+  });
+  if (provider) {
+    notifyBookingEvent(
+      { id: booking.id, clientId: booking.clientId, providerId: booking.providerId, ref: booking.ref },
+      provider.userId,
+      provider.displayName,
+      client?.name || 'Client',
+      updated.service?.name || 'Service',
+      status,
+    ).catch(err => console.error('Notification error:', err));
   }
 
   res.json({ success: true, data: updated });

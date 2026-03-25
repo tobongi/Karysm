@@ -98,18 +98,28 @@ export default function ProfileTab() {
               <Text style={styles.menuText}>Demandes ouvertes</Text>
               <Text style={styles.menuArrow}>{'\u203A'}</Text>
             </Pressable>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/wallet' as any)}>
+              <Text style={styles.menuEmoji}>💳</Text>
+              <Text style={styles.menuText}>Portefeuille</Text>
+              <Text style={styles.menuArrow}>›</Text>
+            </Pressable>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/kyc' as any)}>
+              <Text style={styles.menuEmoji}>🪪</Text>
+              <Text style={styles.menuText}>Vérification identité</Text>
+              <Text style={styles.menuArrow}>›</Text>
+            </Pressable>
           </>
         )}
 
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={() => router.push('/favorites' as any)}>
           <Text style={styles.menuEmoji}>❤️</Text>
           <Text style={styles.menuText}>Favoris</Text>
           <Text style={styles.menuArrow}>›</Text>
         </Pressable>
 
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={() => router.push('/settings/edit-profile' as any)}>
           <Text style={styles.menuEmoji}>⚙️</Text>
-          <Text style={styles.menuText}>Parametres</Text>
+          <Text style={styles.menuText}>Paramètres</Text>
           <Text style={styles.menuArrow}>›</Text>
         </Pressable>
       </View>

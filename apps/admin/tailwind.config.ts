@@ -5,9 +5,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#E07A5F', dark: '#C96B52', light: '#F0A78D' },
-        accent: '#3D405B',
-        surface: '#FAFAF8',
+        primary: { DEFAULT: '#7C3AED', dark: '#6D28D9', light: '#A78BFA' },
+        accent: '#2D1B69',
+        surface: '#FAF5FF',
+        terracotta: '#E07A5F',
       },
     },
   },
