@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, ScrollView, Pressable, StyleSheet,
-  ActivityIndicator, Modal, Switch, Platform,
+  ActivityIndicator, Modal, Switch, Platform, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -9,6 +9,7 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
+import { pickAndUploadImage } from '../../src/lib/upload';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville'];
 
@@ -46,6 +47,10 @@ export default function CreateRequestScreen() {
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [preferredDate, setPreferredDate] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [selfie, setSelfie] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingSelfie, setUploadingSelfie] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -63,6 +68,39 @@ export default function CreateRequestScreen() {
       console.error('Failed to load categories', e);
     } finally {
       setLoadingCategories(false);
+    }
+  }
+
+  async function handleAddPhoto() {
+    if (photos.length >= 5) {
+      return showAlert('Limite atteinte', 'Vous pouvez ajouter 5 photos maximum');
+    }
+    if (uploadingPhoto) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await pickAndUploadImage('requests');
+      if (url) setPhotos((prev) => [...prev, url]);
+    } catch (err: any) {
+      showAlert('Erreur', err.message || "Impossible d'envoyer la photo");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  function handleRemovePhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleAddSelfie() {
+    if (uploadingSelfie) return;
+    setUploadingSelfie(true);
+    try {
+      const url = await pickAndUploadImage('requests');
+      if (url) setSelfie(url);
+    } catch (err: any) {
+      showAlert('Erreur', err.message || "Impossible d'envoyer la photo");
+    } finally {
+      setUploadingSelfie(false);
     }
   }
 
@@ -93,6 +131,8 @@ export default function CreateRequestScreen() {
       if (preferredDate && !flexibleDate) {
         body.preferredDate = preferredDate;
       }
+      if (photos.length > 0) body.photos = photos;
+      if (selfie) body.selfieUrl = selfie;
 
       const res: any = await api('/requests', {
         method: 'POST',
@@ -165,20 +205,53 @@ export default function CreateRequestScreen() {
           maxLength={2000}
         />
 
-        {/* Photos placeholder */}
+        {/* Photos d'inspiration */}
         <Text style={styles.label}>Photos d'inspiration</Text>
-        <Pressable style={styles.photoButton}>
-          <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF8'}</Text>
-          <Text style={styles.photoButtonText}>Ajouter des photos d'inspiration</Text>
-        </Pressable>
+        {photos.length > 0 && (
+          <View style={styles.photoGrid}>
+            {photos.map((uri, i) => (
+              <View key={i} style={styles.photoThumb}>
+                <Image source={{ uri }} style={styles.photoThumbImage} />
+                <Pressable style={styles.photoRemove} onPress={() => handleRemovePhoto(i)}>
+                  <Text style={styles.photoRemoveText}>{'\u2715'}</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
+        {photos.length < 5 && (
+          <Pressable style={styles.photoButton} onPress={handleAddPhoto} disabled={uploadingPhoto}>
+            {uploadingPhoto ? (
+              <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
+            ) : (
+              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF8'}</Text>
+            )}
+            <Text style={styles.photoButtonText}>
+              {photos.length === 0 ? "Ajouter des photos d'inspiration" : `Ajouter une photo (${photos.length}/5)`}
+            </Text>
+          </Pressable>
+        )}
 
-        {/* Selfie placeholder */}
+        {/* Selfie */}
         <Text style={styles.label}>Selfie (optionnel)</Text>
-        <Pressable style={styles.photoButton}>
-          <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF7'}</Text>
-          <Text style={styles.photoButtonText}>Ajouter un selfie</Text>
-        </Pressable>
-        <Text style={styles.hint}>Aide les prestataires à mieux vous conseiller</Text>
+        {selfie ? (
+          <View style={styles.selfieContainer}>
+            <Image source={{ uri: selfie }} style={styles.selfieImage} />
+            <Pressable style={styles.selfieChange} onPress={handleAddSelfie}>
+              <Text style={styles.selfieChangeText}>Changer</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.photoButton} onPress={handleAddSelfie} disabled={uploadingSelfie}>
+            {uploadingSelfie ? (
+              <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
+            ) : (
+              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF7'}</Text>
+            )}
+            <Text style={styles.photoButtonText}>Ajouter un selfie</Text>
+          </Pressable>
+        )}
+        <Text style={styles.hint}>Aide les prestataires a mieux vous conseiller</Text>
 
         {/* Budget */}
         <Text style={styles.label}>Budget (FC)</Text>
@@ -363,6 +436,63 @@ const styles = StyleSheet.create({
   },
   photoButtonIcon: { fontSize: 20, marginRight: 8 },
   photoButtonText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 10,
+  },
+  photoThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoThumbImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  photoRemove: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoRemoveText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  selfieContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  selfieImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: colors.primaryBorder,
+  },
+  selfieChange: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 100,
+    backgroundColor: colors.primaryGhost,
+  },
+  selfieChangeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
   budgetRow: {
     flexDirection: 'row',
     alignItems: 'center',

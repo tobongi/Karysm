@@ -22,7 +22,14 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://tokoss.com', 'https://admin.tokoss.com']
+    ? [
+        'https://tokoss.com',
+        'https://www.tokoss.com',
+        'https://tokoss.app',
+        'https://www.tokoss.app',
+        'https://admin.tokoss.com',
+        'https://admin.tokoss.app',
+      ]
     : ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:8081'],
   credentials: true,
 }));

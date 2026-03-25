@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +18,7 @@ import { colors } from '../src/theme/colors';
 import { api } from '../src/lib/api';
 import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
+import { pickAndUploadAvatar } from '../src/lib/upload';
 
 const CITIES = [
   { name: 'Kinshasa', country: 'RDC', currency: 'CDF' },
@@ -44,6 +46,10 @@ export default function ProviderRegisterScreen() {
   const [instagramHandle, setInstagramHandle] = useState('');
   const [tiktokHandle, setTiktokHandle] = useState('');
 
+  // Avatar
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -53,6 +59,19 @@ export default function ProviderRegisterScreen() {
     selectedCity !== null &&
     commune.trim().length >= 2 &&
     whatsappNumber.trim().length >= 8;
+
+  async function handleAvatarPick() {
+    if (uploadingAvatar) return;
+    setUploadingAvatar(true);
+    try {
+      const url = await pickAndUploadAvatar();
+      if (url) setAvatarUrl(url);
+    } catch (err: any) {
+      showAlert('Erreur', err.message || "Impossible d'envoyer la photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!canSubmit || loading) return;
@@ -77,6 +96,18 @@ export default function ProviderRegisterScreen() {
         method: 'POST',
         body: JSON.stringify(body),
       });
+
+      // Upload avatar to provider profile if one was selected
+      if (avatarUrl) {
+        try {
+          await api('/provider/profile', {
+            method: 'PUT',
+            body: JSON.stringify({ avatarUrl }),
+          });
+        } catch {
+          // silently ignore — registration succeeded
+        }
+      }
 
       // Update user role in auth context
       if (user) {
@@ -115,6 +146,21 @@ export default function ProviderRegisterScreen() {
                 <Text style={styles.stepBadgeText}>1</Text>
               </View>
               <Text style={styles.stepTitle}>Identite</Text>
+            </View>
+
+            <View style={styles.avatarSection}>
+              <Pressable onPress={handleAvatarPick} style={styles.avatarCircle}>
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                ) : uploadingAvatar ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={styles.avatarPlaceholder}>{'\uD83D\uDCF7'}</Text>
+                )}
+              </Pressable>
+              <Text style={styles.avatarHint}>
+                {avatarUrl ? 'Changer la photo' : 'Ajouter une photo'}
+              </Text>
             </View>
 
             <Text style={styles.label}>Comment vous appelez-vous ?</Text>
@@ -363,6 +409,38 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.accent,
+  },
+
+  // Avatar
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: colors.primaryGhost,
+    borderWidth: 2,
+    borderColor: colors.primaryBorder,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+  },
+  avatarPlaceholder: {
+    fontSize: 32,
+  },
+  avatarHint: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 8,
   },
 
   // Labels & Inputs

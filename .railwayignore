@@ -1,0 +1,6 @@
+apps/mobile
+apps/admin
+.expo
+.next
+dist
+*.md
