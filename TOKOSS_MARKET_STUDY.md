@@ -6,9 +6,16 @@
 
 # Executive Summary
 
-Tokoss targets a **$17B+ addressable beauty services market** across Sub-Saharan Africa, where **90%+ of transactions happen informally** via Instagram, WhatsApp, and phone calls. No dominant digital platform exists. The combination of rising smartphone penetration (50%+ of mobile sales), near-universal WhatsApp adoption (95%+ in target markets), and $1.1T in annual mobile money transactions creates a unique window to build the **first structured beauty marketplace for Africa** — combining booking, visual matching, mobile payments, and freelancer empowerment.
+Tokoss targets a **$17B+ addressable beauty services market** across Sub-Saharan Africa, where **90%+ of transactions happen informally** via Instagram, WhatsApp, and phone calls. No dominant digital platform exists. The combination of rising smartphone penetration (50%+ of mobile sales), near-universal WhatsApp adoption (95%+ in target markets), and $1.1T in annual mobile money transactions creates a unique window to build the **first beauty ecosystem for Africa** — combining booking, AI skin/hair analysis for dark skin, product e-commerce, and integrated payments.
 
-**Positioning:** Tokoss is not Treatwell for Africa. It's **Instagram + Upwork + Mobile Money + AI Beauty Preview** — digitizing a massive informal economy that already exists.
+**Positioning:** Tokoss is not Treatwell for Africa. It's a **4-layer beauty ecosystem**:
+
+1. **Marketplace** — Booking + Upwork-style requests (Instagram + Mobile Money + Freelance)
+2. **AI Beauty Analysis** — First-ever AI skin analysis for dark skin (Monk Scale) + afro hair analysis (4A-4C) via selfie
+3. **Product E-commerce** — Providers sell products on tokoss.bizz/slug shops, AI recommends products based on skin analysis
+4. **Integrated Wallet** — Privy wallet (shared with Tobongi ecosystem) + Mobile Money (MBiyo Pay)
+
+**Key insight:** Zero competitors exist in Francophone Africa for any of these 4 layers, let alone the combination. First-mover window: 18-24 months.
 
 ---
 
@@ -235,6 +242,134 @@ Tausi is the **closest existing competitor** to Tokoss:
 | **Quality verification** | AI analyzes portfolio photos for consistency and quality | **Phase 3** — Computer vision |
 | **Demand prediction** | Help providers optimize pricing/availability based on demand patterns | **Phase 4** — Requires transaction data |
 
+## 3.5 The Real Differentiator: AI Skin & Hair Analysis for Dark Skin
+
+**This is the core competitive moat of Tokoss — not the marketplace.**
+
+### The Problem
+Every existing AI beauty app (ModiFace, Perfect Corp, YouCam, SkinVision, TroveSkin) is trained primarily on **Caucasian and Asian skin types**. They fail on dark skin:
+- Incorrect hydration readings on melanin-rich skin
+- Hyperpigmentation detection doesn't work on dark backgrounds
+- Undertone analysis (warm/cool/neutral) calibrated for light skin
+- Hair analysis completely ignores afro-textured hair (type 4A-4C)
+
+### The Opportunity
+Build the **first AI beauty analysis system designed for Black skin and afro hair**. No competitor has this — globally.
+
+### AI Skin Analysis — Technical Approach
+
+**Datasets (free for research):**
+
+| Dataset | Size | Focus | License |
+|---------|------|-------|---------|
+| **Monk Skin Tone Scale** (Google) | 10 tones | AI/computer vision skin classification | Free |
+| **Fitzpatrick 17k** | 16,000+ images | Dermatology by skin type (V & VI = dark) | Free (research) |
+| **DDI** (Stanford) | Diverse | More dark skin representation | Free (research) |
+| **SCIN** (Google) | User-submitted | Dermatology with consent | Free (license) |
+
+**Analysis capabilities via selfie (good lighting):**
+
+| Detection | Method |
+|-----------|--------|
+| Hydratation | Texture analysis, specular reflection |
+| Sébum (oily) | Shine detection, T-zone analysis |
+| Rides | Edge detection, depth mapping |
+| Taches / Hyperpigmentation | Color variance on melanin background |
+| Pores | Texture frequency analysis |
+| Acné | CNN object detection (YOLOv5) |
+| Uniformité de la peau | Color histogram variance |
+| Ton de peau | Monk Scale classification (10 levels) |
+| Sous-ton (undertone) | LAB color space, ITA angle analysis |
+| Carnation personnalisée | Custom scale: Very dark cool, Dark warm, Caramel, Golden brown, Red brown, Ebony, Blue black |
+
+**ITA (Individual Typology Angle)** — Scientific skin color classification:
+- Measures LAB color space + melanin + luminosity + saturation
+- Classifies skin automatically and precisely
+- Works across all skin tones including very dark
+
+### AI Hair Analysis — Technical Approach
+
+**Classification system: Andre Walker Hair Typing + custom extensions**
+
+| Type | Description |
+|------|-------------|
+| 4A | Defined coils, S-pattern |
+| 4B | Z-pattern, less defined |
+| 4C | Tightest coils, most shrinkage |
+
+**Additional analysis via photo:**
+
+| Detection | What it measures |
+|-----------|-----------------|
+| Curl pattern | 4A, 4B, 4C classification |
+| Density | Thin, medium, thick |
+| Strand thickness | Fine, medium, coarse |
+| Porosity | Low, normal, high |
+| Dryness | Moisture level |
+| Elasticity | Stretch and bounce |
+| Shrinkage | Length difference wet vs dry |
+| Scalp condition | Flakiness, oiliness |
+| Breakage | Damaged ends detection |
+| Hairline | Receding, thinning detection |
+
+**Key insight:** No complete AI dataset exists for afro hair analysis. This is an **enormous first-mover opportunity**.
+
+### The Flywheel: AI → Recommendations → E-commerce
+
+```
+User takes selfie
+  → AI: "Peau sèche, sous-ton chaud, hyperpigmentation légère"
+    → Recommends: Natural mask recipe (free content)
+    → Recommends: "Crème hydratante par Marie Kabila"
+        → Buy on tokoss.bizz/marie-kabila
+    → Recommends: "Soin hydratant professionnel"
+        → Book on Tokoss marketplace
+          → Pay via Privy wallet / Mobile Money
+```
+
+This creates **3 revenue streams from a single selfie**:
+1. **Booking commission** (12%) on recommended services
+2. **Product sales commission** (15-20%) on recommended products
+3. **AI premium subscription** ($2-5/month) for advanced analysis
+
+### Dataset Strategy
+
+**Phase 1 (now):** Use free datasets — Fitzpatrick17k, DDI, Monk Scale
+**Phase 2 (6-12 months):** Collect user selfies + skin questionnaires → build proprietary dataset
+**Phase 3 (12-24 months):** Proprietary dataset becomes the competitive moat — no one else has 100K+ annotated dark skin photos from real African users
+
+This is exactly how L'Oréal, SkinVision, and TroveSkin built their AI. **The real dataset = your users.**
+
+### Open-Source References
+
+| Repo | Use Case |
+|------|----------|
+| Nobita006/facial-analysis-app | Skin analysis pipeline reference |
+| KREESS/detection_of_facial_acne (SmartSkin) | CNN for skin conditions (YOLOv5) — adapt for dark skin |
+| Pantalaymon/facial-attractiveness-ratings | MEBeauty multi-ethnic dataset |
+| ronickg/react-native-nitro-inspire-face | Face landmarks in React Native for AR |
+
+## 3.6 Francophone Africa: Zero Competition Confirmed
+
+After extensive research, **no competitor exists in Francophone Africa** for any layer of the Tokoss ecosystem:
+
+| Layer | Francophone Africa Competitors | Global Competitors in Africa |
+|-------|-------------------------------|------------------------------|
+| Beauty booking marketplace | **NONE** | Tausi (Kenya only, $150K, tiny) |
+| AI skin analysis for dark skin | **NONE** | **NONE globally** |
+| AI afro hair analysis | **NONE** | **NONE globally** |
+| Beauty product e-commerce by providers | **NONE** | Ginger (Nigeria, B2B products only) |
+| Integrated wallet + mobile money | **NONE** | — |
+
+**Why no one has done this:**
+1. VCs ignore Francophone Africa (90% of African VC goes to Nigeria, Kenya, SA, Egypt)
+2. Language barrier — Anglophone devs don't target these markets
+3. AI datasets for dark skin are recent (Monk Scale 2022, DDI 2023)
+4. Mobile money is fragmented (Orange, MTN, Wave, M-Pesa) — no one aggregated it for beauty
+5. The market is invisible — 90% informal, no data, analysts don't see it
+
+**First-mover window: 18-24 months minimum** in Francophone Africa.
+
 ---
 
 # 4. BUSINESS MODEL ANALYSIS
@@ -284,22 +419,41 @@ Tausi is the **closest existing competitor** to Tokoss:
 
 | Model | Description | Projected Revenue | Feasibility |
 |-------|-------------|------------------|-------------|
-| **AI features subscription** | Virtual try-on, style matching (premium) | $2-5/month per user | HIGH — Strong willingness to pay |
+| **AI skin/hair analysis (premium)** | Advanced analysis, personalized routines, tracking over time | $2-5/month per user | HIGH — Unique for dark skin |
+| **Product e-commerce (tokoss.bizz)** | Providers sell beauty products (creams, natural masks) on their shop | 15-20% commission | HIGH — Flows from AI recommendations |
+| **AI product recommendations** | AI suggests products based on skin analysis → drives sales | Embedded in e-commerce commission | HIGH — Automated sales |
 | **Training marketplace** | Courses for beauty professionals | 20-30% commission on courses | MEDIUM |
 | **SaaS for salons** | Full management suite for established salons | $20-50/month | MEDIUM |
-| **Data/insights** | Beauty trends data for brands | B2B licensing | LOW (needs scale) |
-| **Financial services** | Micro-loans for providers (equipment, supplies) | Interest income | MEDIUM — Partnership model |
+| **Data/insights** | Beauty trends data for brands (L'Oréal, Unilever, local brands) | B2B licensing | MEDIUM (needs scale) |
+| **Financial services** | Micro-loans for providers via Privy wallet transaction history | Interest income | MEDIUM — Partnership model |
+
+### The E-commerce Layer: tokoss.bizz
+
+Providers can sell beauty products (creams, natural treatments, hair products) on their own shop:
+- **tokoss.bizz/slug** = provider's e-commerce page (alias of tobongi.bizz/slug — same Bongi-OS engine)
+- AI skin analysis recommends specific products → automatic traffic to shops
+- Natural mask recipes (free content) build trust → lead to premium product purchases
+- Payment through integrated **Privy wallet** (shared with Tobongi ecosystem) + Mobile Money
+
+### Revenue Streams Summary (4-Layer Ecosystem)
+
+| Layer | Revenue Type | Margin |
+|-------|-------------|--------|
+| **Marketplace** | 12% commission on bookings | Core |
+| **AI Analysis** | $2-5/month premium subscription | High margin |
+| **E-commerce** | 15-20% on product sales via tokoss.bizz | Recurring |
+| **Wallet** | Transaction fees + float income | Passive |
 
 ### Revenue Projection (Conservative)
 
-| Year | Providers | Monthly Bookings | Avg Booking | Commission (12%) | Monthly Revenue | Annual Revenue |
-|------|-----------|-----------------|-------------|------------------|----------------|----------------|
-| Y1 | 500 | 3,000 | $15 | $1.80 | **$5,400** | **$65K** |
-| Y2 | 3,000 | 25,000 | $18 | $2.16 | **$54,000** | **$648K** |
-| Y3 | 15,000 | 150,000 | $20 | $2.40 | **$360,000** | **$4.3M** |
-| Y5 | 80,000 | 1,000,000 | $22 | $2.64 | **$2,640,000** | **$31.7M** |
+| Year | Providers | Monthly Bookings | Product Sales | AI Subscribers | Monthly Revenue | Annual Revenue |
+|------|-----------|-----------------|--------------|----------------|----------------|----------------|
+| Y1 | 500 | 3,000 | — | — | **$5,400** | **$65K** |
+| Y2 | 3,000 | 25,000 | $10K/mo | 500 | **$67,000** | **$800K** |
+| Y3 | 15,000 | 150,000 | $80K/mo | 5,000 | **$490,000** | **$5.9M** |
+| Y5 | 80,000 | 1,000,000 | $500K/mo | 50,000 | **$3,500,000** | **$42M** |
 
-> Add subscription, advertising, and product sales = **potential $50M+ ARR by Year 5** across 4-5 markets.
+> With all 4 layers active = **potential $60M+ ARR by Year 5** across 4-5 markets.
 
 ---
 
@@ -517,10 +671,13 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 ### Key Differentiators vs. Everything Else
 
-| vs. WhatsApp/Instagram | Tokoss adds: structured search, verified reviews, integrated payments, scheduling, AI preview |
+| Competitor | What Tokoss has that they don't |
 |---|---|
-| vs. Treatwell/Fresha | Tokoss is built for: informal economy, mobile money, home services, African hair types, Francophone markets |
-| vs. Tausi App | Tokoss has: visual booking, Francophone-first, stronger funding ambition, AI try-on roadmap, multi-country strategy |
+| **WhatsApp/Instagram** | Structured search, verified reviews, integrated payments, scheduling, AI skin analysis, e-commerce |
+| **Treatwell/Fresha** | Informal economy support, mobile money, home services, African hair/skin AI, Francophone markets, product e-commerce |
+| **Tausi App** | Francophone-first, AI skin/hair analysis for dark skin, product e-commerce (tokoss.bizz), integrated wallet (Privy), 4-layer ecosystem |
+| **L'Oréal/ModiFace AI** | Trained on dark skin (Monk Scale), afro hair analysis (4A-4C), connected to real African providers, mobile money payments |
+| **Any global competitor** | Proprietary dataset of African dark skin selfies, afro hair photos, local beauty pricing data — impossible to replicate without being on the ground |
 
 ## 6.7 Recommended MVP Features
 
@@ -549,17 +706,19 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 ## 6.8 Long-Term Vision (5-Year)
 
-**Year 1:** Dominant beauty marketplace in Abidjan + Dakar. 5,000+ providers. Proven unit economics.
+**Year 1:** Dominant beauty marketplace in Abidjan + Dakar. 5,000+ providers. Proven unit economics. AI skin analysis beta.
 
-**Year 2:** Expand to Lagos + Nairobi. 20,000+ providers. $5M+ ARR. Series A.
+**Year 2:** Expand to Lagos + Nairobi. 20,000+ providers. Launch tokoss.bizz e-commerce. AI skin analysis live. 50K+ selfie dataset. $5M+ ARR. Series A.
 
-**Year 3:** Launch AI try-on features. Beauty product marketplace. 50,000+ providers across 5 countries. $15M+ ARR.
+**Year 3:** AI hair analysis (4A-4C) live. Product recommendations from AI. 50,000+ providers across 5 countries. Proprietary dataset = competitive moat. $15M+ ARR.
 
-**Year 4:** Financial services for providers. Training marketplace. Expand to 8+ countries. $30M+ ARR.
+**Year 4:** Privy wallet ecosystem with Tobongi. Financial services for providers. Training marketplace. Expand to 8+ countries. $30M+ ARR.
 
-**Year 5:** Africa's beauty super-app. 100,000+ providers. $50M+ ARR. Category leader. Series B/C.
+**Year 5:** Africa's beauty super-app. 100,000+ providers. 500K+ proprietary skin/hair dataset. AI-driven product recommendations driving 30%+ of e-commerce sales. $60M+ ARR. Category leader. Series B/C.
 
-**Exit potential:** Acquisition by global beauty platform (Fresha, Treatwell parent), African super-app (Jumia, Flutterwave), or IPO.
+**Exit potential:** Acquisition by global beauty/tech company (L'Oréal, Fresha, Google — who would pay premium for the dark skin AI dataset), African super-app ecosystem, or IPO.
+
+**The ultimate moat:** By Year 5, Tokoss will own the largest annotated dataset of dark skin types and afro hair in the world. This data is impossible to replicate without being on the ground in Africa with millions of real users. It's not just a marketplace — it's a **data company** that happens to do beauty.
 
 ---
 
@@ -598,19 +757,43 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 ## The Pitch (1 paragraph)
 
-Tokoss sits at the intersection of three mega-trends: (1) Africa's $17B beauty market going digital, (2) informal economy formalization via mobile platforms, and (3) financial inclusion through transaction data. The platform is not just a booking app — it is **infrastructure for an entire unserved economic segment**, with a clear path from marketplace to fintech. The Francophone Africa beachhead has **zero competition** and a combined addressable population of 200M+ across the initial target countries. Every beauty transaction that flows through Tokoss creates data that enables financial services (micro-loans, insurance, savings) for providers who have never had access — this is the Grab/Gojek playbook applied to Africa's largest informal service economy.
+Tokoss is a **4-layer beauty ecosystem** for Africa: marketplace + AI skin/hair analysis + product e-commerce + integrated wallet. We target a $17B+ beauty market where 90% of transactions are informal (WhatsApp, Instagram, cash) and **zero digital platform exists in Francophone Africa**. Our core moat is the **first AI trained on dark skin (Monk Scale) and afro hair (4A-4C)** — technology that doesn't exist anywhere globally. Every selfie taken on Tokoss builds a proprietary dataset that becomes more valuable over time. The AI recommends services AND products sold by providers on their tokoss.bizz shops, creating a self-reinforcing flywheel: more users → better AI → better recommendations → more sales → more providers → more users.
 
 ## Why Now?
 
 1. **Smartphone tipping point:** Africa smartphone sales crossed 50% of total mobile sales. The user base is ready.
 2. **Mobile money maturity:** $1.1T in annual transactions. Wave has 90% of Senegalese adults. The payment rails exist.
-3. **Post-COVID digital acceleration:** COVID pushed more African consumers to digital booking and payments.
-4. **No incumbent:** Unlike ride-hailing (Bolt, Uber) or food delivery (Glovo, Chowdeck), beauty services have **no digital platform in Africa**.
-5. **AI inflection:** Generative AI and computer vision are now capable enough to build virtual try-on for African hair types — first-mover advantage is available right now.
+3. **AI datasets now available:** Monk Skin Tone Scale (Google, 2022), DDI (Stanford, 2023), Fitzpatrick17k — all free. For the first time, building dark skin AI is technically feasible.
+4. **No incumbent:** Unlike ride-hailing (Bolt, Uber) or food delivery (Glovo, Chowdeck), beauty services have **no digital platform in Africa**. Zero in Francophone Africa.
+5. **Post-COVID digital acceleration:** COVID pushed African consumers to digital booking and payments.
+6. **The informal economy is ready to be digitized:** Millions of beauty professionals already work via Instagram + WhatsApp + Mobile Money. They just need a platform.
 
 ## Why This Team Can Win
 
 *(To be completed with founder backgrounds, local market knowledge, and technical capabilities)*
+
+## The 4-Layer Ecosystem
+
+```
+Layer 1: MARKETPLACE (live)
+  Beauty booking + Upwork-style requests
+  → Commission 12%
+
+Layer 2: AI ANALYSIS (Phase 4)
+  Selfie → skin analysis (dark skin) + hair analysis (afro 4A-4C)
+  → Premium subscription $2-5/month
+  → Proprietary dataset = moat
+
+Layer 3: E-COMMERCE (Phase 3)
+  tokoss.bizz/slug = provider product shops
+  AI recommends products based on skin analysis
+  → Commission 15-20%
+
+Layer 4: WALLET (Phase 2)
+  Privy wallet (shared with Tobongi ecosystem)
+  Mobile Money top-up → pay bookings + products
+  → Transaction fees + float
+```
 
 ## Comparable Exits & Valuations
 
@@ -618,12 +801,19 @@ Tokoss sits at the intersection of three mega-trends: (1) Africa's $17B beauty m
 |---------|---------|-----------|---------|
 | Urban Company | Home services, India | $2.8B | Digitized informal home services in emerging market |
 | Fresha | Salon software, Global | $1B+ | Free SaaS → marketplace → payments |
-| Wave | Mobile money, Senegal | $1.7B (2021) | Digitized existing behavior (money transfer) in same markets |
+| Wave | Mobile money, Senegal | $1.7B (2021) | Digitized existing behavior in same Francophone markets |
 | Flutterwave | Payments, Africa | $3B (2022) | Built payment infrastructure for African commerce |
-| Jumia | E-commerce, Africa | $1B+ (peak IPO) | First pan-African digital marketplace |
+| Perfect Corp | AI beauty tech, Global | $1B+ | AI skin analysis + virtual try-on (but NOT trained on dark skin) |
 
-Tokoss combines the marketplace dynamics of Urban Company, the payments play of Wave, and the African-market-first approach of Flutterwave — in a vertical with zero competition.
+Tokoss combines:
+- The **marketplace dynamics** of Urban Company
+- The **Francophone Africa beachhead** of Wave
+- The **AI beauty tech** of Perfect Corp (but for dark skin — a market they can't serve)
+- The **payment ecosystem** of Flutterwave
+- The **e-commerce layer** that none of the above have
+
+**In a vertical with zero competition and a dataset moat that compounds over time.**
 
 ---
 
-*This market study was compiled for Tokoss strategic planning and investor preparation. Data sourced from publicly available market research reports, industry publications, and startup databases. All web research conducted March 2026. Sources include Statista, Mordor Intelligence, Technavio, GSMA, DataReportal, Grand View Research, Polaris Market Research, and direct startup/company data.*
+*This market study was compiled for Tokoss strategic planning and investor preparation. Data sourced from publicly available market research reports, industry publications, and startup databases. All web research conducted March 2026. Sources include Statista, Mordor Intelligence, Technavio, GSMA, DataReportal, Grand View Research, Polaris Market Research, and direct startup/company data. Updated March 2026 with AI differentiator strategy, e-commerce layer (tokoss.bizz), and Privy wallet ecosystem.*
