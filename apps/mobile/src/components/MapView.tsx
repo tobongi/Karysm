@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Platform, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { colors } from '../theme/colors';
 
@@ -9,7 +9,6 @@ interface MapPin {
   lat: number;
   lng: number;
   avgRating: number;
-  category?: string;
 }
 
 interface Props {
@@ -18,130 +17,134 @@ interface Props {
   center?: { lat: number; lng: number };
 }
 
-// Native fallback
 function NativeMapFallback({ pins }: { pins: MapPin[] }) {
   return (
     <View style={styles.fallback}>
       <Text style={styles.fallbackIcon}>🗺️</Text>
       <Text style={styles.fallbackText}>Carte disponible sur la version web</Text>
-      <Text style={styles.fallbackCount}>{pins.length} prestataires dans cette zone</Text>
+      <Text style={styles.fallbackCount}>{pins.length} prestataires</Text>
     </View>
   );
 }
 
 export default function MapViewComponent({ pins, onPinPress, center }: Props) {
-  if (Platform.OS !== 'web') {
-    return <NativeMapFallback pins={pins} />;
-  }
-
+  if (Platform.OS !== 'web') return <NativeMapFallback pins={pins} />;
   return <WebMap pins={pins} onPinPress={onPinPress} center={center} />;
 }
 
-// Web-only map using Mapbox GL JS via CDN
 function WebMap({ pins, onPinPress, center }: Props) {
   const mapContainer = useRef<any>(null);
   const mapRef = useRef<any>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadAndInitMap();
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
+    loadLeaflet();
+    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, []);
 
-  async function loadAndInitMap() {
+  async function loadLeaflet() {
     if (typeof document === 'undefined') return;
-
     try {
-      // Load CSS
-      if (!document.getElementById('mapbox-css')) {
+      // Load Leaflet CSS
+      if (!document.getElementById('leaflet-css')) {
         const link = document.createElement('link');
-        link.id = 'mapbox-css';
+        link.id = 'leaflet-css';
         link.rel = 'stylesheet';
-        link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
         document.head.appendChild(link);
       }
 
-      // Load JS
-      if (!(window as any).mapboxgl) {
+      // Load Leaflet JS
+      if (!(window as any).L) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js';
+          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
           script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Mapbox load failed'));
+          script.onerror = () => reject(new Error('Leaflet load failed'));
           document.head.appendChild(script);
         });
       }
 
-      const mapboxgl = (window as any).mapboxgl;
-      // Use free/public token — user should replace with their own
-      mapboxgl.accessToken = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoidG9rb3NzYXBwIiwiYSI6ImNtOG1jcXQ2NzBkMmEya3B6dWVocGF5MmEifQ.placeholder';
-
-      const defaultCenter = center || { lat: -4.325, lng: 15.322 };
-
-      const map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [defaultCenter.lng, defaultCenter.lat],
-        zoom: 12,
-      });
-
-      mapRef.current = map;
-      map.on('load', () => setMapLoaded(true));
+      initMap();
     } catch {
       setError('Impossible de charger la carte');
     }
   }
 
+  function initMap() {
+    if (!mapContainer.current || !(window as any).L || mapRef.current) return;
+    const L = (window as any).L;
+
+    const defaultCenter = center || { lat: -4.325, lng: 15.322 }; // Kinshasa
+
+    const map = L.map(mapContainer.current, {
+      center: [defaultCenter.lat, defaultCenter.lng],
+      zoom: 12,
+      zoomControl: true,
+    });
+
+    // OpenStreetMap tiles — free, no token
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19,
+    }).addTo(map);
+
+    mapRef.current = map;
+    setReady(true);
+  }
+
   // Add/update pins
   useEffect(() => {
-    if (!mapRef.current || !mapLoaded || typeof document === 'undefined') return;
-    const mapboxgl = (window as any).mapboxgl;
-    if (!mapboxgl) return;
+    if (!mapRef.current || !ready || typeof window === 'undefined') return;
+    const L = (window as any).L;
+    if (!L) return;
 
-    // Remove old markers
-    document.querySelectorAll('.tokoss-pin').forEach(el => el.remove());
+    // Clear existing markers
+    mapRef.current.eachLayer((layer: any) => {
+      if (layer instanceof L.Marker) mapRef.current.removeLayer(layer);
+    });
+
+    // Custom violet icon
+    const violetIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:32px;height:32px;border-radius:50%;
+        background:#2D1B69;border:3px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+        display:flex;align-items:center;justify-content:center;
+        color:white;font-weight:bold;font-size:12px;
+        cursor:pointer;
+      "></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -20],
+    });
+
+    const markers: any[] = [];
 
     pins.forEach(pin => {
       if (!pin.lat || !pin.lng) return;
 
-      const el = document.createElement('div');
-      el.className = 'tokoss-pin';
-      Object.assign(el.style, {
-        width: '36px', height: '36px', borderRadius: '50%',
-        background: '#7C3AED', border: '3px solid white',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        cursor: 'pointer', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        color: 'white', fontWeight: 'bold', fontSize: '14px',
-      });
-      el.textContent = pin.displayName[0]?.toUpperCase() || '?';
-      el.addEventListener('click', () => onPinPress(pin.slug));
+      const marker = L.marker([pin.lat, pin.lng], { icon: violetIcon })
+        .addTo(mapRef.current)
+        .bindPopup(`
+          <div style="font-family:system-ui;padding:2px;min-width:120px;">
+            <strong style="color:#2D1B69;font-size:13px;">${pin.displayName}</strong><br/>
+            <span style="color:#E07A5F;font-weight:600;font-size:12px;">★ ${pin.avgRating.toFixed(1)}</span>
+          </div>
+        `);
 
-      const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
-        .setHTML(`<div style="font-family:system-ui;padding:4px;">
-          <strong style="color:#2D1B69;">${pin.displayName}</strong><br/>
-          <span style="color:#E07A5F;font-weight:600;">★ ${pin.avgRating.toFixed(1)}</span>
-        </div>`);
-
-      new mapboxgl.Marker(el)
-        .setLngLat([pin.lng, pin.lat])
-        .setPopup(popup)
-        .addTo(mapRef.current);
+      marker.on('click', () => onPinPress(pin.slug));
+      markers.push(marker);
     });
 
     // Fit bounds
-    if (pins.length > 1) {
-      const bounds = new mapboxgl.LngLatBounds();
-      pins.forEach(p => { if (p.lat && p.lng) bounds.extend([p.lng, p.lat]); });
-      mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 14 });
+    if (markers.length > 1) {
+      const group = L.featureGroup(markers);
+      mapRef.current.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 14 });
     }
-  }, [pins, mapLoaded]);
+  }, [pins, ready]);
 
   if (error) {
     return (
@@ -157,7 +160,7 @@ function WebMap({ pins, onPinPress, center }: Props) {
         ref={mapContainer}
         style={{ width: '100%', height: '100%', borderRadius: 16, overflow: 'hidden' }}
       />
-      {!mapLoaded && (
+      {!ready && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
