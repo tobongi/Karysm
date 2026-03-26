@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
+import MapView from '../../src/components/MapView';
 
 const SERVICE_CATEGORIES = [
   { slug: 'coiffure', name: 'Coiffure', icon: '✂️' },
@@ -42,6 +43,7 @@ export default function ExplorerTab() {
   const [providers, setProviders] = useState<ProviderResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -76,8 +78,16 @@ export default function ExplorerTab() {
       <View style={styles.webWrapper}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Tokoss</Text>
-          <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
+          <View>
+            <Text style={styles.headerTitle}>Tokoss</Text>
+            <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
+          </View>
+          <Pressable
+            style={styles.viewToggle}
+            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
+          >
+            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '◎' : '≡'}</Text>
+          </Pressable>
         </View>
 
         {/* Search */}
@@ -132,6 +142,21 @@ export default function ExplorerTab() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.accent} />
+          </View>
+        ) : viewMode === 'map' ? (
+          <View style={styles.mapContainer}>
+            <MapView
+              pins={providers
+                .map(p => ({
+                  id: p.id, slug: p.slug, displayName: p.displayName,
+                  lat: (p as any).lat || 0, lng: (p as any).lng || 0,
+                  avgRating: p.avgRating || 0,
+                }))
+                .filter(p => p.lat !== 0 && p.lng !== 0)
+              }
+              onPinPress={(slug) => router.push(`/provider/${slug}`)}
+            />
+            <Text style={styles.mapCount}>{providers.length} prestataire{providers.length !== 1 ? 's' : ''}</Text>
           </View>
         ) : (
           <FlatList
@@ -211,7 +236,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headerTitle: { fontSize: 26, fontWeight: '700', color: colors.accent, fontStyle: 'italic', letterSpacing: -0.5 },
   headerSubtitle: { fontSize: 13, color: colors.textMuted, letterSpacing: 0.5, marginTop: 1 },
 
@@ -310,4 +335,15 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(224,122,95,0.2)',
   },
   tagPriceText: { fontSize: 11, color: colors.terracotta, fontWeight: '500' },
+
+  // View toggle
+  viewToggle: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center',
+  },
+  viewToggleText: { fontSize: 16, color: colors.white },
+
+  // Map
+  mapContainer: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
+  mapCount: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
 });
