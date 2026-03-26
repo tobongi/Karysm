@@ -38,7 +38,7 @@ export default function FavoritesScreen() {
       const res: any = await api('/favorites');
       setProviders(res.data || []);
     } catch (err: any) {
-      console.error('Fetch favorites error:', err);
+      // console.error('Fetch favorites error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -66,39 +66,47 @@ export async function api<T = any>(endpoint: string, options: RequestInit = {}):
     headers['Authorization'] = `Bearer ${authToken}`;
   }
 
-  let res = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  // Auto-refresh on 401
-  if (res.status === 401 && authToken) {
-    if (!refreshPromise) {
-      refreshPromise = refreshToken();
+  try {
+    let res = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+
+    // Auto-refresh on 401
+    if (res.status === 401 && authToken) {
+      if (!refreshPromise) {
+        refreshPromise = refreshToken();
+      }
+      const newToken = await refreshPromise;
+      refreshPromise = null;
+
+      if (newToken) {
+        headers['Authorization'] = `Bearer ${newToken}`;
+        res = await fetch(`${API_URL}${endpoint}`, { ...options, headers, signal: controller.signal });
+      } else {
+        await forceLogout();
+        throw new Error('Session expirée');
+      }
     }
-    const newToken = await refreshPromise;
-    refreshPromise = null;
 
-    if (newToken) {
-      headers['Authorization'] = `Bearer ${newToken}`;
-      res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-    } else {
+    // Also handle 401 on non-auth endpoints (user never logged in)
+    if (res.status === 401 && !authToken) {
       await forceLogout();
-      throw new Error('Session expirée');
+      throw new Error('Connectez-vous pour continuer');
     }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || `Erreur ${res.status}`);
+    }
+
+    return data;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  // Also handle 401 on non-auth endpoints (user never logged in)
-  if (res.status === 401 && !authToken) {
-    await forceLogout();
-    throw new Error('Connectez-vous pour continuer');
-  }
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || `Erreur ${res.status}`);
-  }
-
-  return data;
 }

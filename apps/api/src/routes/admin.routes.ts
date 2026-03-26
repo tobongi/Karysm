@@ -1,12 +1,9 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
-import { authMiddleware, requireRole } from '../middleware/auth';
+import { authMiddleware, requireRole, generateToken } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error';
 import { createNotification } from '../lib/notifications';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'tokoss-dev-secret';
 
 const router = Router();
 
@@ -27,11 +24,7 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
     return res.status(401).json({ success: false, error: 'Identifiants invalides' });
   }
 
-  const token = jwt.sign(
-    { userId: admin.id, role: 'ADMIN', phone: '' },
-    JWT_SECRET,
-    { expiresIn: '24h' },
-  );
+  const token = generateToken({ userId: admin.id, role: 'ADMIN', phone: '' });
 
   res.json({
     success: true,

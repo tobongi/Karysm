@@ -3,7 +3,13 @@ import jwt from 'jsonwebtoken';
 import type { JwtPayload } from '@tokoss/shared';
 import { UnauthorizedError } from '../lib/errors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tokoss-dev-secret';
+const JWT_SECRET = (() => {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be set in production');
+  }
+  return 'tokoss-dev-secret';
+})();
 
 declare global {
   namespace Express {

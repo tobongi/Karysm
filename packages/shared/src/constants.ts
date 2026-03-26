@@ -26,6 +26,8 @@ export const CITIES = [
   { name: 'Kinshasa', country: 'RDC', countryCode: '243', currency: 'CDF' },
   { name: 'Douala', country: 'Cameroun', countryCode: '237', currency: 'XAF' },
   { name: 'Libreville', country: 'Gabon', countryCode: '241', currency: 'XAF' },
+  { name: 'Abidjan', country: 'Côte d\'Ivoire', countryCode: '225', currency: 'XAF' },
+  { name: 'Dakar', country: 'Sénégal', countryCode: '221', currency: 'XAF' },
 ] as const;
 
 export const CURRENCIES = {

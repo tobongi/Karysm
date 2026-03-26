@@ -59,17 +59,18 @@ export default function ExplorerTab() {
       const params = new URLSearchParams();
       if (search) params.set('q', search);
       if (selectedCategory) params.set('category', selectedCategory);
+      if (selectedCity) params.set('city', selectedCity);
       params.set('sort', 'rating');
       params.set('pageSize', '20');
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
     } catch (e) {
-      console.error('Search error:', e);
+      // console.error('Search error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, selectedCity]);
 
   useEffect(() => {
     setLoading(true);

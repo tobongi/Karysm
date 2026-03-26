@@ -42,7 +42,7 @@ export default function BookingsTab() {
       const res: any = await api(`/bookings/mine?status=${tab}`);
       setBookings(res.data || []);
     } catch (e) {
-      console.error('Bookings fetch error:', e);
+      // console.error('Bookings fetch error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);

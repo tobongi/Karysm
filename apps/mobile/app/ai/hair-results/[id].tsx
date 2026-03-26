@@ -107,7 +107,7 @@ export default function HairResultsScreen() {
         {/* Hair type badge */}
         {data.hairType && (
           <View style={styles.typeCard}>
-            <Text style={styles.typeEmoji}>💇‍♀️</Text>
+            <Text style={styles.typeEmoji}>💇🏿‍♀️</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.typeLabel}>Type {data.hairType}</Text>
               {hairInfo && <Text style={styles.typeName}>{hairInfo.label}</Text>}
@@ -201,7 +201,7 @@ export default function HairResultsScreen() {
             <Text style={styles.newBtnText}>🔄 Nouvelle analyse</Text>
           </Pressable>
           <Pressable style={styles.findBtn} onPress={() => router.push('/(tabs)')}>
-            <Text style={styles.findBtnText}>💇 Trouver un coiffeur</Text>
+            <Text style={styles.findBtnText}>💇🏿 Trouver un coiffeur</Text>
           </Pressable>
         </View>
 

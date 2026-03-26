@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Alert, Linking, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Linking, RefreshControl } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../src/theme/colors';
@@ -86,7 +86,7 @@ export default function BookingDetail() {
       const res: any = await api(`/bookings/${id}`);
       setBooking(res.data);
     } catch (e: any) {
-      console.error('Fetch booking error:', e);
+      // console.error('Fetch booking error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);

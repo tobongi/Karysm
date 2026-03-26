@@ -79,7 +79,7 @@ export default function ProfileTab() {
         {isProvider && (
           <>
             <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/services')}>
-              <Text style={styles.menuEmoji}>💇</Text>
+              <Text style={styles.menuEmoji}>💇🏿</Text>
               <Text style={styles.menuText}>Mes services</Text>
               <Text style={styles.menuArrow}>›</Text>
             </Pressable>

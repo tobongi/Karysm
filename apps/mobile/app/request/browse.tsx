@@ -67,7 +67,7 @@ export default function BrowseRequestsScreen() {
       const res: any = await api(`/requests?${params.toString()}`);
       setRequests(res.data?.items || []);
     } catch (e) {
-      console.error('Browse requests error:', e);
+      // console.error('Browse requests error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);

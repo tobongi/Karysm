@@ -196,6 +196,7 @@ model AvailabilityException {
   reason      String?
 
   @@unique([providerId, date])
+  @@index([providerId])
   @@map("availability_exceptions")
 }
 
@@ -353,7 +354,7 @@ model Payout {
 model Review {
   id         String   @id @default(cuid())
   bookingId  String   @unique
-  booking    Booking  @relation(fields: [bookingId], references: [id])
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   clientId   String
   client     User     @relation(fields: [clientId], references: [id])
   providerId String

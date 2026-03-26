@@ -9,7 +9,7 @@ import { otpSendSchema, otpVerifySchema, registerSchema, refreshSchema } from '.
 
 const router = Router();
 
-// In-memory OTP store (replace with Redis in production)
+// TODO: Replace with Redis/DB for production — in-memory OTPs are lost on server restart
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
 const DEMO_OTP = process.env.DEMO_OTP || '1234';

@@ -49,7 +49,7 @@ export default function WalletScreen() {
       setWallet(walletRes.data);
       setTransactions(txRes.data || []);
     } catch (err: any) {
-      console.error('Wallet error:', err);
+      // console.error('Wallet error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);

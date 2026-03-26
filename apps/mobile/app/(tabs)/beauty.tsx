@@ -163,7 +163,7 @@ export default function BeautyTab() {
           onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
         >
           <View style={styles.cardHeader}>
-            <Text style={styles.cardEmoji}>💇‍♀️</Text>
+            <Text style={styles.cardEmoji}>💇🏿‍♀️</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>Analyse cheveux</Text>
               <Text style={styles.cardDescription}>
@@ -209,7 +209,7 @@ export default function BeautyTab() {
             ))}
             {hairHistory.slice(1).map((h) => (
               <Pressable key={h.id} style={styles.historyRow} onPress={() => router.push(`/ai/hair-results/${h.id}`)}>
-                <Text style={styles.historyIcon}>💇‍♀️</Text>
+                <Text style={styles.historyIcon}>💇🏿‍♀️</Text>
                 <Text style={styles.historyLabel}>Cheveux — {h.hairType || 'Score ' + (h.overallScore || '—')}</Text>
                 <Text style={styles.historyDate}>{formatDate(h.createdAt)}</Text>
               </Pressable>

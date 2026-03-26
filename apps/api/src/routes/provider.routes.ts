@@ -4,7 +4,7 @@ import { slugify } from '@tokoss/shared';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { providerProfileSchema, serviceSchema, availabilitySchema } from '../schemas';
-import { NotFoundError, ConflictError } from '../lib/errors';
+import { NotFoundError, ConflictError, ValidationError } from '../lib/errors';
 import { asyncHandler } from '../middleware/error';
 
 const router = Router();
@@ -109,6 +109,13 @@ router.delete('/services/:id', authMiddleware, requireRole('PROVIDER'), asyncHan
 router.put('/availability', authMiddleware, requireRole('PROVIDER'), validateBody(availabilitySchema), asyncHandler(async (req: Request, res: Response) => {
   const provider = await prisma.provider.findUnique({ where: { userId: req.user!.userId } });
   if (!provider) throw new NotFoundError('Provider');
+
+  // Validate endTime > startTime for each slot
+  for (const slot of req.body.schedule) {
+    if (slot.endTime <= slot.startTime) {
+      throw new ValidationError(`endTime (${slot.endTime}) must be after startTime (${slot.startTime}) for ${slot.dayOfWeek}`);
+    }
+  }
 
   // Upsert each day
   for (const slot of req.body.schedule) {

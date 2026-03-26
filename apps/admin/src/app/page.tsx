@@ -100,8 +100,10 @@ export default function AdminDashboard() {
       router.push('/login');
       return;
     }
-    const saved = localStorage.getItem('tokoss_admin_user');
-    if (saved) setAdminUser(JSON.parse(saved));
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('tokoss_admin_user');
+      if (saved) setAdminUser(JSON.parse(saved));
+    }
   }, [router]);
 
   const fetchData = useCallback(async () => {
@@ -118,7 +120,7 @@ export default function AdminDashboard() {
       setBookings(bookingsRes.data || []);
       setReviews(reviewsRes.data || []);
       setKycDocs(kycRes.data || []);
-    } catch {}
+    } catch (err: any) { alert(err.message || 'Erreur de chargement'); }
     setLoading(false);
   }, []);
 
@@ -134,7 +136,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ status }),
       });
       setProviders(prev => prev.map(p => p.id === id ? { ...p, status } : p));
-    } catch {}
+    } catch (err: any) { alert(err.message || 'Erreur'); }
     setActionLoading(null);
   }
 
@@ -146,7 +148,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ reason: action === 'reject' ? 'Document non conforme' : undefined }),
       });
       setKycDocs(prev => prev.filter(d => d.id !== docId));
-    } catch {}
+    } catch (err: any) { alert(err.message || 'Erreur'); }
     setActionLoading(null);
   }
 
@@ -155,13 +157,15 @@ export default function AdminDashboard() {
     try {
       const res: any = await adminApi(`/admin/reviews/${reviewId}/visibility`, { method: 'PATCH' });
       setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, isVisible: res.data.isVisible } : r));
-    } catch {}
+    } catch (err: any) { alert(err.message || 'Erreur'); }
     setActionLoading(null);
   }
 
   function handleLogout() {
-    localStorage.removeItem('tokoss_admin_token');
-    localStorage.removeItem('tokoss_admin_user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('tokoss_admin_token');
+      localStorage.removeItem('tokoss_admin_user');
+    }
     router.push('/login');
   }
 

@@ -11,7 +11,7 @@ import { showAlert } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
 import { pickAndUploadImage } from '../../src/lib/upload';
 
-const CITIES = ['Kinshasa', 'Douala', 'Libreville'];
+const CITIES = ['Kinshasa', 'Douala', 'Libreville', 'Abidjan', 'Dakar'];
 
 const LOCATION_TYPES = [
   { value: 'CLIENT', label: 'Chez moi' },
@@ -65,7 +65,7 @@ export default function CreateRequestScreen() {
       const res: any = await api('/categories');
       setCategories(res.data || []);
     } catch (e) {
-      console.error('Failed to load categories', e);
+      // console.error('Failed to load categories', e);
     } finally {
       setLoadingCategories(false);
     }

@@ -22,7 +22,9 @@ export default function LoginPage() {
       });
 
       setAdminToken(res.token);
-      localStorage.setItem('tokoss_admin_user', JSON.stringify(res.admin));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tokoss_admin_user', JSON.stringify(res.admin));
+      }
       router.push('/');
     } catch (err: any) {
       setError(err.message || 'Identifiants invalides');

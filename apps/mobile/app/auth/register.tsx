@@ -17,11 +17,15 @@ export default function Register() {
       showAlert('Nom requis', 'Veuillez entrer votre nom (minimum 2 caractères).');
       return;
     }
+    if (!otp) {
+      showAlert('Erreur', 'Code OTP manquant. Veuillez recommencer la vérification.');
+      return;
+    }
     setLoading(true);
     try {
       const res: any = await api('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ phone, name: name.trim(), otp: otp || '1234' }),
+        body: JSON.stringify({ phone, name: name.trim(), otp }),
       });
       await login(res.token, res.refreshToken, res.user);
       router.replace('/(tabs)');

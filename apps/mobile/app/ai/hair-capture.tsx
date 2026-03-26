@@ -72,7 +72,7 @@ export default function HairCaptureScreen() {
           </View>
         ) : (
           <Pressable style={styles.captureButton} onPress={handleTakePhoto}>
-            <Text style={styles.captureIcon}>💇‍♀️</Text>
+            <Text style={styles.captureIcon}>💇🏿‍♀️</Text>
             <Text style={styles.captureText}>Photographier mes cheveux</Text>
           </Pressable>
         )}

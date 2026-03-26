@@ -55,7 +55,7 @@ export default function KycScreen() {
       const res: any = await api('/kyc/status');
       setKycData(res.data);
     } catch (err: any) {
-      console.error('KYC status error:', err);
+      // console.error('KYC status error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
