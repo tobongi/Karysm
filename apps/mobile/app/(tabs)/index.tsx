@@ -1,28 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import MapView from '../../src/components/MapView';
 
+// Categories — text only, no emoji, elegant
 const SERVICE_CATEGORIES = [
-  { slug: 'coiffure', name: 'Coiffure', icon: '💇‍♀️' },
-  { slug: 'ongles', name: 'Ongles', icon: '💅' },
-  { slug: 'maquillage', name: 'Maquillage', icon: '💄' },
-  { slug: 'massage', name: 'Massage', icon: '💆‍♀️' },
-  { slug: 'barber', name: 'Barbier', icon: '✂️' },
-  { slug: 'spa', name: 'Spa', icon: '🧖‍♀️' },
+  { slug: 'coiffure', name: 'Coiffure' },
+  { slug: 'ongles', name: 'Ongles' },
+  { slug: 'maquillage', name: 'Maquillage' },
+  { slug: 'massage', name: 'Massage' },
+  { slug: 'barber', name: 'Barbier' },
+  { slug: 'spa', name: 'Spa' },
 ];
-
-const CATEGORY_ICONS: Record<string, string> = {
-  'Coiffure': '💇‍♀️',
-  'Ongles': '💅',
-  'Maquillage': '💄',
-  'Massage': '💆‍♀️',
-  'Barber': '✂️',
-  'Spa': '🧖‍♀️',
-};
 
 interface ProviderResult {
   id: string;
@@ -88,94 +80,91 @@ export default function ExplorerTab() {
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
   }
 
-  function getCategoryIcon(categoryName: string): string {
-    return CATEGORY_ICONS[categoryName] || '✨';
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
+        {/* Header — clean, editorial */}
         <View style={styles.header}>
           <View>
             <Text style={styles.headerTitle}>Tokoss</Text>
-            <Text style={styles.headerSubtitle}>Beauté & bien-être en Afrique</Text>
+            <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
           </View>
           <Pressable
             style={styles.viewToggle}
             onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
           >
-            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '🗺️' : '📋'}</Text>
+            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '◎' : '≡'}</Text>
           </Pressable>
         </View>
 
+        {/* Search — refined */}
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchIcon}>⌕</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Rechercher un service ou prestataire..."
+            placeholder="Rechercher..."
             placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={setSearch}
           />
           {search.length > 0 && (
             <Pressable onPress={() => setSearch('')}>
-              <Text style={styles.clearIcon}>✕</Text>
+              <Text style={styles.clearIcon}>×</Text>
             </Pressable>
           )}
         </View>
 
+        {/* Categories — minimal text chips */}
         <View style={styles.categoriesRow}>
-          {SERVICE_CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.slug}
-              style={[styles.chip, selectedCategory === cat.slug && styles.chipActive]}
-              onPress={() => setSelectedCategory(selectedCategory === cat.slug ? null : cat.slug)}
-            >
-              <View style={[styles.chipIconCircle, selectedCategory === cat.slug && styles.chipIconCircleActive]}>
-                <Text style={styles.chipEmoji}>{cat.icon}</Text>
-              </View>
-              <Text style={[styles.chipText, selectedCategory === cat.slug && styles.chipTextActive]}>{cat.name}</Text>
-            </Pressable>
-          ))}
+          {SERVICE_CATEGORIES.map((cat) => {
+            const isActive = selectedCategory === cat.slug;
+            return (
+              <Pressable
+                key={cat.slug}
+                style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(isActive ? null : cat.slug)}
+              >
+                <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
+                  {cat.name}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        {/* Beauty Request CTA */}
+        {/* Beauty Request CTA — subtle, elegant */}
         <Pressable
           style={styles.requestBanner}
           onPress={() => router.push('/request/create' as any)}
         >
-          <View style={styles.requestBannerLeft}>
-            <Text style={styles.requestBannerEmoji}>{'\u2728'}</Text>
-            <View>
-              <Text style={styles.requestBannerTitle}>Décrivez ce que vous voulez</Text>
-              <Text style={styles.requestBannerSubtitle}>Recevez des propositions de pros</Text>
-            </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.requestTitle}>Décrivez ce que vous voulez</Text>
+            <Text style={styles.requestSubtitle}>Recevez des propositions de professionnelles</Text>
           </View>
-          <Text style={styles.requestBannerArrow}>{'\u203A'}</Text>
+          <Text style={styles.requestArrow}>→</Text>
         </Pressable>
 
+        {/* Content */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={colors.accent} />
           </View>
         ) : viewMode === 'map' ? (
           <View style={styles.mapContainer}>
-              <MapView
-                pins={providers
-                  .filter(p => p.services[0]?.category)
-                  .map(p => ({
-                    id: p.id,
-                    slug: p.slug,
-                    displayName: p.displayName,
-                    lat: (p as any).lat || 0,
-                    lng: (p as any).lng || 0,
-                    avgRating: p.avgRating || 0,
-                    category: p.services[0]?.category?.name,
-                  }))
-                  .filter(p => p.lat !== 0 && p.lng !== 0)
-                }
-                onPinPress={(slug) => router.push(`/provider/${slug}`)}
-              />
+            <MapView
+              pins={providers
+                .map(p => ({
+                  id: p.id,
+                  slug: p.slug,
+                  displayName: p.displayName,
+                  lat: (p as any).lat || 0,
+                  lng: (p as any).lng || 0,
+                  avgRating: p.avgRating || 0,
+                }))
+                .filter(p => p.lat !== 0 && p.lng !== 0)
+              }
+              onPinPress={(slug) => router.push(`/provider/${slug}`)}
+            />
             <Text style={styles.mapCount}>
               {providers.length} prestataire{providers.length !== 1 ? 's' : ''}
             </Text>
@@ -185,12 +174,11 @@ export default function ExplorerTab() {
             data={providers}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>🔍</Text>
                 <Text style={styles.emptyTitle}>Aucun résultat</Text>
-                <Text style={styles.emptySubtitle}>Essayez une autre recherche ou catégorie</Text>
+                <Text style={styles.emptySubtitle}>Essayez une autre recherche</Text>
               </View>
             }
             renderItem={({ item }) => (
@@ -198,39 +186,37 @@ export default function ExplorerTab() {
                 style={styles.card}
                 onPress={() => router.push(`/provider/${item.slug}`)}
               >
-                {/* Mini gallery — 3 placeholder slots for portfolio photos */}
+                {/* Gallery — clean placeholders */}
                 <View style={styles.cardGallery}>
                   <View style={styles.galleryMain}>
-                    <Text style={styles.galleryIcon}>{getCategoryIcon(item.services[0]?.category?.name)}</Text>
+                    <Text style={styles.galleryInitial}>
+                      {item.displayName[0]?.toUpperCase()}
+                    </Text>
                   </View>
                   <View style={styles.gallerySide}>
-                    <View style={styles.gallerySmall}>
-                      <Text style={styles.gallerySmallIcon}>📸</Text>
-                    </View>
-                    <View style={styles.gallerySmall}>
-                      <Text style={styles.gallerySmallIcon}>📸</Text>
-                    </View>
+                    <View style={styles.gallerySmall} />
+                    <View style={styles.gallerySmall} />
                   </View>
                 </View>
 
                 <View style={styles.cardContent}>
-                  {/* Row 1: Name + Rating */}
+                  {/* Name + Rating */}
                   <View style={styles.cardRow}>
                     <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
                     <View style={styles.ratingBadge}>
                       <Text style={styles.ratingStar}>★</Text>
                       <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
-                      <Text style={styles.reviewCount}>({item.totalReviews || 0})</Text>
+                      <Text style={styles.reviewCount}>({item.totalReviews})</Text>
                     </View>
                   </View>
 
-                  {/* Row 2: Location */}
+                  {/* Location */}
                   <Text style={styles.cardLocation}>
-                    📍 {item.commune ? `${item.commune}, ` : ''}{item.city}
+                    {item.commune ? `${item.commune}, ` : ''}{item.city}
                     {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
                   </Text>
 
-                  {/* Row 3: Services with prices */}
+                  {/* Services */}
                   <View style={styles.servicesPreview}>
                     {item.services.slice(0, 2).map((svc, i) => (
                       <View key={i} style={styles.serviceRow}>
@@ -241,20 +227,20 @@ export default function ExplorerTab() {
                       </View>
                     ))}
                     {item.services.length > 2 && (
-                      <Text style={styles.moreServices}>+{item.services.length - 2} autres services</Text>
+                      <Text style={styles.moreServices}>+{item.services.length - 2} autres</Text>
                     )}
                   </View>
 
-                  {/* Row 4: Badges */}
-                  <View style={styles.badges}>
+                  {/* Tags — minimal */}
+                  <View style={styles.tags}>
                     {item.isMobile && (
-                      <View style={styles.mobileBadge}>
-                        <Text style={styles.mobileBadgeText}>🏠 Se déplace</Text>
+                      <View style={styles.tag}>
+                        <Text style={styles.tagText}>Se déplace</Text>
                       </View>
                     )}
                     {item.minPrice != null && (
-                      <View style={styles.priceBadge}>
-                        <Text style={styles.priceBadgeText}>À partir de {formatPrice(item.minPrice, item.currency)}</Text>
+                      <View style={styles.tagPrice}>
+                        <Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text>
                       </View>
                     )}
                   </View>
@@ -270,167 +256,127 @@ export default function ExplorerTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  // Constrain width on web for mobile-like experience
   webWrapper: {
-    flex: 1,
-    width: '100%',
+    flex: 1, width: '100%',
     maxWidth: Platform.OS === 'web' ? 480 : undefined,
     alignSelf: 'center',
   },
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: colors.accent },
-  headerSubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+
+  // Header — editorial
+  header: {
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 26, fontWeight: '700', color: colors.accent,
+    fontStyle: 'italic', letterSpacing: -0.5,
+  },
+  headerSubtitle: { fontSize: 13, color: colors.textMuted, letterSpacing: 0.5, marginTop: 1 },
+
+  // View toggle — minimal
+  viewToggle: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center',
+  },
+  viewToggleText: { fontSize: 16, color: colors.white },
+
+  // Search — refined
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.white, marginHorizontal: 20,
+    borderRadius: 10, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: colors.border,
   },
-  searchIcon: { fontSize: 16, marginRight: 8 },
+  searchIcon: { fontSize: 18, color: colors.textMuted, marginRight: 8 },
   searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
-  clearIcon: { fontSize: 16, color: colors.textMuted, padding: 4 },
+  clearIcon: { fontSize: 20, color: colors.textMuted, padding: 4 },
+
+  // Categories — horizontal text chips
   categoriesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 4,
+    flexDirection: 'row', flexWrap: 'wrap',
+    paddingHorizontal: 20, marginTop: 14, gap: 8,
   },
-  chip: {
-    alignItems: 'center',
-    width: '33.33%',
-    paddingVertical: 8,
+  categoryChip: {
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100,
+    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
   },
-  chipActive: {},
-  chipIconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: '#F0ECFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
+  categoryChipActive: {
+    backgroundColor: colors.accent, borderColor: colors.accent,
   },
-  chipIconCircleActive: {
-    backgroundColor: colors.primary,
+  categoryText: {
+    fontSize: 13, fontWeight: '500', color: colors.text, letterSpacing: 0.2,
   },
-  chipEmoji: { fontSize: 22 },
-  chipText: { fontSize: 12, fontWeight: '500', color: colors.text },
-  chipTextActive: { color: colors.primary, fontWeight: '700' },
-  list: { padding: 20, paddingTop: 20 },
+  categoryTextActive: {
+    color: colors.white, fontWeight: '600',
+  },
+
+  // Request banner — subtle
+  requestBanner: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: 20, marginTop: 14, marginBottom: 4,
+    padding: 16, backgroundColor: colors.white,
+    borderRadius: 12, borderWidth: 1, borderColor: colors.border,
+    borderLeftWidth: 3, borderLeftColor: colors.accent,
+  },
+  requestTitle: { fontSize: 14, fontWeight: '600', color: colors.accent },
+  requestSubtitle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  requestArrow: { fontSize: 18, color: colors.accent, fontWeight: '300' },
+
+  // List
+  list: { padding: 20, paddingTop: 16 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: colors.text },
-  emptySubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+  emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+
+  // Card — clean, minimal
   card: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 16,
+    backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.border, marginBottom: 14,
   },
-  cardGallery: {
-    height: 130,
-    flexDirection: 'row',
-  },
+  cardGallery: { height: 120, flexDirection: 'row' },
   galleryMain: {
-    flex: 2,
-    backgroundColor: '#F0ECFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex: 2, backgroundColor: colors.accent,
+    justifyContent: 'center', alignItems: 'center',
   },
-  galleryIcon: { fontSize: 36 },
-  gallerySide: {
-    flex: 1,
-    gap: 2,
-  },
-  gallerySmall: {
-    flex: 1,
-    backgroundColor: '#E8E0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  gallerySmallIcon: { fontSize: 16, opacity: 0.4 },
+  galleryInitial: { fontSize: 32, fontWeight: '700', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },
+  gallerySide: { flex: 1, gap: 1 },
+  gallerySmall: { flex: 1, backgroundColor: '#E8E3F0' },
+
   cardContent: { padding: 16 },
   cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  cardName: { fontSize: 17, fontWeight: '700', color: colors.accent, flex: 1, marginRight: 8 },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(224,122,95,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 100,
-  },
-  ratingStar: { fontSize: 13, color: colors.terracotta, marginRight: 3 },
-  ratingText: { fontSize: 13, fontWeight: '700', color: colors.terracotta, marginRight: 2 },
-  reviewCount: { fontSize: 11, color: colors.textSecondary },
-  cardLocation: { fontSize: 13, color: colors.textSecondary, marginTop: 6 },
+  cardName: { fontSize: 16, fontWeight: '600', color: colors.accent, flex: 1, marginRight: 8 },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  ratingStar: { fontSize: 13, color: colors.terracotta },
+  ratingText: { fontSize: 14, fontWeight: '700', color: colors.terracotta },
+  reviewCount: { fontSize: 11, color: colors.textMuted },
+
+  cardLocation: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+
   servicesPreview: { marginTop: 12 },
   serviceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   serviceName: { fontSize: 14, color: colors.text, flex: 1, marginRight: 12 },
-  servicePrice: { fontSize: 14, fontWeight: '700', color: colors.terracotta },
-  moreServices: { fontSize: 12, color: colors.primary, marginTop: 6, fontWeight: '500' },
-  badges: { flexDirection: 'row', marginTop: 12, flexWrap: 'wrap' },
-  mobileBadge: {
-    backgroundColor: colors.primaryGhost,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 100,
-    marginRight: 8,
+  servicePrice: { fontSize: 14, fontWeight: '600', color: colors.terracotta },
+  moreServices: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
+
+  tags: { flexDirection: 'row', marginTop: 10, gap: 8 },
+  tag: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
+    borderWidth: 1, borderColor: colors.border,
   },
-  mobileBadgeText: { fontSize: 12, color: colors.primary, fontWeight: '500' },
-  priceBadge: {
-    backgroundColor: 'rgba(224,122,95,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 100,
+  tagText: { fontSize: 11, color: colors.textSecondary, fontWeight: '500' },
+  tagPrice: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
+    borderWidth: 1, borderColor: 'rgba(224,122,95,0.2)',
   },
-  priceBadgeText: { fontSize: 12, color: colors.terracotta, fontWeight: '500' },
-  // Request banner
-  requestBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 4,
-    padding: 14,
-    backgroundColor: colors.primaryGhost,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
-  },
-  requestBannerLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  requestBannerEmoji: { fontSize: 24, marginRight: 12 },
-  requestBannerTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
-  requestBannerSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },
-  requestBannerArrow: { fontSize: 24, color: colors.primary, fontWeight: '700' },
-  // View toggle
-  viewToggle: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: colors.primaryBorder,
-  },
-  viewToggleText: { fontSize: 18 },
+  tagPriceText: { fontSize: 11, color: colors.terracotta, fontWeight: '500' },
+
   // Map
   mapContainer: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
-  mapCount: { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
+  mapCount: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
 });

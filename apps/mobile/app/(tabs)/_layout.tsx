@@ -2,10 +2,11 @@ import { View, Text as RNText, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+// Minimal text-based icons — mature, no emoji
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <RNText style={styles.iconText}>{emoji}</RNText>
+      <RNText style={[styles.iconText, focused && styles.iconTextActive]}>{label}</RNText>
     </View>
   );
 }
@@ -14,18 +15,18 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 6,
-          paddingTop: 6,
-          height: Platform.OS === 'ios' ? 80 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 80 : 62,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
-        tabBarItemStyle: { paddingVertical: 4 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '500', marginTop: 0, letterSpacing: 0.3 },
+        tabBarItemStyle: { paddingVertical: 2 },
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.accent,
         headerTitleStyle: { fontWeight: '700' },
@@ -36,29 +37,29 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Explorer',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="◎" focused={focused} />,
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Réservations',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
+          title: 'Rendez-vous',
+          tabBarIcon: ({ focused }) => <TabIcon label="▦" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Notifs',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" focused={focused} />,
+          title: 'Activité',
+          tabBarIcon: ({ focused }) => <TabIcon label="◉" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="beauty"
         options={{
           title: 'Beauté AI',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="✨" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="◇" focused={focused} />,
           headerShown: false,
         }}
       />
@@ -66,7 +67,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="○" focused={focused} />,
         }}
       />
     </Tabs>
@@ -75,16 +76,20 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconWrapActive: {
-    backgroundColor: colors.primaryGhost,
+    backgroundColor: colors.accent,
   },
   iconText: {
-    fontSize: 20,
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+  iconTextActive: {
+    color: colors.white,
   },
 });
