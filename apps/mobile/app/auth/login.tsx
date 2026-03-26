@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 import { api } from '../../src/lib/api';
+import { showAlert } from '../../src/lib/alert';
 
 export default function Login() {
   const { login } = useAuth();
@@ -11,23 +12,17 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [loading, setLoading] = useState(false);
-
-  // Demo mode: bypass API when it's not running
-  const DEMO_MODE = false;
+  const [error, setError] = useState('');
 
   async function handleSendOTP() {
     if (phone.length < 3) return;
     setLoading(true);
-    if (DEMO_MODE) {
-      setStep('otp');
-      setLoading(false);
-      return;
-    }
+    setError('');
     try {
       await api('/auth/otp/send', { method: 'POST', body: JSON.stringify({ phone }) });
       setStep('otp');
     } catch (e: any) {
-      Alert.alert('Erreur', e.message);
+      setError(e.message || 'Impossible d\'envoyer le code');
     }
     setLoading(false);
   }
@@ -35,16 +30,7 @@ export default function Login() {
   async function handleVerifyOTP() {
     if (otp.length !== 4) return;
     setLoading(true);
-    if (DEMO_MODE && otp === '1234') {
-      await login(
-        'demo-token',
-        'demo-refresh',
-        { id: 'demo-user', name: 'Client Demo', phone, role: 'CLIENT' }
-      );
-      router.replace('/(tabs)');
-      setLoading(false);
-      return;
-    }
+    setError('');
     try {
       const res: any = await api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) });
       if (res.isNewUser) {
@@ -54,7 +40,7 @@ export default function Login() {
         router.replace('/(tabs)');
       }
     } catch (e: any) {
-      Alert.alert('Erreur', e.message);
+      setError(e.message || 'Code invalide');
     }
     setLoading(false);
   }
@@ -63,26 +49,35 @@ export default function Login() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.content}>
         <Text style={styles.logo}>Tokoss</Text>
-        <Text style={styles.subtitle}>Beaute & bien-etre a domicile</Text>
+        <Text style={styles.subtitle}>Beauté & bien-être</Text>
 
         {step === 'phone' ? (
           <>
-            <Text style={styles.label}>Numero de telephone</Text>
+            <Text style={styles.label}>Numéro de téléphone</Text>
             <TextInput
               style={styles.input}
-              placeholder="081 234 5678"
+              placeholder="+243 812 345 678"
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
+              autoFocus
             />
-            <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSendOTP} disabled={loading}>
+            <Text style={styles.hint}>Entrez votre numéro avec l'indicatif pays (+243, +225, +221...)</Text>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <Pressable
+              style={[styles.button, (loading || phone.length < 3) && styles.buttonDisabled]}
+              onPress={handleSendOTP}
+              disabled={loading || phone.length < 3}
+            >
               <Text style={styles.buttonText}>{loading ? 'Envoi...' : 'Recevoir le code'}</Text>
             </Pressable>
           </>
         ) : (
           <>
-            <Text style={styles.label}>Code OTP</Text>
+            <Text style={styles.label}>Code de vérification</Text>
             <TextInput
               style={styles.input}
               placeholder="1234"
@@ -91,12 +86,22 @@ export default function Login() {
               maxLength={4}
               value={otp}
               onChangeText={setOtp}
+              autoFocus
             />
-            <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleVerifyOTP} disabled={loading}>
-              <Text style={styles.buttonText}>{loading ? 'Verification...' : 'Verifier'}</Text>
+            <Text style={styles.hint}>Code envoyé au {phone}</Text>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <Pressable
+              style={[styles.button, (loading || otp.length !== 4) && styles.buttonDisabled]}
+              onPress={handleVerifyOTP}
+              disabled={loading || otp.length !== 4}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Vérification...' : 'Vérifier'}</Text>
             </Pressable>
-            <Pressable onPress={() => setStep('phone')}>
-              <Text style={styles.link}>Changer de numero</Text>
+
+            <Pressable onPress={() => { setStep('phone'); setOtp(''); setError(''); }}>
+              <Text style={styles.link}>Changer de numéro</Text>
             </Pressable>
           </>
         )}
@@ -108,22 +113,25 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
-  logo: { fontSize: 40, fontWeight: '800', color: colors.accent, textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginBottom: 48 },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
+  logo: {
+    fontSize: 36, fontWeight: '700', color: colors.accent,
+    textAlign: 'center', marginBottom: 4, fontStyle: 'italic',
+  },
+  subtitle: { fontSize: 14, color: colors.textMuted, textAlign: 'center', marginBottom: 48, letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 8, letterSpacing: 0.3 },
   input: {
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 16,
+    borderWidth: 1, borderColor: colors.border,
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16,
+    fontSize: 18, color: colors.text, marginBottom: 8,
+  },
+  hint: { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
+  error: {
+    fontSize: 13, color: colors.error, marginBottom: 8,
+    backgroundColor: 'rgba(239,68,68,0.08)', padding: 10, borderRadius: 8,
   },
   button: { backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 8 },
-  buttonDisabled: { opacity: 0.6 },
+  buttonDisabled: { opacity: 0.4 },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
   link: { color: colors.primary, textAlign: 'center', marginTop: 16, fontSize: 14 },
 });
