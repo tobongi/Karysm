@@ -7,11 +7,11 @@ import { api } from '../../src/lib/api';
 
 const SERVICE_CATEGORIES = [
   { slug: 'coiffure', name: 'Coiffure', icon: '✂️' },
-  { slug: 'ongles', name: 'Ongles', icon: '💅' },
+  { slug: 'ongles', name: 'Ongles', icon: '💅🏿' },
   { slug: 'maquillage', name: 'Maquillage', icon: '💄' },
-  { slug: 'massage', name: 'Massage', icon: '🤲' },
+  { slug: 'massage', name: 'Massage', icon: '🤲🏿' },
   { slug: 'barber', name: 'Barbier', icon: '💈' },
-  { slug: 'spa', name: 'Spa', icon: '🧖' },
+  { slug: 'spa', name: 'Spa', icon: '🧖🏿' },
 ];
 
 interface ProviderResult {
