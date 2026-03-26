@@ -92,8 +92,8 @@ function FacePoint({ position, label, value, color, delay }: {
     Animated.sequence([
       Animated.delay(delay),
       Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: false }),
+        Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: false }),
       ]),
     ]).start();
   }, []);

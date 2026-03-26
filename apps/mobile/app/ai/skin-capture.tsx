@@ -27,8 +27,8 @@ function ScanLine({ active }: { active: boolean }) {
     if (active) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(anim, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+          Animated.timing(anim, { toValue: 0, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
         ]),
       ).start();
     } else {
@@ -58,8 +58,8 @@ function DetectionBadge({ label, value, position, delay, visible }: {
       Animated.sequence([
         Animated.delay(delay),
         Animated.parallel([
-          Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: false }),
+          Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: false }),
         ]),
       ]).start();
     } else {
@@ -90,8 +90,8 @@ export default function SkinCaptureScreen() {
     if (scanPhase === 'scanning') {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.03, duration: 1000, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.03, duration: 1000, useNativeDriver: false }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
         ]),
       ).start();
     } else {

@@ -4,16 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
-import MapView from '../../src/components/MapView';
 
-// Categories — text only, no emoji, elegant
 const SERVICE_CATEGORIES = [
-  { slug: 'coiffure', name: 'Coiffure' },
-  { slug: 'ongles', name: 'Ongles' },
-  { slug: 'maquillage', name: 'Maquillage' },
-  { slug: 'massage', name: 'Massage' },
-  { slug: 'barber', name: 'Barbier' },
-  { slug: 'spa', name: 'Spa' },
+  { slug: 'coiffure', name: 'Coiffure', icon: '✂️' },
+  { slug: 'ongles', name: 'Ongles', icon: '💅' },
+  { slug: 'maquillage', name: 'Maquillage', icon: '💄' },
+  { slug: 'massage', name: 'Massage', icon: '🤲' },
+  { slug: 'barber', name: 'Barbier', icon: '💈' },
+  { slug: 'spa', name: 'Spa', icon: '🧖' },
 ];
 
 interface ProviderResult {
@@ -44,7 +42,6 @@ export default function ExplorerTab() {
   const [providers, setProviders] = useState<ProviderResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -53,7 +50,6 @@ export default function ExplorerTab() {
       if (selectedCategory) params.set('category', selectedCategory);
       params.set('sort', 'rating');
       params.set('pageSize', '20');
-
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
     } catch (e) {
@@ -70,11 +66,6 @@ export default function ExplorerTab() {
     return () => clearTimeout(timeout);
   }, [fetchProviders]);
 
-  function onRefresh() {
-    setRefreshing(true);
-    fetchProviders();
-  }
-
   function formatPrice(amount: number, currency: string) {
     const symbol = currency === 'CDF' ? 'FC' : 'FCFA';
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
@@ -83,21 +74,13 @@ export default function ExplorerTab() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
-        {/* Header — clean, editorial */}
+        {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Tokoss</Text>
-            <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
-          </View>
-          <Pressable
-            style={styles.viewToggle}
-            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
-          >
-            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '◎' : '≡'}</Text>
-          </Pressable>
+          <Text style={styles.headerTitle}>Tokoss</Text>
+          <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
         </View>
 
-        {/* Search — refined */}
+        {/* Search */}
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>⌕</Text>
           <TextInput
@@ -114,25 +97,26 @@ export default function ExplorerTab() {
           )}
         </View>
 
-        {/* Categories — minimal text chips */}
-        <View style={styles.categoriesRow}>
+        {/* Categories — refined emoji grid 3x2 */}
+        <View style={styles.categoriesGrid}>
           {SERVICE_CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.slug;
             return (
               <Pressable
                 key={cat.slug}
-                style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                style={[styles.categoryCard, isActive && styles.categoryCardActive]}
                 onPress={() => setSelectedCategory(isActive ? null : cat.slug)}
               >
-                <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
-                  {cat.name}
-                </Text>
+                <View style={[styles.categoryIconWrap, isActive && styles.categoryIconWrapActive]}>
+                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                </View>
+                <Text style={[styles.categoryName, isActive && styles.categoryNameActive]}>{cat.name}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        {/* Beauty Request CTA — subtle, elegant */}
+        {/* Beauty Request CTA */}
         <Pressable
           style={styles.requestBanner}
           onPress={() => router.push('/request/create' as any)}
@@ -144,37 +128,17 @@ export default function ExplorerTab() {
           <Text style={styles.requestArrow}>→</Text>
         </Pressable>
 
-        {/* Content */}
+        {/* Provider list */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.accent} />
-          </View>
-        ) : viewMode === 'map' ? (
-          <View style={styles.mapContainer}>
-            <MapView
-              pins={providers
-                .map(p => ({
-                  id: p.id,
-                  slug: p.slug,
-                  displayName: p.displayName,
-                  lat: (p as any).lat || 0,
-                  lng: (p as any).lng || 0,
-                  avgRating: p.avgRating || 0,
-                }))
-                .filter(p => p.lat !== 0 && p.lng !== 0)
-              }
-              onPinPress={(slug) => router.push(`/provider/${slug}`)}
-            />
-            <Text style={styles.mapCount}>
-              {providers.length} prestataire{providers.length !== 1 ? 's' : ''}
-            </Text>
           </View>
         ) : (
           <FlatList
             data={providers}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProviders(); }} tintColor={colors.accent} />}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyTitle}>Aucun résultat</Text>
@@ -182,16 +146,11 @@ export default function ExplorerTab() {
               </View>
             }
             renderItem={({ item }) => (
-              <Pressable
-                style={styles.card}
-                onPress={() => router.push(`/provider/${item.slug}`)}
-              >
-                {/* Gallery — clean placeholders */}
+              <Pressable style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
+                {/* Gallery */}
                 <View style={styles.cardGallery}>
                   <View style={styles.galleryMain}>
-                    <Text style={styles.galleryInitial}>
-                      {item.displayName[0]?.toUpperCase()}
-                    </Text>
+                    <Text style={styles.galleryInitial}>{item.displayName[0]?.toUpperCase()}</Text>
                   </View>
                   <View style={styles.gallerySide}>
                     <View style={styles.gallerySmall} />
@@ -200,7 +159,6 @@ export default function ExplorerTab() {
                 </View>
 
                 <View style={styles.cardContent}>
-                  {/* Name + Rating */}
                   <View style={styles.cardRow}>
                     <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
                     <View style={styles.ratingBadge}>
@@ -210,20 +168,16 @@ export default function ExplorerTab() {
                     </View>
                   </View>
 
-                  {/* Location */}
                   <Text style={styles.cardLocation}>
-                    {item.commune ? `${item.commune}, ` : ''}{item.city}
+                    📍 {item.commune ? `${item.commune}, ` : ''}{item.city}
                     {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
                   </Text>
 
-                  {/* Services */}
                   <View style={styles.servicesPreview}>
                     {item.services.slice(0, 2).map((svc, i) => (
                       <View key={i} style={styles.serviceRow}>
                         <Text style={styles.serviceName} numberOfLines={1}>{svc.name}</Text>
-                        <Text style={styles.servicePrice}>
-                          {formatPrice(svc.priceMin, item.currency)}
-                        </Text>
+                        <Text style={styles.servicePrice}>{formatPrice(svc.priceMin, item.currency)}</Text>
                       </View>
                     ))}
                     {item.services.length > 2 && (
@@ -231,17 +185,12 @@ export default function ExplorerTab() {
                     )}
                   </View>
 
-                  {/* Tags — minimal */}
                   <View style={styles.tags}>
                     {item.isMobile && (
-                      <View style={styles.tag}>
-                        <Text style={styles.tagText}>Se déplace</Text>
-                      </View>
+                      <View style={styles.tag}><Text style={styles.tagText}>🏠 Se déplace</Text></View>
                     )}
                     {item.minPrice != null && (
-                      <View style={styles.tagPrice}>
-                        <Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text>
-                      </View>
+                      <View style={styles.tagPrice}><Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text></View>
                     )}
                   </View>
                 </View>
@@ -262,25 +211,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  // Header — editorial
-  header: {
-    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-  },
-  headerTitle: {
-    fontSize: 26, fontWeight: '700', color: colors.accent,
-    fontStyle: 'italic', letterSpacing: -0.5,
-  },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
+  headerTitle: { fontSize: 26, fontWeight: '700', color: colors.accent, fontStyle: 'italic', letterSpacing: -0.5 },
   headerSubtitle: { fontSize: 13, color: colors.textMuted, letterSpacing: 0.5, marginTop: 1 },
 
-  // View toggle — minimal
-  viewToggle: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center',
-  },
-  viewToggleText: { fontSize: 16, color: colors.white },
-
-  // Search — refined
+  // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.white, marginHorizontal: 20,
@@ -291,29 +226,31 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
   clearIcon: { fontSize: 20, color: colors.textMuted, padding: 4 },
 
-  // Categories — horizontal text chips
-  categoriesRow: {
+  // Categories — 3x2 grid with refined emoji
+  categoriesGrid: {
     flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: 20, marginTop: 14, gap: 8,
+    paddingHorizontal: 16, marginTop: 16, marginBottom: 4,
   },
-  categoryChip: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
+  categoryCard: {
+    width: '33.33%', alignItems: 'center', paddingVertical: 10,
   },
-  categoryChipActive: {
+  categoryCardActive: {},
+  categoryIconWrap: {
+    width: 52, height: 52, borderRadius: 14,
+    backgroundColor: colors.white, justifyContent: 'center', alignItems: 'center',
+    marginBottom: 6, borderWidth: 1, borderColor: colors.border,
+  },
+  categoryIconWrapActive: {
     backgroundColor: colors.accent, borderColor: colors.accent,
   },
-  categoryText: {
-    fontSize: 13, fontWeight: '500', color: colors.text, letterSpacing: 0.2,
-  },
-  categoryTextActive: {
-    color: colors.white, fontWeight: '600',
-  },
+  categoryIcon: { fontSize: 22 },
+  categoryName: { fontSize: 12, fontWeight: '500', color: colors.text, letterSpacing: 0.2 },
+  categoryNameActive: { color: colors.accent, fontWeight: '700' },
 
-  // Request banner — subtle
+  // Request banner
   requestBanner: {
     flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, marginTop: 14, marginBottom: 4,
+    marginHorizontal: 20, marginTop: 12, marginBottom: 4,
     padding: 16, backgroundColor: colors.white,
     borderRadius: 12, borderWidth: 1, borderColor: colors.border,
     borderLeftWidth: 3, borderLeftColor: colors.accent,
@@ -329,7 +266,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
   emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
 
-  // Card — clean, minimal
+  // Card
   card: {
     backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.border, marginBottom: 14,
@@ -344,9 +281,7 @@ const styles = StyleSheet.create({
   gallerySmall: { flex: 1, backgroundColor: '#E8E3F0' },
 
   cardContent: { padding: 16 },
-  cardRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-  },
+  cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardName: { fontSize: 16, fontWeight: '600', color: colors.accent, flex: 1, marginRight: 8 },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingStar: { fontSize: 13, color: colors.terracotta },
@@ -375,8 +310,4 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(224,122,95,0.2)',
   },
   tagPriceText: { fontSize: 11, color: colors.terracotta, fontWeight: '500' },
-
-  // Map
-  mapContainer: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
-  mapCount: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
 });
