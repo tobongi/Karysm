@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Platform, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { AuthProvider, useAuth } from '../src/lib/auth-context';
 import { colors } from '../src/theme/colors';
 import { registerForPushNotifications, addNotificationResponseListener } from '../src/lib/notifications';
@@ -36,9 +36,16 @@ function AppContent() {
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.accent,
-          headerTitleStyle: { fontWeight: '700' },
+          headerTitleStyle: { fontWeight: '700', fontSize: 16 },
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
+          headerBackTitle: '',
+          headerLeft: ({ canGoBack }) =>
+            canGoBack ? (
+              <Pressable onPress={() => router.back()} style={{ paddingRight: 16, paddingVertical: 8 }}>
+                <Text style={{ fontSize: 22, color: colors.accent }}>‹</Text>
+              </Pressable>
+            ) : null,
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
