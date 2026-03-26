@@ -139,12 +139,24 @@ function WebMap({ pins, onPinPress, center }: Props) {
       markers.push(marker);
     });
 
-    // Fit bounds
+    // Fit bounds or center on city
     if (markers.length > 1) {
       const group = L.featureGroup(markers);
-      mapRef.current.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 14 });
+      mapRef.current.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 15 });
+    } else if (markers.length === 1) {
+      mapRef.current.setView([pins[0].lat, pins[0].lng], 14);
+    } else if (center) {
+      mapRef.current.setView([center.lat, center.lng], 13);
     }
   }, [pins, ready]);
+
+  // Recenter when center prop changes
+  useEffect(() => {
+    if (mapRef.current && ready && center) {
+      const L = (window as any).L;
+      if (L) mapRef.current.setView([center.lat, center.lng], 13, { animate: true });
+    }
+  }, [center?.lat, center?.lng, ready]);
 
   if (error) {
     return (

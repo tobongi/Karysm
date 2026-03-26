@@ -6,6 +6,14 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import MapView from '../../src/components/MapView';
 
+const CITIES = [
+  { name: 'Kinshasa', lat: -4.325, lng: 15.322 },
+  { name: 'Douala', lat: 4.051, lng: 9.768 },
+  { name: 'Libreville', lat: 0.416, lng: 9.467 },
+  { name: 'Abidjan', lat: 5.345, lng: -4.025 },
+  { name: 'Dakar', lat: 14.693, lng: -17.444 },
+];
+
 const SERVICE_CATEGORIES = [
   { slug: 'coiffure', name: 'Coiffure', icon: '✂️' },
   { slug: 'ongles', name: 'Ongles', icon: '💅🏿' },
@@ -44,6 +52,7 @@ export default function ExplorerTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedCity, setSelectedCity] = useState('Kinshasa');
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -107,6 +116,21 @@ export default function ExplorerTab() {
           )}
         </View>
 
+        {/* City selector */}
+        <View style={styles.cityRow}>
+          {CITIES.map((city) => (
+            <Pressable
+              key={city.name}
+              style={[styles.cityChip, selectedCity === city.name && styles.cityChipActive]}
+              onPress={() => setSelectedCity(city.name)}
+            >
+              <Text style={[styles.cityText, selectedCity === city.name && styles.cityTextActive]}>
+                {city.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
         {/* Categories — refined emoji grid 3x2 */}
         <View style={styles.categoriesGrid}>
           {SERVICE_CATEGORIES.map((cat) => {
@@ -145,18 +169,29 @@ export default function ExplorerTab() {
           </View>
         ) : viewMode === 'map' ? (
           <View style={styles.mapContainer}>
-            <MapView
-              pins={providers
-                .map(p => ({
-                  id: p.id, slug: p.slug, displayName: p.displayName,
-                  lat: (p as any).lat || 0, lng: (p as any).lng || 0,
-                  avgRating: p.avgRating || 0,
-                }))
-                .filter(p => p.lat !== 0 && p.lng !== 0)
-              }
-              onPinPress={(slug) => router.push(`/provider/${slug}`)}
-            />
-            <Text style={styles.mapCount}>{providers.length} prestataire{providers.length !== 1 ? 's' : ''}</Text>
+            {(() => {
+              const cityProviders = providers.filter(p => p.city === selectedCity);
+              const cityCenter = CITIES.find(c => c.name === selectedCity) || CITIES[0];
+              return (
+                <>
+                  <MapView
+                    pins={cityProviders
+                      .map(p => ({
+                        id: p.id, slug: p.slug, displayName: p.displayName,
+                        lat: (p as any).lat || 0, lng: (p as any).lng || 0,
+                        avgRating: p.avgRating || 0,
+                      }))
+                      .filter(p => p.lat !== 0 && p.lng !== 0)
+                    }
+                    onPinPress={(slug) => router.push(`/provider/${slug}`)}
+                    center={{ lat: cityCenter.lat, lng: cityCenter.lng }}
+                  />
+                  <Text style={styles.mapCount}>
+                    {cityProviders.length} prestataire{cityProviders.length !== 1 ? 's' : ''} à {selectedCity}
+                  </Text>
+                </>
+              );
+            })()}
           </View>
         ) : (
           <FlatList
@@ -250,6 +285,20 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 18, color: colors.textMuted, marginRight: 8 },
   searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
   clearIcon: { fontSize: 20, color: colors.textMuted, padding: 4 },
+
+  // City selector
+  cityRow: {
+    flexDirection: 'row', paddingHorizontal: 20, marginTop: 12, gap: 6,
+  },
+  cityChip: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
+    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
+  },
+  cityChipActive: {
+    backgroundColor: colors.accent, borderColor: colors.accent,
+  },
+  cityText: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
+  cityTextActive: { color: colors.white, fontWeight: '600' },
 
   // Categories — 3x2 grid with refined emoji
   categoriesGrid: {
