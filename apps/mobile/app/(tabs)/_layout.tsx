@@ -46,6 +46,7 @@ export default function TabLayout() {
         options={{
           title: 'Rendez-vous',
           tabBarIcon: ({ focused }) => <TabIcon label="▦" focused={focused} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -53,6 +54,7 @@ export default function TabLayout() {
         options={{
           title: 'Activité',
           tabBarIcon: ({ focused }) => <TabIcon label="◉" focused={focused} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -68,6 +70,7 @@ export default function TabLayout() {
         options={{
           title: 'Profil',
           tabBarIcon: ({ focused }) => <TabIcon label="○" focused={focused} />,
+          headerShown: false,
         }}
       />
     </Tabs>
