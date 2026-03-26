@@ -48,7 +48,7 @@ export default function Login() {
     try {
       const res: any = await api('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ phone, otp }) });
       if (res.isNewUser) {
-        router.push({ pathname: '/auth/register', params: { phone } });
+        router.push({ pathname: '/auth/register', params: { phone, otp } });
       } else {
         await login(res.token, res.refreshToken, res.user);
         router.replace('/(tabs)');

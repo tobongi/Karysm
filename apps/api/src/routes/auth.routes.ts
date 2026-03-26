@@ -37,14 +37,16 @@ router.post('/otp/verify', validateBody(otpVerifySchema), asyncHandler(async (re
   if (!stored || stored.otp !== otp || stored.expiresAt < Date.now()) {
     throw new ValidationError('Invalid or expired OTP');
   }
-  otpStore.delete(phone);
 
   // Find or indicate new user
   const user = await prisma.user.findUnique({ where: { phone } });
 
   if (!user) {
+    // Keep OTP in store — register will use it
     return res.json({ success: true, isNewUser: true, phone });
   }
+
+  otpStore.delete(phone);
 
   const token = generateToken({ userId: user.id, role: user.role, phone: user.phone });
   const refreshToken = generateRefreshToken();
