@@ -1,26 +1,50 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { IconScissors, IconSparkles, IconBrush, IconHandGrab, IconRazor, IconDroplet, IconMapPin, IconArrowRight, IconSearch, IconX, IconMap, IconList, IconHeart } from '@tabler/icons-react-native';
 import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/typography';
+import { radius, spacing, screenPadding } from '../../src/theme/spacing';
+import { shadows } from '../../src/theme/shadows';
 import { api } from '../../src/lib/api';
+import { SearchBar, CategoryIcon } from '../../src/components';
 import MapView from '../../src/components/MapView';
 
-const CITIES = [
-  { name: 'Kinshasa', lat: -4.325, lng: 15.322 },
-  { name: 'Douala', lat: 4.051, lng: 9.768 },
-  { name: 'Libreville', lat: 0.416, lng: 9.467 },
-  { name: 'Abidjan', lat: 5.345, lng: -4.025 },
-  { name: 'Dakar', lat: 14.693, lng: -17.444 },
+const QUARTIERS = [
+  { name: 'Matonge', lat: -4.331, lng: 15.313 },
+  { name: 'Bandal', lat: -4.327, lng: 15.296 },
+  { name: 'Gombe', lat: -4.310, lng: 15.312 },
+  { name: 'Ma Campagne', lat: -4.338, lng: 15.298 },
+  { name: 'Kitambo', lat: -4.325, lng: 15.290 },
+  { name: 'Limete', lat: -4.329, lng: 15.339 },
 ];
 
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  coiffure: <IconScissors size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  ongles: <IconSparkles size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  maquillage: <IconBrush size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  massage: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  barber: <IconRazor size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  spa: <IconDroplet size={28} color={colors.terracotta} strokeWidth={1.5} />,
+};
+
+const CATEGORY_ICONS_ACTIVE: Record<string, React.ReactNode> = {
+  coiffure: <IconScissors size={28} color={colors.white} strokeWidth={1.5} />,
+  ongles: <IconSparkles size={28} color={colors.white} strokeWidth={1.5} />,
+  maquillage: <IconBrush size={28} color={colors.white} strokeWidth={1.5} />,
+  massage: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
+  barber: <IconRazor size={28} color={colors.white} strokeWidth={1.5} />,
+  spa: <IconDroplet size={28} color={colors.white} strokeWidth={1.5} />,
+};
+
 const SERVICE_CATEGORIES = [
-  { slug: 'coiffure', name: 'Coiffure', icon: '✂️' },
-  { slug: 'ongles', name: 'Ongles', icon: '💅🏿' },
-  { slug: 'maquillage', name: 'Maquillage', icon: '💄' },
-  { slug: 'massage', name: 'Massage', icon: '🤲🏿' },
-  { slug: 'barber', name: 'Barbier', icon: '💈' },
-  { slug: 'spa', name: 'Spa', icon: '🧖🏿' },
+  { slug: 'coiffure', name: 'Coiffure' },
+  { slug: 'ongles', name: 'Ongles' },
+  { slug: 'maquillage', name: 'Maquillage' },
+  { slug: 'massage', name: 'Massage' },
+  { slug: 'barber', name: 'Barbier' },
+  { slug: 'spa', name: 'Spa' },
 ];
 
 interface ProviderResult {
@@ -52,14 +76,15 @@ export default function ExplorerTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [selectedCity, setSelectedCity] = useState('Kinshasa');
+  const [selectedQuartier, setSelectedQuartier] = useState('Matonge');
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   const fetchProviders = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (search) params.set('q', search);
       if (selectedCategory) params.set('category', selectedCategory);
-      if (selectedCity) params.set('city', selectedCity);
+      params.set('city', 'Kinshasa');
       params.set('sort', 'rating');
       params.set('pageSize', '20');
       const res: any = await api(`/search?${params.toString()}`);
@@ -70,7 +95,7 @@ export default function ExplorerTab() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, selectedCategory, selectedCity]);
+  }, [search, selectedCategory]);
 
   useEffect(() => {
     setLoading(true);
@@ -78,133 +103,174 @@ export default function ExplorerTab() {
     return () => clearTimeout(timeout);
   }, [fetchProviders]);
 
+  const toggleFavorite = useCallback(async (providerId: string) => {
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      if (next.has(providerId)) next.delete(providerId);
+      else next.add(providerId);
+      return next;
+    });
+    try {
+      await api(`/favorites/${providerId}`, { method: 'POST' });
+    } catch (_e) {
+      // Revert on error
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        if (next.has(providerId)) next.delete(providerId);
+        else next.add(providerId);
+        return next;
+      });
+    }
+  }, []);
+
   function formatPrice(amount: number, currency: string) {
     const symbol = currency === 'CDF' ? 'FC' : 'FCFA';
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
   }
 
+  const listHeader = (
+    <>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Tokoss</Text>
+          <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
+        </View>
+        <Pressable
+          style={styles.viewToggle}
+          onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
+        >
+          {viewMode === 'list' ? (
+            <IconMap size={18} color={colors.white} strokeWidth={2} />
+          ) : (
+            <IconList size={18} color={colors.white} strokeWidth={2} />
+          )}
+        </Pressable>
+      </View>
+
+      {/* Search */}
+      <View style={styles.searchContainer}>
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Rechercher un service, un pro..."
+        />
+      </View>
+
+      {/* City selector */}
+      <View style={styles.cityRow}>
+        {QUARTIERS.map((city) => (
+          <Pressable
+            key={city.name}
+            style={[styles.cityChip, selectedQuartier === city.name && styles.cityChipActive]}
+            onPress={() => setSelectedQuartier(city.name)}
+          >
+            {selectedQuartier === city.name && (
+              <IconMapPin size={12} color={colors.white} strokeWidth={2} style={{ marginRight: 4 }} />
+            )}
+            <Text style={[styles.cityText, selectedQuartier === city.name && styles.cityTextActive]}>
+              {city.name}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Section title: Categories */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Catégories</Text>
+      </View>
+
+      {/* Categories — 3x2 grid with Tabler icons */}
+      <View style={styles.categoriesGrid}>
+        {SERVICE_CATEGORIES.map((cat) => {
+          const isActive = selectedCategory === cat.slug;
+          return (
+            <View key={cat.slug} style={styles.categoryCell}>
+              <CategoryIcon
+                label={cat.name}
+                icon={isActive ? CATEGORY_ICONS_ACTIVE[cat.slug] : CATEGORY_ICONS[cat.slug]}
+                isActive={isActive}
+                onPress={() => setSelectedCategory(isActive ? null : cat.slug)}
+              />
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Beauty Request CTA */}
+      <Pressable
+        style={styles.requestBanner}
+        onPress={() => router.push('/request/create' as any)}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={styles.requestTitle}>Décrivez ce que vous voulez</Text>
+          <Text style={styles.requestSubtitle}>Recevez des propositions de professionnelles</Text>
+        </View>
+        <View style={styles.requestArrowWrap}>
+          <IconArrowRight size={18} color={colors.white} strokeWidth={2} />
+        </View>
+      </Pressable>
+
+      {/* Section title: Providers */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recommandés</Text>
+        <Pressable>
+          <Text style={styles.seeAll}>Voir tout</Text>
+        </Pressable>
+      </View>
+
+      {/* Map view inline */}
+      {viewMode === 'map' && (
+        <View style={styles.mapContainer}>
+          {(() => {
+            const cityProviders = providers;
+            const cityCenter = QUARTIERS.find(c => c.name === selectedQuartier) || QUARTIERS[0];
+            return (
+              <>
+                <MapView
+                  pins={cityProviders
+                    .map(p => ({
+                      id: p.id, slug: p.slug, displayName: p.displayName,
+                      lat: (p as any).lat || 0, lng: (p as any).lng || 0,
+                      avgRating: p.avgRating || 0,
+                    }))
+                    .filter(p => p.lat !== 0 && p.lng !== 0)
+                  }
+                  onPinPress={(slug) => router.push(`/provider/${slug}`)}
+                  center={{ lat: cityCenter.lat, lng: cityCenter.lng }}
+                />
+                <Text style={styles.mapCount}>
+                  {cityProviders.length} prestataire{cityProviders.length !== 1 ? 's' : ''} à Kinshasa
+                </Text>
+              </>
+            );
+          })()}
+        </View>
+      )}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Tokoss</Text>
-            <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
-          </View>
-          <Pressable
-            style={styles.viewToggle}
-            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
-          >
-            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '◎' : '≡'}</Text>
-          </Pressable>
-        </View>
-
-        {/* Search */}
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>⌕</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Rechercher..."
-            placeholderTextColor={colors.textMuted}
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')}>
-              <Text style={styles.clearIcon}>×</Text>
-            </Pressable>
-          )}
-        </View>
-
-        {/* City selector */}
-        <View style={styles.cityRow}>
-          {CITIES.map((city) => (
-            <Pressable
-              key={city.name}
-              style={[styles.cityChip, selectedCity === city.name && styles.cityChipActive]}
-              onPress={() => setSelectedCity(city.name)}
-            >
-              <Text style={[styles.cityText, selectedCity === city.name && styles.cityTextActive]}>
-                {city.name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Categories — refined emoji grid 3x2 */}
-        <View style={styles.categoriesGrid}>
-          {SERVICE_CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat.slug;
-            return (
-              <Pressable
-                key={cat.slug}
-                style={[styles.categoryCard, isActive && styles.categoryCardActive]}
-                onPress={() => setSelectedCategory(isActive ? null : cat.slug)}
-              >
-                <View style={[styles.categoryIconWrap, isActive && styles.categoryIconWrapActive]}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                </View>
-                <Text style={[styles.categoryName, isActive && styles.categoryNameActive]}>{cat.name}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Beauty Request CTA */}
-        <Pressable
-          style={styles.requestBanner}
-          onPress={() => router.push('/request/create' as any)}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.requestTitle}>Décrivez ce que vous voulez</Text>
-            <Text style={styles.requestSubtitle}>Recevez des propositions de professionnelles</Text>
-          </View>
-          <Text style={styles.requestArrow}>→</Text>
-        </Pressable>
-
-        {/* Provider list */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.accent} />
-          </View>
-        ) : viewMode === 'map' ? (
-          <View style={styles.mapContainer}>
-            {(() => {
-              const cityProviders = providers.filter(p => p.city === selectedCity);
-              const cityCenter = CITIES.find(c => c.name === selectedCity) || CITIES[0];
-              return (
-                <>
-                  <MapView
-                    pins={cityProviders
-                      .map(p => ({
-                        id: p.id, slug: p.slug, displayName: p.displayName,
-                        lat: (p as any).lat || 0, lng: (p as any).lng || 0,
-                        avgRating: p.avgRating || 0,
-                      }))
-                      .filter(p => p.lat !== 0 && p.lng !== 0)
-                    }
-                    onPinPress={(slug) => router.push(`/provider/${slug}`)}
-                    center={{ lat: cityCenter.lat, lng: cityCenter.lng }}
-                  />
-                  <Text style={styles.mapCount}>
-                    {cityProviders.length} prestataire{cityProviders.length !== 1 ? 's' : ''} à {selectedCity}
-                  </Text>
-                </>
-              );
-            })()}
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : (
           <FlatList
-            data={providers}
+            data={viewMode === 'map' ? [] : providers}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProviders(); }} tintColor={colors.accent} />}
+            ListHeaderComponent={listHeader}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProviders(); }} tintColor={colors.primary} />}
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyTitle}>Aucun résultat</Text>
-                <Text style={styles.emptySubtitle}>Essayez une autre recherche</Text>
-              </View>
+              viewMode === 'map' ? null : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyTitle}>Aucun résultat</Text>
+                  <Text style={styles.emptySubtitle}>Essayez une autre recherche</Text>
+                </View>
+              )
             }
             renderItem={({ item }) => (
               <Pressable style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
@@ -217,22 +283,40 @@ export default function ExplorerTab() {
                     <View style={styles.gallerySmall} />
                     <View style={styles.gallerySmall} />
                   </View>
+                  {/* Favorite heart overlay */}
+                  <Pressable
+                    style={styles.heartOverlay}
+                    onPress={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
+                    hitSlop={8}
+                  >
+                    <View style={styles.heartCircle}>
+                      <IconHeart
+                        size={22}
+                        color={favoriteIds.has(item.id) ? colors.primary : colors.white}
+                        fill={favoriteIds.has(item.id) ? colors.primary : 'none'}
+                        strokeWidth={2}
+                      />
+                    </View>
+                  </Pressable>
                 </View>
 
                 <View style={styles.cardContent}>
                   <View style={styles.cardRow}>
                     <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
                     <View style={styles.ratingBadge}>
-                      <Text style={styles.ratingStar}>★</Text>
+                      <Text style={styles.ratingStar}>{'\u2605'}</Text>
                       <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
                       <Text style={styles.reviewCount}>({item.totalReviews})</Text>
                     </View>
                   </View>
 
-                  <Text style={styles.cardLocation}>
-                    📍 {item.commune ? `${item.commune}, ` : ''}{item.city}
-                    {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
-                  </Text>
+                  <View style={styles.locationRow}>
+                    <IconMapPin size={13} color={colors.textSecondary} strokeWidth={1.5} />
+                    <Text style={styles.cardLocation}>
+                      {item.commune ? `${item.commune}, ` : ''}{item.city}
+                      {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
+                    </Text>
+                  </View>
 
                   <View style={styles.servicesPreview}>
                     {item.services.slice(0, 2).map((svc, i) => (
@@ -248,10 +332,10 @@ export default function ExplorerTab() {
 
                   <View style={styles.tags}>
                     {item.isMobile && (
-                      <View style={styles.tag}><Text style={styles.tagText}>🏠 Se déplace</Text></View>
+                      <View style={styles.tag}><Text style={styles.tagText}>Se deplace</Text></View>
                     )}
                     {item.minPrice != null && (
-                      <View style={styles.tagPrice}><Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text></View>
+                      <View style={styles.tagPrice}><Text style={styles.tagPriceText}>des {formatPrice(item.minPrice, item.currency)}</Text></View>
                     )}
                   </View>
                 </View>
@@ -272,128 +356,299 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  headerTitle: { fontSize: 26, fontWeight: '700', color: colors.accent, fontStyle: 'italic', letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 13, color: colors.textMuted, letterSpacing: 0.5, marginTop: 1 },
+  // Header
+  header: {
+    paddingHorizontal: screenPadding.horizontal,
+    paddingTop: 12,
+    paddingBottom: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.accent,
+    fontStyle: 'italic',
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
 
   // Search
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, marginHorizontal: 20,
-    borderRadius: 10, paddingHorizontal: 14,
-    borderWidth: 1, borderColor: colors.border,
+  searchContainer: {
+    paddingHorizontal: screenPadding.horizontal,
   },
-  searchIcon: { fontSize: 18, color: colors.textMuted, marginRight: 8 },
-  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
-  clearIcon: { fontSize: 20, color: colors.textMuted, padding: 4 },
 
   // City selector
   cityRow: {
-    flexDirection: 'row', paddingHorizontal: 20, marginTop: 12, gap: 6,
+    flexDirection: 'row',
+    paddingHorizontal: screenPadding.horizontal,
+    marginTop: spacing.sm,
+    gap: 8,
+    flexWrap: 'wrap',
   },
   cityChip: {
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
-    backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   cityChipActive: {
-    backgroundColor: colors.accent, borderColor: colors.accent,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  cityText: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
-  cityTextActive: { color: colors.white, fontWeight: '600' },
+  cityText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  cityTextActive: {
+    fontFamily: fonts.bodySemiBold,
+    color: colors.white,
+    fontWeight: '600',
+  },
 
-  // Categories — 3x2 grid with refined emoji
+  // Section headers
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: screenPadding.horizontal,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  sectionTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  seeAll: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+
+  // Categories — 3x2 grid
   categoriesGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: 16, marginTop: 16, marginBottom: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: screenPadding.horizontal,
+    marginBottom: spacing.xs,
   },
-  categoryCard: {
-    width: '33.33%', alignItems: 'center', paddingVertical: 10,
+  categoryCell: {
+    width: '33.33%',
+    paddingVertical: spacing.xs,
   },
-  categoryCardActive: {},
-  categoryIconWrap: {
-    width: 52, height: 52, borderRadius: 14,
-    backgroundColor: colors.white, justifyContent: 'center', alignItems: 'center',
-    marginBottom: 6, borderWidth: 1, borderColor: colors.border,
-  },
-  categoryIconWrapActive: {
-    backgroundColor: colors.accent, borderColor: colors.accent,
-  },
-  categoryIcon: { fontSize: 22 },
-  categoryName: { fontSize: 12, fontWeight: '500', color: colors.text, letterSpacing: 0.2 },
-  categoryNameActive: { color: colors.accent, fontWeight: '700' },
 
   // Request banner
   requestBanner: {
-    flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, marginTop: 12, marginBottom: 4,
-    padding: 16, backgroundColor: colors.white,
-    borderRadius: 12, borderWidth: 1, borderColor: colors.border,
-    borderLeftWidth: 3, borderLeftColor: colors.accent,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: screenPadding.horizontal,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    padding: spacing.md,
+    backgroundColor: colors.accent,
+    borderRadius: radius.lg,
+  } as ViewStyle,
+  requestTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.white,
   },
-  requestTitle: { fontSize: 14, fontWeight: '600', color: colors.accent },
-  requestSubtitle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  requestArrow: { fontSize: 18, color: colors.accent, fontWeight: '300' },
+  requestSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 3,
+  },
+  requestArrowWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.sm,
+  },
 
   // List
-  list: { padding: 20, paddingTop: 16 },
+  list: { paddingHorizontal: screenPadding.horizontal, paddingTop: 0, paddingBottom: 100 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
-  emptySubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  emptyTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  emptySubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
 
   // Card
   card: {
-    backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden',
-    borderWidth: 1, borderColor: colors.border, marginBottom: 14,
-  },
-  cardGallery: { height: 120, flexDirection: 'row' },
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    ...shadows.card,
+  } as ViewStyle,
+  cardGallery: { height: 140, flexDirection: 'row' },
   galleryMain: {
-    flex: 2, backgroundColor: colors.accent,
-    justifyContent: 'center', alignItems: 'center',
+    flex: 2,
+    backgroundColor: colors.n300,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  galleryInitial: { fontSize: 32, fontWeight: '700', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },
-  gallerySide: { flex: 1, gap: 1 },
-  gallerySmall: { flex: 1, backgroundColor: '#E8E3F0' },
+  galleryInitial: {
+    fontFamily: fonts.displayBold,
+    fontSize: 36,
+    fontWeight: '700',
+    color: 'rgba(167,115,102,0.3)',
+    fontStyle: 'italic',
+  },
+  gallerySide: { flex: 1, gap: 2 },
+  gallerySmall: { flex: 1, backgroundColor: colors.n200 },
 
-  cardContent: { padding: 16 },
+  heartOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 2,
+  },
+  heartCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  cardContent: { padding: spacing.md },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardName: { fontSize: 16, fontWeight: '600', color: colors.accent, flex: 1, marginRight: 8 },
+  cardName: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.accent,
+    flex: 1,
+    marginRight: spacing.xs,
+  },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingStar: { fontSize: 13, color: colors.terracotta },
-  ratingText: { fontSize: 14, fontWeight: '700', color: colors.terracotta },
-  reviewCount: { fontSize: 11, color: colors.textMuted },
+  ratingText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.terracotta,
+  },
+  reviewCount: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textMuted,
+  },
 
-  cardLocation: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
+  cardLocation: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
 
-  servicesPreview: { marginTop: 12 },
+  servicesPreview: { marginTop: spacing.sm },
   serviceRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  serviceName: { fontSize: 14, color: colors.text, flex: 1, marginRight: 12 },
-  servicePrice: { fontSize: 14, fontWeight: '600', color: colors.terracotta },
-  moreServices: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
+  serviceName: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.text,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  servicePrice: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.terracotta,
+  },
+  moreServices: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 6,
+  },
 
-  tags: { flexDirection: 'row', marginTop: 10, gap: 8 },
+  tags: { flexDirection: 'row', marginTop: spacing.sm, gap: 8 },
   tag: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
-    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.sm,
+    backgroundColor: colors.primaryGhost,
   },
-  tagText: { fontSize: 11, color: colors.textSecondary, fontWeight: '500' },
+  tagText: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
   tagPrice: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
-    borderWidth: 1, borderColor: 'rgba(224,122,95,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(167,115,102,0.08)',
   },
-  tagPriceText: { fontSize: 11, color: colors.terracotta, fontWeight: '500' },
+  tagPriceText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.terracotta,
+  },
 
   // View toggle
   viewToggle: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  viewToggleText: { fontSize: 16, color: colors.white },
 
   // Map
-  mapContainer: { flex: 1, paddingHorizontal: 20, paddingBottom: 20 },
-  mapCount: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
+  mapContainer: { flex: 1, paddingHorizontal: screenPadding.horizontal, paddingBottom: screenPadding.horizontal },
+  mapCount: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
 });
