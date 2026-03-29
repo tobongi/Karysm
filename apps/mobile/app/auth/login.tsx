@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
+import { Button, Input } from '../../src/components';
 
 export default function Login() {
   const { login } = useAuth();
@@ -49,59 +50,52 @@ export default function Login() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.content}>
         <Text style={styles.logo}>Tokoss</Text>
-        <Text style={styles.subtitle}>Beauté & bien-être</Text>
+        <Text style={styles.subtitle}>Beaute & bien-etre</Text>
 
         {step === 'phone' ? (
           <>
-            <Text style={styles.label}>Numéro de téléphone</Text>
-            <TextInput
-              style={styles.input}
+            <Input
+              label="Numero de telephone"
               placeholder="+243 812 345 678"
-              placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
-              autoFocus
+              hint="Entrez votre numero avec l'indicatif pays (+243, +225, +221...)"
+              error={error || undefined}
             />
-            <Text style={styles.hint}>Entrez votre numéro avec l'indicatif pays (+243, +225, +221...)</Text>
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <Pressable
-              style={[styles.button, (loading || phone.length < 3) && styles.buttonDisabled]}
+            <Button
+              title={loading ? 'Envoi...' : 'Recevoir le code'}
               onPress={handleSendOTP}
               disabled={loading || phone.length < 3}
-            >
-              <Text style={styles.buttonText}>{loading ? 'Envoi...' : 'Recevoir le code'}</Text>
-            </Pressable>
+              loading={loading}
+              size="lg"
+              fullWidth
+            />
           </>
         ) : (
           <>
-            <Text style={styles.label}>Code de vérification</Text>
-            <TextInput
-              style={styles.input}
+            <Input
+              label="Code de verification"
               placeholder="1234"
-              placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
-              maxLength={4}
               value={otp}
-              onChangeText={setOtp}
-              autoFocus
+              onChangeText={(text) => setOtp(text.slice(0, 4))}
+              hint={`Code envoye au ${phone}`}
+              error={error || undefined}
             />
-            <Text style={styles.hint}>Code envoyé au {phone}</Text>
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <Pressable
-              style={[styles.button, (loading || otp.length !== 4) && styles.buttonDisabled]}
+            <Button
+              title={loading ? 'Verification...' : 'Verifier'}
               onPress={handleVerifyOTP}
               disabled={loading || otp.length !== 4}
-            >
-              <Text style={styles.buttonText}>{loading ? 'Vérification...' : 'Vérifier'}</Text>
-            </Pressable>
+              loading={loading}
+              size="lg"
+              fullWidth
+            />
 
             <Pressable onPress={() => { setStep('phone'); setOtp(''); setError(''); }}>
-              <Text style={styles.link}>Changer de numéro</Text>
+              <Text style={styles.link}>Changer de numero</Text>
             </Pressable>
           </>
         )}
@@ -114,24 +108,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
   logo: {
-    fontSize: 36, fontWeight: '700', color: colors.accent,
-    textAlign: 'center', marginBottom: 4, fontStyle: 'italic',
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 32, color: colors.accent,
+    textAlign: 'center', marginBottom: 8, fontStyle: 'italic',
   },
-  subtitle: { fontSize: 14, color: colors.textMuted, textAlign: 'center', marginBottom: 48, letterSpacing: 0.5 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.text, marginBottom: 8, letterSpacing: 0.3 },
-  input: {
-    backgroundColor: colors.card,
-    borderWidth: 1, borderColor: colors.border,
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16,
-    fontSize: 18, color: colors.text, marginBottom: 8,
+  subtitle: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 12, color: colors.textMuted,
+    textAlign: 'center', marginBottom: 48, letterSpacing: 1,
+    textTransform: 'uppercase' as const,
   },
-  hint: { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
-  error: {
-    fontSize: 13, color: colors.error, marginBottom: 8,
-    backgroundColor: 'rgba(239,68,68,0.08)', padding: 10, borderRadius: 8,
+  link: {
+    fontFamily: 'Poppins_500Medium',
+    color: colors.primaryDark, textAlign: 'center',
+    marginTop: 16, fontSize: 14,
   },
-  button: { backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 8 },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  link: { color: colors.primary, textAlign: 'center', marginTop: 16, fontSize: 14 },
 });

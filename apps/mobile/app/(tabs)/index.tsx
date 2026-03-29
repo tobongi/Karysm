@@ -1,15 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Platform, ViewStyle } from 'react-native';
+import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { IconScissors, IconSparkles, IconBrush, IconHandGrab, IconRazor, IconDroplet, IconMapPin, IconArrowRight, IconSearch, IconX, IconMap, IconList, IconHeart } from '@tabler/icons-react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { IconScissors, IconSparkles, IconBrush, IconHandGrab, IconRazor, IconDroplet, IconMapPin, IconArrowRight, IconSearch, IconX, IconMap, IconList, IconHeart, IconDiamond, IconAward } from '@tabler/icons-react-native';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 import { shadows } from '../../src/theme/shadows';
 import { api } from '../../src/lib/api';
-import { SearchBar, CategoryIcon } from '../../src/components';
+import { getRecentlyViewed, RecentProvider } from '../../src/lib/recently-viewed';
+import { SearchBar, CategoryIcon, ProviderCardSkeleton } from '../../src/components';
 import MapView from '../../src/components/MapView';
+
+const PLACEHOLDER_IMAGES = [
+  require('../../assets/images/providers/provider_1.jpg'),
+  require('../../assets/images/providers/provider_2.jpg'),
+  require('../../assets/images/providers/provider_3.jpg'),
+  require('../../assets/images/providers/provider_4.jpg'),
+  require('../../assets/images/providers/provider_5.jpg'),
+  require('../../assets/images/providers/provider_6.jpg'),
+  require('../../assets/images/providers/provider_7.jpg'),
+];
 
 const QUARTIERS = [
   { name: 'Matonge', lat: -4.331, lng: 15.313 },
@@ -22,7 +33,7 @@ const QUARTIERS = [
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.terracotta} strokeWidth={1.5} />,
-  ongles: <IconSparkles size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  ongles: <IconDiamond size={28} color={colors.terracotta} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.terracotta} strokeWidth={1.5} />,
   massage: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.terracotta} strokeWidth={1.5} />,
@@ -31,7 +42,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 const CATEGORY_ICONS_ACTIVE: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.white} strokeWidth={1.5} />,
-  ongles: <IconSparkles size={28} color={colors.white} strokeWidth={1.5} />,
+  ongles: <IconDiamond size={28} color={colors.white} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.white} strokeWidth={1.5} />,
   massage: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.white} strokeWidth={1.5} />,
@@ -78,6 +89,14 @@ export default function ExplorerTab() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [selectedQuartier, setSelectedQuartier] = useState('Matonge');
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentProvider[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      getRecentlyViewed().then(setRecentlyViewed);
+    }, [])
+  );
 
   const fetchProviders = useCallback(async () => {
     try {
@@ -148,13 +167,76 @@ export default function ExplorerTab() {
         </Pressable>
       </View>
 
-      {/* Search */}
+      {/* Hero Banner */}
+      <View style={styles.heroBanner}>
+        <Image
+          source={PLACEHOLDER_IMAGES[0]}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+        <View style={styles.heroOverlay} />
+        <View style={styles.heroContent}>
+          <Text style={styles.heroLabel}>NOUVEAU</Text>
+          <Text style={styles.heroTitle}>{'Votre beauté,\nsublimée'}</Text>
+          <Text style={styles.heroSubtitle}>Trouvez les meilleures professionnelles près de chez vous</Text>
+        </View>
+      </View>
+
+      {/* Search with quartier suggestions */}
       <View style={styles.searchContainer}>
         <SearchBar
           value={search}
-          onChangeText={setSearch}
-          placeholder="Rechercher un service, un pro..."
+          onChangeText={(text) => {
+            setSearch(text);
+            setShowSuggestions(text.length > 0);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="Que recherchez-vous ?"
         />
+        {showSuggestions && search.length === 0 && (
+          <View style={styles.suggestions}>
+            <Text style={styles.suggestionsTitle}>Quartiers populaires</Text>
+            {QUARTIERS.map((q) => (
+              <Pressable
+                key={q.name}
+                style={styles.suggestionRow}
+                onPress={() => {
+                  setSelectedQuartier(q.name);
+                  setShowSuggestions(false);
+                }}
+              >
+                <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
+                <Text style={styles.suggestionText}>{q.name}</Text>
+                {selectedQuartier === q.name && (
+                  <Text style={styles.suggestionActive}>✓</Text>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        )}
+        {showSuggestions && search.length > 0 && (() => {
+          const matchingQuartiers = QUARTIERS.filter(q =>
+            q.name.toLowerCase().includes(search.toLowerCase())
+          );
+          return matchingQuartiers.length > 0 ? (
+            <View style={styles.suggestions}>
+              {matchingQuartiers.map((q) => (
+                <Pressable
+                  key={q.name}
+                  style={styles.suggestionRow}
+                  onPress={() => {
+                    setSelectedQuartier(q.name);
+                    setSearch('');
+                    setShowSuggestions(false);
+                  }}
+                >
+                  <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
+                  <Text style={styles.suggestionText}>{q.name}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null;
+        })()}
       </View>
 
       {/* City selector */}
@@ -197,6 +279,24 @@ export default function ExplorerTab() {
         })}
       </View>
 
+      {/* Inspiration banner */}
+      <Pressable
+        style={styles.inspirationBanner}
+        onPress={() => router.push('/lookbook' as any)}
+      >
+        <View style={styles.inspirationContent}>
+          <Text style={styles.inspirationLabel}>INSPIRATION</Text>
+          <Text style={styles.inspirationTitle}>{'Trouvez votre\nprochain look'}</Text>
+          <Text style={styles.inspirationCta}>Explorer →</Text>
+        </View>
+        <View style={styles.inspirationImageGrid}>
+          <View style={[styles.inspirationThumb, { backgroundColor: colors.primary }]} />
+          <View style={[styles.inspirationThumb, { backgroundColor: colors.accent }]} />
+          <View style={[styles.inspirationThumb, { backgroundColor: colors.terracotta }]} />
+          <View style={[styles.inspirationThumb, { backgroundColor: colors.primaryLight }]} />
+        </View>
+      </Pressable>
+
       {/* Beauty Request CTA */}
       <Pressable
         style={styles.requestBanner}
@@ -210,6 +310,48 @@ export default function ExplorerTab() {
           <IconArrowRight size={18} color={colors.white} strokeWidth={2} />
         </View>
       </Pressable>
+
+      {/* Occasion Booking CTA */}
+      <Pressable
+        style={styles.occasionBanner}
+        onPress={() => router.push('/booking/occasion' as any)}
+      >
+        <Text style={styles.occasionEmoji}>💒</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.occasionTitle}>Un événement à préparer ?</Text>
+          <Text style={styles.occasionSubtitle}>Mariage, fête, shooting — planifiez tout en une fois</Text>
+        </View>
+        <Text style={styles.occasionArrow}>›</Text>
+      </Pressable>
+
+      {/* Recently viewed */}
+      {recentlyViewed.length > 0 && (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Vu récemment</Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: screenPadding.horizontal, gap: 12 }}
+            style={{ marginBottom: 8 }}
+          >
+            {recentlyViewed.slice(0, 5).map((p) => (
+              <Pressable
+                key={p.id}
+                style={styles.recentCard}
+                onPress={() => router.push(`/provider/${p.slug}`)}
+              >
+                <View style={styles.recentAvatar}>
+                  <Text style={styles.recentAvatarText}>{p.displayName[0]}</Text>
+                </View>
+                <Text style={styles.recentName} numberOfLines={1}>{p.displayName}</Text>
+                <Text style={styles.recentRating}>{'\u2605'} {p.avgRating.toFixed(1)}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </>
+      )}
 
       {/* Section title: Providers */}
       <View style={styles.sectionHeader}>
@@ -254,8 +396,10 @@ export default function ExplorerTab() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+          <View style={{ paddingHorizontal: screenPadding.horizontal, paddingTop: 20 }}>
+            <ProviderCardSkeleton />
+            <ProviderCardSkeleton />
+            <ProviderCardSkeleton />
           </View>
         ) : (
           <FlatList
@@ -272,17 +416,22 @@ export default function ExplorerTab() {
                 </View>
               )
             }
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <Pressable style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
                 {/* Gallery */}
                 <View style={styles.cardGallery}>
-                  <View style={styles.galleryMain}>
-                    <Text style={styles.galleryInitial}>{item.displayName[0]?.toUpperCase()}</Text>
-                  </View>
-                  <View style={styles.gallerySide}>
-                    <View style={styles.gallerySmall} />
-                    <View style={styles.gallerySmall} />
-                  </View>
+                  <Image
+                    source={PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length]}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                  {/* TOP PRO badge */}
+                  {item.avgRating >= 4.5 && (
+                    <View style={styles.topProBadge}>
+                      <IconAward size={12} color="#FFFFFF" strokeWidth={2} />
+                      <Text style={styles.topProText}>TOP PRO</Text>
+                    </View>
+                  )}
                   {/* Favorite heart overlay */}
                   <Pressable
                     style={styles.heartOverlay}
@@ -367,23 +516,116 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.accent,
     fontStyle: 'italic',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   headerSubtitle: {
     fontFamily: fonts.body,
-    fontSize: 13,
+    fontSize: 11,
     color: colors.textMuted,
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
     marginTop: 2,
+    textTransform: 'uppercase' as const,
+  },
+
+  // Hero Banner
+  heroBanner: {
+    marginHorizontal: screenPadding.horizontal,
+    marginBottom: spacing.md,
+    height: 180,
+    borderRadius: 24,
+    overflow: 'hidden',
+    position: 'relative',
+  } as ViewStyle,
+  heroImage: {
+    width: '100%' as any,
+    height: 180,
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(45,27,105,0.85)',
+    ...(Platform.OS === 'web'
+      ? { background: 'linear-gradient(to top, rgba(45,27,105,0.85) 0%, rgba(45,27,105,0.4) 50%, transparent 100%)' } as any
+      : {}),
+  },
+  heroContent: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  heroLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  heroTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 26,
+    color: colors.white,
+    letterSpacing: -0.5,
+    fontWeight: '700',
+    lineHeight: 30,
+  },
+  heroSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 6,
   },
 
   // Search
   searchContainer: {
     paddingHorizontal: screenPadding.horizontal,
+    marginTop: 8,
+    zIndex: 10,
+  },
+  suggestions: {
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: 6,
+    paddingVertical: 8,
+    ...({ boxShadow: '0 4px 16px rgba(167,115,102,0.12)' } as any),
+  },
+  suggestionsTitle: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 12,
+    color: colors.textMuted,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  suggestionRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  suggestionText: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 14,
+    color: colors.text,
+    flex: 1,
+  },
+  suggestionActive: {
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 14,
+    color: colors.primary,
   },
 
   // City selector
@@ -395,18 +637,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   cityChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: radius.md,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
   },
   cityChipActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   cityText: {
     fontFamily: fonts.body,
@@ -425,19 +664,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: screenPadding.horizontal,
-    marginTop: spacing.lg,
+    marginTop: 28,
     marginBottom: spacing.xs,
   },
   sectionTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 20,
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.accent,
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   seeAll: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 11,
     color: colors.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
   },
 
   // Categories — 3x2 grid
@@ -450,6 +693,7 @@ const styles = StyleSheet.create({
   categoryCell: {
     width: '33.33%',
     paddingVertical: spacing.xs,
+    marginBottom: 8,
   },
 
   // Request banner
@@ -459,13 +703,13 @@ const styles = StyleSheet.create({
     marginHorizontal: screenPadding.horizontal,
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
-    padding: spacing.md,
+    padding: 20,
     backgroundColor: colors.accent,
-    borderRadius: radius.lg,
+    borderRadius: 28,
   } as ViewStyle,
   requestTitle: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.white,
   },
@@ -474,6 +718,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 3,
+    opacity: 0.8,
   },
   requestArrowWrap: {
     width: 36,
@@ -483,6 +728,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: spacing.sm,
+  },
+
+  // Occasion banner
+  occasionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: screenPadding.horizontal,
+    marginTop: 10,
+    padding: 16,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(124,58,237,0.15)',
+  } as ViewStyle,
+  occasionEmoji: {
+    fontSize: 28,
+  },
+  occasionTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.accent,
+  },
+  occasionSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  occasionArrow: {
+    fontSize: 22,
+    color: colors.textMuted,
   },
 
   // List
@@ -505,28 +783,39 @@ const styles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: 24,
     overflow: 'hidden',
-    marginBottom: spacing.md,
-    ...shadows.card,
+    marginBottom: 20,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 20px rgba(90,56,60,0.08), 0 1px 4px rgba(90,56,60,0.04)' } as any
+      : { shadowColor: '#5F383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4 }),
   } as ViewStyle,
-  cardGallery: { height: 140, flexDirection: 'row' },
-  galleryMain: {
-    flex: 2,
-    backgroundColor: colors.n300,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cardGallery: { height: 180, position: 'relative' as const },
+  galleryImage: {
+    width: '100%' as any,
+    height: 180,
   },
-  galleryInitial: {
-    fontFamily: fonts.displayBold,
-    fontSize: 36,
-    fontWeight: '700',
-    color: 'rgba(167,115,102,0.3)',
-    fontStyle: 'italic',
-  },
-  gallerySide: { flex: 1, gap: 2 },
-  gallerySmall: { flex: 1, backgroundColor: colors.n200 },
 
+  topProBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 2,
+    backgroundColor: '#7C3AED',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  topProText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+  },
   heartOverlay: {
     position: 'absolute',
     top: 10,
@@ -546,11 +835,12 @@ const styles = StyleSheet.create({
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardName: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.accent,
     flex: 1,
     marginRight: spacing.xs,
+    letterSpacing: -0.3,
   },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingStar: { fontSize: 13, color: colors.terracotta },
@@ -576,6 +866,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textSecondary,
+    marginTop: 4,
   },
 
   servicesPreview: { marginTop: spacing.sm },
@@ -607,7 +898,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  tags: { flexDirection: 'row', marginTop: spacing.sm, gap: 8 },
+  tags: { flexDirection: 'row', marginTop: spacing.sm, gap: 10 },
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -642,6 +933,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  // Recently viewed
+  recentCard: {
+    width: 90,
+    alignItems: 'center',
+    paddingVertical: 8,
+  } as ViewStyle,
+  recentAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  } as ViewStyle,
+  recentAvatarText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontFamily: fonts.displayBold,
+    fontWeight: '700' as const,
+  },
+  recentName: {
+    fontSize: 11,
+    color: colors.text,
+    fontFamily: 'Poppins_500Medium',
+    marginTop: 6,
+    textAlign: 'center' as const,
+  },
+  recentRating: {
+    fontSize: 10,
+    color: colors.terracotta,
+    fontFamily: fonts.bodySemiBold,
+    fontWeight: '600' as const,
+    marginTop: 2,
+  },
+
   // Map
   mapContainer: { flex: 1, paddingHorizontal: screenPadding.horizontal, paddingBottom: screenPadding.horizontal },
   mapCount: {
@@ -650,5 +976,57 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
+  },
+
+  // Inspiration banner
+  inspirationBanner: {
+    flexDirection: 'row',
+    marginHorizontal: screenPadding.horizontal,
+    marginTop: spacing.sm,
+    padding: 20,
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    overflow: 'hidden',
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 4px 20px rgba(90,56,60,0.08), 0 1px 4px rgba(90,56,60,0.04)' } as any)
+      : { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 4 }),
+  } as ViewStyle,
+  inspirationContent: {
+    flex: 1,
+  },
+  inspirationLabel: {
+    fontSize: 10,
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+    marginBottom: 6,
+  },
+  inspirationTitle: {
+    fontSize: 20,
+    fontFamily: fonts.displayBold,
+    color: colors.accent,
+    lineHeight: 26,
+    letterSpacing: -0.5,
+    fontWeight: '700',
+  },
+  inspirationCta: {
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: fonts.bodySemiBold,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  inspirationImageGrid: {
+    width: 80,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    alignSelf: 'center',
+  },
+  inspirationThumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
   },
 });

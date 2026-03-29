@@ -163,23 +163,23 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 20 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 20 },
 
   // Empty state
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 20 },
-  exploreButton: { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 14 },
-  exploreButtonText: { color: colors.white, fontSize: 15, fontWeight: '600' },
+  emptyTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 8 },
+  emptyText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 20 },
+  exploreButton: { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 22 },
+  exploreButtonText: { color: colors.white, fontSize: 15, fontFamily: 'Poppins_600SemiBold' },
 
   // List
   list: { gap: 12 },
 
   // Card
   card: {
-    backgroundColor: colors.card, borderRadius: 14, padding: 16,
+    backgroundColor: colors.card, borderRadius: 24, padding: 16,
     borderWidth: 1, borderColor: colors.border,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
@@ -188,21 +188,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
     marginRight: 12, borderWidth: 2, borderColor: colors.primaryBorder,
   },
-  avatarText: { fontSize: 18, fontWeight: '700', color: colors.primary },
-  providerName: { fontSize: 16, fontWeight: '600', color: colors.accent },
-  location: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  avatarText: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  providerName: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  location: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   heartButton: { padding: 8 },
   heartIcon: { fontSize: 20 },
 
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  rating: { fontSize: 13, color: colors.textSecondary },
-  price: { fontSize: 14, fontWeight: '700', color: colors.terracotta },
+  rating: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
+  price: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
 
-  servicesList: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
+  servicesList: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 8 },
 
   mobileBadge: {
     alignSelf: 'flex-start', backgroundColor: colors.primaryGhost,
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16,
   },
-  mobileBadgeText: { fontSize: 12, color: colors.primary, fontWeight: '500' },
+  mobileBadgeText: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: colors.primary },
 });

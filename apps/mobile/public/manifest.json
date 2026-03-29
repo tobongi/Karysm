@@ -1,0 +1,20 @@
+{
+  "name": "Tokoss — Beauté & Bien-être",
+  "short_name": "Tokoss",
+  "description": "La marketplace beauté pour les peaux qui vous ressemblent. Trouvez, réservez et analysez votre beauté avec l'IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2E4D9",
+  "theme_color": "#7C3AED",
+  "categories": ["beauty", "lifestyle", "health"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

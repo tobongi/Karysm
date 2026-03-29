@@ -143,38 +143,38 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent, marginBottom: 16 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 16 },
 
   // Balance
   balanceCard: {
-    backgroundColor: colors.primary, padding: 24, borderRadius: 16,
+    backgroundColor: colors.primary, padding: 24, borderRadius: 24,
     alignItems: 'center', marginBottom: 24,
   },
-  balanceLabel: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
-  balanceAmount: { fontSize: 34, fontWeight: '800', color: colors.white, marginBottom: 12 },
+  balanceLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
+  balanceAmount: { fontSize: 34, fontFamily: 'Poppins_700Bold', color: colors.white, marginBottom: 12 },
   pendingRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16,
     backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100,
   },
-  pendingLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
-  pendingAmount: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.9)' },
+  pendingLabel: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.6)' },
+  pendingAmount: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: 'rgba(255,255,255,0.9)' },
   payoutButton: {
     backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 100,
   },
-  payoutText: { color: colors.white, fontSize: 14, fontWeight: '600' },
+  payoutText: { color: colors.white, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
 
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 14 },
 
   // Empty
   emptyState: { alignItems: 'center', paddingTop: 40 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: colors.textSecondary },
-  emptySubtext: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  emptyText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
+  emptySubtext: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
 
   // Transactions
   txRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.card, padding: 16, borderRadius: 12,
+    backgroundColor: colors.card, padding: 16, borderRadius: 24,
     marginBottom: 8, borderWidth: 1, borderColor: colors.border,
   },
   txIcon: {
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
   },
   txIconText: { fontSize: 18 },
   txInfo: { flex: 1 },
-  txLabel: { fontSize: 14, fontWeight: '500', color: colors.text },
-  txDate: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  txAmount: { fontSize: 15, fontWeight: '700' },
+  txLabel: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
+  txDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 2 },
+  txAmount: { fontSize: 15, fontFamily: 'Poppins_700Bold' },
   txPositive: { color: colors.success },
   txNegative: { color: colors.error },
 });

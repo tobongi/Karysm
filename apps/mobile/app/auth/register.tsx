@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
+import { Button, Input } from '../../src/components';
 
 export default function Register() {
   const { phone, otp } = useLocalSearchParams<{ phone: string; otp: string }>();
@@ -14,11 +15,11 @@ export default function Register() {
 
   async function handleRegister() {
     if (name.trim().length < 2) {
-      showAlert('Nom requis', 'Veuillez entrer votre nom (minimum 2 caractères).');
+      showAlert('Nom requis', 'Veuillez entrer votre nom (minimum 2 caracteres).');
       return;
     }
     if (!otp) {
-      showAlert('Erreur', 'Code OTP manquant. Veuillez recommencer la vérification.');
+      showAlert('Erreur', 'Code OTP manquant. Veuillez recommencer la verification.');
       return;
     }
     setLoading(true);
@@ -41,25 +42,22 @@ export default function Register() {
         <Text style={styles.title}>Bienvenue</Text>
         <Text style={styles.subtitle}>Comment vous appelez-vous ?</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Votre nom"
-          placeholderTextColor={colors.textMuted}
+        <Input
+          label="Votre nom"
+          placeholder="Ex: Awa Diallo"
           value={name}
           onChangeText={setName}
-          autoFocus
-          autoCapitalize="words"
+          hint={phone || ''}
         />
 
-        <Text style={styles.phoneText}>{phone}</Text>
-
-        <Pressable
-          style={[styles.button, (loading || name.trim().length < 2) && styles.buttonDisabled]}
+        <Button
+          title={loading ? 'Creation...' : 'Commencer'}
           onPress={handleRegister}
           disabled={loading || name.trim().length < 2}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Création...' : 'Commencer'}</Text>
-        </Pressable>
+          loading={loading}
+          size="lg"
+          fullWidth
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -68,21 +66,12 @@ export default function Register() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.accent, marginBottom: 8 },
-  subtitle: { fontSize: 16, color: colors.textSecondary, marginBottom: 32 },
-  input: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 12,
+  title: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 28, color: colors.accent, marginBottom: 8,
   },
-  phoneText: { fontSize: 13, color: colors.textMuted, marginBottom: 24 },
-  button: { backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  subtitle: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 16, color: colors.textSecondary, marginBottom: 32,
+  },
 });

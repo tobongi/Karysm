@@ -5,14 +5,22 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Image,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
+import Skeleton from '../../src/components/Skeleton';
+
+const BEAUTY_TIPS = [
+  { id: '1', icon: '\u{1F4A7}', title: 'Méthode LOC pour cheveux 4C', content: "Liquid, Oil, Cream \u2014 l'ordre d'application qui change tout pour l'hydratation des cheveux crépus." },
+  { id: '2', icon: '\u2600\uFE0F', title: 'SPF et peau foncée : le mythe', content: "Les peaux riches en mélanine ont aussi besoin de protection solaire. L'hyperpigmentation est plus visible sans SPF." },
+  { id: '3', icon: '\u{1F33F}', title: 'Beurre de karité : guide complet', content: 'Comment choisir, préparer et appliquer le karité pour cheveux et peau. Du brut au raffiné, tout savoir.' },
+  { id: '4', icon: '\u{1F9F4}', title: 'Routine night-time pour braids', content: 'Protège tes tresses la nuit avec un bonnet en satin et un spray hydratant léger pour éviter la sécheresse.' },
+];
 
 interface SkinSummary {
   id: string;
@@ -87,8 +95,10 @@ export default function BeautyTab() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Beauté AI</Text>
         </View>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.content}>
+          <Skeleton width="100%" height={160} borderRadius={24} />
+          <View style={{ height: 20 }} />
+          <Skeleton width="100%" height={160} borderRadius={24} />
         </View>
       </View>
     );
@@ -108,7 +118,7 @@ export default function BeautyTab() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.primary} />}
       >
-        {/* ── Skin Analysis Card ── */}
+        {/* -- Skin Analysis Card -- */}
         <Pressable
           style={styles.analysisCard}
           onPress={() => lastSkin ? router.push(`/ai/skin-results/${lastSkin.id}`) : router.push('/ai/skin-capture')}
@@ -157,7 +167,7 @@ export default function BeautyTab() {
           </Pressable>
         </Pressable>
 
-        {/* ── Hair Analysis Card ── */}
+        {/* -- Hair Analysis Card -- */}
         <Pressable
           style={styles.analysisCard}
           onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
@@ -196,7 +206,7 @@ export default function BeautyTab() {
           </Pressable>
         </Pressable>
 
-        {/* ── History ── */}
+        {/* -- History -- */}
         {(skinHistory.length > 1 || hairHistory.length > 1) && (
           <View style={styles.historySection}>
             <Text style={styles.sectionTitle}>Historique</Text>
@@ -217,6 +227,31 @@ export default function BeautyTab() {
           </View>
         )}
 
+        {/* -- Hair Journal Card -- */}
+        <Pressable style={styles.journalCard} onPress={() => router.push('/hair-journal' as any)}>
+          <View style={styles.journalIcon}>
+            <Text style={{ fontSize: 24 }}>{'\u{1F4D6}'}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.journalTitle}>Journal capillaire</Text>
+            <Text style={styles.journalSubtitle}>Suivez votre parcours cheveux mois par mois</Text>
+          </View>
+          <Text style={styles.journalArrow}>{'\u203A'}</Text>
+        </Pressable>
+
+        {/* -- Learn Section -- */}
+        <Text style={styles.learnSectionTitle}>Apprendre</Text>
+
+        {BEAUTY_TIPS.map((tip) => (
+          <View key={tip.id} style={styles.tipCard}>
+            <Text style={styles.tipEmoji}>{tip.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tipTitle}>{tip.title}</Text>
+              <Text style={styles.tipPreview} numberOfLines={2}>{tip.content}</Text>
+            </View>
+          </View>
+        ))}
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
@@ -226,30 +261,33 @@ export default function BeautyTab() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
-    paddingTop: 60, paddingBottom: 16, paddingHorizontal: 20,
-    backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border,
+    paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+    backgroundColor: colors.card,
   },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: colors.accent },
-  headerSubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+  headerTitle: { fontSize: 28, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
+  headerSubtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
 
   // Analysis cards
   analysisCard: {
-    backgroundColor: colors.card, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: colors.border, marginBottom: 16,
+    backgroundColor: colors.card, borderRadius: 24, padding: 20,
+    marginBottom: 20,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   cardEmoji: { fontSize: 32, marginRight: 14 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: colors.accent },
-  cardDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  cardTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent },
+  cardDescription: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   scoreCircle: {
     width: 52, height: 52, borderRadius: 26,
     backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.primaryBorder,
   },
-  scoreText: { fontSize: 18, fontWeight: '800', color: colors.primary },
-  scoreLabel: { fontSize: 9, color: colors.textMuted, marginTop: -2 },
+  scoreText: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  scoreLabel: { fontSize: 9, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: -2 },
 
   cardDetails: { flexDirection: 'row', gap: 8, marginBottom: 14 },
   monkBadge: {
@@ -257,36 +295,74 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardHover, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100,
   },
   monkDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
-  monkText: { fontSize: 12, fontWeight: '600', color: colors.text },
+  monkText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   undertoneBadge: {
     backgroundColor: colors.cardHover, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100,
   },
-  undertoneText: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
+  undertoneText: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
   hairTypeBadge: {
     backgroundColor: colors.primaryGhost, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100,
   },
-  hairTypeText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  hairTypeText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
 
   cardCta: {
-    backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 10, alignItems: 'center',
+    backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 25, alignItems: 'center',
   },
-  cardCtaText: { color: colors.white, fontSize: 14, fontWeight: '600' },
+  cardCtaText: { color: colors.white, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
 
   // History
   historySection: { marginTop: 8 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 12 },
+  sectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 14 },
   historyRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.card, padding: 14, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.border, marginBottom: 8,
+    backgroundColor: colors.card, padding: 16, borderRadius: 16,
+    marginBottom: 10,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
   },
   historyIcon: { fontSize: 18, marginRight: 12 },
-  historyLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: colors.text },
-  historyDate: { fontSize: 12, color: colors.textMuted },
+  historyLabel: { flex: 1, fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
+  historyDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+
+  // Journal card
+  journalCard: {
+    flexDirection: 'row', alignItems: 'center', padding: 18,
+    backgroundColor: colors.card, borderRadius: 20,
+    marginHorizontal: 0, marginTop: 20, gap: 14,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
+  },
+  journalIcon: {
+    width: 48, height: 48, borderRadius: 14,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  journalTitle: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  journalSubtitle: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', marginTop: 2 },
+  journalArrow: { fontSize: 22, color: colors.textMuted },
+
+  // Learn section
+  learnSectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginTop: 28, marginBottom: 12 },
+  tipCard: {
+    flexDirection: 'row', padding: 16,
+    backgroundColor: colors.card, borderRadius: 16,
+    marginBottom: 10, gap: 14,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
+  },
+  tipEmoji: { fontSize: 28 },
+  tipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  tipPreview: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 18, marginTop: 4 },
 
   // Empty/Auth
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.text, textAlign: 'center', marginBottom: 20 },
-  loginButton: { backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 12 },
-  loginButtonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  emptyTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center', marginBottom: 20 },
+  loginButton: { backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 25 },
+  loginButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
 });

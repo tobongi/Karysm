@@ -495,7 +495,7 @@ export default function ServicesScreen() {
                 <Switch
                   value={item.isActive}
                   onValueChange={() => toggleActive(item)}
-                  trackColor={{ false: colors.border, true: colors.primaryLight }}
+                  trackColor={{ false: colors.n300, true: colors.primaryLight }}
                   thumbColor={item.isActive ? colors.primary : colors.textMuted}
                 />
                 <Pressable
@@ -525,15 +525,15 @@ const styles = StyleSheet.create({
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyState: { alignItems: 'center' },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 8 },
+  emptyText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
 
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -541,29 +541,29 @@ const styles = StyleSheet.create({
   cardLeft: { flex: 1 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   categoryIcon: { fontSize: 18 },
-  serviceName: { fontSize: 16, fontWeight: '600', color: colors.text },
-  serviceMeta: { fontSize: 13, color: colors.textMuted },
+  serviceName: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  serviceMeta: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
   cardRight: { alignItems: 'flex-end', gap: 8 },
-  servicePrice: { fontSize: 15, fontWeight: '700', color: colors.terracotta },
+  servicePrice: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
   cardActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   deleteBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(239,68,68,0.1)',
+    backgroundColor: 'rgba(222,53,11,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteBtnText: { fontSize: 12, color: colors.error, fontWeight: '700' },
+  deleteBtnText: { fontSize: 12, color: colors.error, fontFamily: 'Poppins_700Bold' },
 
   addButton: {
     margin: 20,
     backgroundColor: colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     alignItems: 'center',
   },
-  addText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  addText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
 
   // Success toast
   successToast: {
@@ -574,11 +574,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     zIndex: 100,
     alignItems: 'center',
   },
-  successToastText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  successToastText: { color: colors.white, fontSize: 15, fontFamily: 'Poppins_600SemiBold' },
 
   // Modal
   modalOverlay: {
@@ -588,8 +588,8 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     maxHeight: '90%',
     paddingBottom: 20,
   },
@@ -607,18 +607,19 @@ const styles = StyleSheet.create({
   modalScroll: { paddingHorizontal: 20, maxHeight: 500 },
 
   // Form styles
-  formTitle: { fontSize: 20, fontWeight: '700', color: colors.accent },
+  formTitle: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: colors.accent },
   rowInputs: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 6, marginTop: 16 },
+  label: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 6, marginTop: 16 },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.text,
   },
   inputMultiline: { minHeight: 80, textAlignVertical: 'top' },
@@ -626,7 +627,7 @@ const styles = StyleSheet.create({
   categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: colors.primaryGhost,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  categoryChipText: { fontSize: 13, color: colors.primary, fontWeight: '500' },
+  categoryChipText: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.primary },
   categoryChipTextActive: { color: colors.white },
   // Social links
   socialSection: {
@@ -644,8 +645,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  socialTitle: { fontSize: 15, fontWeight: '700', color: colors.accent, marginBottom: 4 },
-  socialHint: { fontSize: 12, color: colors.textMuted, marginBottom: 12 },
+  socialTitle: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
+  socialHint: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 12 },
   socialInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -664,14 +665,14 @@ const styles = StyleSheet.create({
   photoItem: {
     width: 80,
     height: 80,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
   },
   photoImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 10,
+    borderRadius: 12,
   },
   photoRemove: {
     position: 'absolute',
@@ -684,11 +685,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  photoRemoveText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  photoRemoveText: { color: colors.white, fontSize: 11, fontFamily: 'Poppins_700Bold' },
   photoAddButton: {
     width: 80,
     height: 80,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.primaryBorder,
     borderStyle: 'dashed',
@@ -702,28 +703,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 10,
+    borderRadius: 12,
   },
-  videoPlayIcon: { color: '#FFFFFF', fontSize: 24 },
+  videoPlayIcon: { color: colors.white, fontSize: 24 },
   photoAddIcon: { fontSize: 24, marginBottom: 2 },
-  photoAddText: { fontSize: 10, color: colors.primary, fontWeight: '600', textAlign: 'center' },
+  photoAddText: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: colors.primary, textAlign: 'center' },
 
   formButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
   cancelButton: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     alignItems: 'center',
     backgroundColor: colors.primaryGhost,
   },
-  cancelButtonText: { fontSize: 16, fontWeight: '600', color: colors.primary },
+  cancelButtonText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   saveButton: {
     flex: 1,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     alignItems: 'center',
     backgroundColor: colors.primary,
   },
-  saveButtonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
   buttonDisabled: { opacity: 0.6 },
 });

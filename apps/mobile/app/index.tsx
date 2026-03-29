@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useAuth } from '../src/lib/auth-context';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { colors } from '../src/theme/colors';
 
 export default function Index() {
@@ -9,7 +9,8 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.logo}>Tokoss</Text>
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 24 }} />
       </View>
     );
   }
@@ -19,5 +20,17 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
+  logo: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontStyle: 'italic',
+    fontSize: 42,
+    color: colors.accent,
+    letterSpacing: -0.5,
+  },
 });

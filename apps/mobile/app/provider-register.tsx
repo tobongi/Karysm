@@ -403,11 +403,11 @@ const styles = StyleSheet.create({
   stepBadgeText: {
     color: colors.white,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   stepTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: colors.accent,
   },
 
@@ -438,25 +438,26 @@ const styles = StyleSheet.create({
   },
   avatarHint: {
     fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.primary,
-    fontWeight: '600',
     marginTop: 8,
   },
 
   // Labels & Inputs
   label: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.text,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    fontFamily: 'Poppins_400Regular',
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
@@ -467,6 +468,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     textAlign: 'right',
     marginTop: 4,
@@ -481,7 +483,7 @@ const styles = StyleSheet.create({
   },
   cityCard: {
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1.5,
@@ -495,7 +497,7 @@ const styles = StyleSheet.create({
   },
   cityName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.text,
   },
   cityNameSelected: {
@@ -503,6 +505,7 @@ const styles = StyleSheet.create({
   },
   cityCountry: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     marginTop: 2,
   },
@@ -515,7 +518,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
@@ -528,7 +531,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: colors.n300,
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
@@ -538,12 +541,12 @@ const styles = StyleSheet.create({
   toggleLabel: {
     marginLeft: 12,
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
   },
   toggleLabelActive: {
     color: colors.primary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
 
   // Radius
@@ -552,11 +555,12 @@ const styles = StyleSheet.create({
   },
   radiusLabel: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginBottom: 10,
   },
   radiusValue: {
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: colors.primary,
   },
   radiusButtons: {
@@ -566,7 +570,7 @@ const styles = StyleSheet.create({
   radiusChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
@@ -577,7 +581,7 @@ const styles = StyleSheet.create({
   },
   radiusChipText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.textSecondary,
   },
   radiusChipTextActive: {
@@ -594,15 +598,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRightWidth: 0,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 14,
     justifyContent: 'center',
   },
   atPrefixText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.textMuted,
   },
   instagramInput: {
@@ -621,7 +625,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: colors.primary,
-    borderRadius: 14,
+    borderRadius: 22,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -632,7 +636,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: colors.white,
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Modal
@@ -645,7 +649,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 28,
     width: '100%',
     maxWidth: 360,
@@ -657,12 +661,13 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: colors.accent,
     marginBottom: 8,
   },
   modalMessage: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -670,7 +675,7 @@ const styles = StyleSheet.create({
   },
   modalPrimaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 22,
     paddingVertical: 14,
     paddingHorizontal: 24,
     width: '100%',
@@ -680,7 +685,7 @@ const styles = StyleSheet.create({
   modalPrimaryButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   modalSecondaryButton: {
     paddingVertical: 12,
@@ -691,6 +696,6 @@ const styles = StyleSheet.create({
   modalSecondaryButtonText: {
     color: colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
 });

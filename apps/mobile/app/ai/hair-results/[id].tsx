@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator,
+  View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -41,6 +41,23 @@ const STYLE_LABELS: Record<string, string> = {
   AFRO: 'Afro', BRAIDS: 'Tresses', CORNROWS: 'Cornrows', LOCS: 'Locks',
   TWA: 'TWA', BANTU_KNOTS: 'Bantu Knots', TWIST_OUT: 'Twist-out',
 };
+
+const HAIR_PROVIDERS = [
+  { id: '1', slug: 'braids-queen', name: 'Braids Queen', specialty: 'Tresses protectrices 4A-4C', rating: '4.9' },
+  { id: '2', slug: 'natural-hair-studio', name: 'Natural Hair Studio', specialty: 'Soins cheveux naturels crépus', rating: '4.8' },
+  { id: '3', slug: 'loc-specialist', name: 'Loc Specialist', specialty: 'Locs & twists tous types', rating: '4.7' },
+];
+
+function getHairTips(analysis: any): Array<{icon: string, title: string, tip: string}> {
+  const tips: Array<{icon: string, title: string, tip: string}> = [];
+  if (analysis.porosity === 'HIGH') tips.push({ icon: '💧', title: 'Porosité élevée', tip: 'Tes cheveux absorbent vite mais perdent l\'hydratation. Scelle avec une huile lourde (ricin, olive) après chaque hydratation.' });
+  if (analysis.porosity === 'LOW') tips.push({ icon: '🔒', title: 'Porosité faible', tip: 'L\'eau a du mal à pénétrer tes cheveux. Utilise un bonnet chauffant ou de la vapeur pour ouvrir les cuticules.' });
+  if (analysis.dryness != null && analysis.dryness > 50) tips.push({ icon: '🏜️', title: 'Sécheresse', tip: 'Hydrate avec la méthode LOC (Liquid-Oil-Cream). Dors avec un bonnet en satin pour préserver l\'hydratation.' });
+  if (analysis.shrinkage != null && analysis.shrinkage > 60) tips.push({ icon: '🌀', title: 'Shrinkage important', tip: 'C\'est le signe de cheveux en bonne santé ! Pour étirer, essaie le twist-out ou les bantu knots sur cheveux humides.' });
+  if (['4B', '4C'].includes(analysis.hairType)) tips.push({ icon: '👑', title: `Type ${analysis.hairType}`, tip: 'Démêle toujours sur cheveux mouillés avec un après-shampoing riche. Sectionne en 4 parts minimum.' });
+  if (tips.length === 0) tips.push({ icon: '✨', title: 'Beaux cheveux !', tip: 'Tes cheveux sont en bonne santé. Continue ta routine et protège-les la nuit avec du satin.' });
+  return tips.slice(0, 3);
+}
 
 interface HairData {
   id: string;
@@ -195,8 +212,62 @@ export default function HairResultsScreen() {
           </View>
         )}
 
+        {/* ── Recommandé pour toi ── */}
+        <View style={styles.recoSection}>
+          <Text style={styles.recoTitle}>Professionnelles pour toi</Text>
+          <Text style={styles.recoSubtitle}>Spécialisées pour ton type de cheveux</Text>
+
+          {HAIR_PROVIDERS.map(p => (
+            <Pressable key={p.id} style={styles.recoProviderCard} onPress={() => router.push(`/provider/${p.slug}`)}>
+              <View style={styles.recoProviderAvatar}>
+                <Text style={styles.recoProviderInitial}>{p.name[0]}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.recoProviderName}>{p.name}</Text>
+                <Text style={styles.recoProviderSpecialty}>{p.specialty}</Text>
+              </View>
+              <Text style={styles.recoProviderRating}>★ {p.rating}</Text>
+            </Pressable>
+          ))}
+
+          <Pressable style={styles.recoSeeAll} onPress={() => router.push('/(tabs)')}>
+            <Text style={styles.recoSeeAllText}>Voir toutes les professionnelles →</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.recoSection}>
+          <Text style={styles.recoTitle}>Conseils pour toi</Text>
+          {getHairTips(data).map((tip, i) => (
+            <View key={i} style={styles.recoTipCard}>
+              <Text style={styles.recoTipIcon}>{tip.icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.recoTipTitle}>{tip.title}</Text>
+                <Text style={styles.recoTipText}>{tip.tip}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <Pressable style={styles.recoCta} onPress={() => router.push('/(tabs)')}>
+          <Text style={styles.recoCtaText}>Réserver un soin professionnel</Text>
+        </Pressable>
+
         {/* Actions */}
         <View style={styles.actions}>
+          <Pressable
+            style={styles.shareBtn}
+            onPress={async () => {
+              try {
+                const hairTypeLabel = data.hairType && HAIR_TYPE_INFO[data.hairType] ? HAIR_TYPE_INFO[data.hairType].label : '';
+                const porosityLabel = data.porosity && POROSITY_INFO[data.porosity] ? POROSITY_INFO[data.porosity].label : (data.porosity || '');
+                const densityLabel = data.density ? (DENSITY_INFO[data.density] || data.density) : '';
+                const message = `💇🏿 Mon analyse capillaire Tokoss\n\nType : ${data.hairType ?? '-'} — ${hairTypeLabel}\nPorosité : ${porosityLabel}\nDensité : ${densityLabel}\n\nDécouvre ton type de cheveux sur Tokoss ! 👉 https://tokoss.app`;
+                await Share.share({ message, title: 'Mon analyse capillaire Tokoss' });
+              } catch {}
+            }}
+          >
+            <Text style={styles.shareBtnText}>Partager mes résultats</Text>
+          </Pressable>
           <Pressable style={styles.newBtn} onPress={() => router.push('/ai/hair-capture')}>
             <Text style={styles.newBtnText}>🔄 Nouvelle analyse</Text>
           </Pressable>
@@ -212,7 +283,7 @@ export default function HairResultsScreen() {
 }
 
 function MetricBar({ label, value, icon, invert, neutral }: { label: string; value: number; icon: string; invert?: boolean; neutral?: boolean }) {
-  let barColor = colors.success;
+  let barColor: string = colors.success;
   if (neutral) {
     barColor = colors.primary;
   } else {
@@ -238,86 +309,124 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
-  errorText: { fontSize: 16, color: colors.textMuted, marginBottom: 16 },
-  backBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  backBtnText: { color: colors.white, fontWeight: '600' },
+  errorText: { fontSize: 16, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 16 },
+  backBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  backBtnText: { color: colors.white, fontFamily: 'Poppins_600SemiBold' },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent },
-  date: { fontSize: 13, color: colors.textMuted, marginBottom: 20 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
+  date: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 20 },
 
   // Type card
   typeCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: colors.card, borderRadius: 14, padding: 16,
+    backgroundColor: colors.card, borderRadius: 24, padding: 16,
     borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
   typeEmoji: { fontSize: 36 },
-  typeLabel: { fontSize: 12, fontWeight: '700', color: colors.primary, letterSpacing: 1 },
-  typeName: { fontSize: 20, fontWeight: '700', color: colors.accent },
-  typeDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  typeLabel: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.primary, letterSpacing: 1 },
+  typeName: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: colors.accent },
+  typeDesc: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
 
   // Score
   scoreCard: {
-    backgroundColor: colors.primary, borderRadius: 14, padding: 24,
+    backgroundColor: colors.primary, borderRadius: 24, padding: 24,
     alignItems: 'center', marginBottom: 24,
   },
   scoreBig: { flexDirection: 'row', alignItems: 'baseline' },
-  scoreBigNumber: { fontSize: 48, fontWeight: '800', color: colors.white },
-  scoreBigLabel: { fontSize: 18, color: 'rgba(255,255,255,0.6)', marginLeft: 4 },
-  scoreTitle: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
+  scoreBigNumber: { fontSize: 48, fontFamily: 'Poppins_700Bold', color: colors.white },
+  scoreBigLabel: { fontSize: 18, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.6)', marginLeft: 4 },
+  scoreTitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.8)', marginTop: 4 },
 
   // Characteristics
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 14 },
   charsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
   charCard: {
-    width: '47%', backgroundColor: colors.card, borderRadius: 12, padding: 14,
+    width: '47%', backgroundColor: colors.card, borderRadius: 16, padding: 14,
     borderWidth: 1, borderColor: colors.border,
   },
-  charLabel: { fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 1, marginBottom: 4 },
-  charValue: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  charLabel: { fontSize: 11, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 1, marginBottom: 4 },
+  charValue: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.accent },
 
   // Metrics
   metricsSection: { marginBottom: 24 },
   metricRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: colors.card, borderRadius: 10, padding: 12,
+    backgroundColor: colors.card, borderRadius: 16, padding: 12,
     borderWidth: 1, borderColor: colors.border, marginBottom: 8,
   },
   metricIcon: { fontSize: 18 },
-  metricLabel: { width: 80, fontSize: 13, fontWeight: '500', color: colors.text },
+  metricLabel: { width: 80, fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.text },
   metricBar: {
-    flex: 1, height: 6, backgroundColor: colors.cardHover, borderRadius: 3, overflow: 'hidden',
+    flex: 1, height: 6, backgroundColor: colors.n300, borderRadius: 3, overflow: 'hidden',
   },
   metricBarFill: { height: '100%', borderRadius: 3 },
-  metricValue: { width: 40, fontSize: 13, fontWeight: '700', textAlign: 'right' },
+  metricValue: { width: 40, fontSize: 13, fontFamily: 'Poppins_700Bold', textAlign: 'right' },
 
   // Style
   styleRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24,
   },
-  styleLabel: { fontSize: 14, color: colors.textSecondary },
+  styleLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
   styleBadge: {
-    backgroundColor: colors.primaryGhost, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100,
+    backgroundColor: colors.primaryGhost, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
   },
-  styleBadgeText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  styleBadgeText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
 
   // Recommendations
   recsSection: { marginBottom: 24 },
   recRow: {
-    backgroundColor: colors.card, borderRadius: 10, padding: 12,
+    backgroundColor: colors.card, borderRadius: 16, padding: 12,
     borderWidth: 1, borderColor: colors.border, marginBottom: 6,
   },
-  recText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+  recText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text, lineHeight: 20 },
+
+  // Share button
+  shareBtn: {
+    borderWidth: 1, borderColor: colors.primary, backgroundColor: 'transparent',
+    borderRadius: 16, paddingVertical: 12, alignItems: 'center',
+  },
+  shareBtnText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
 
   // Actions
   actions: { gap: 10 },
   newBtn: {
-    backgroundColor: colors.primaryGhost, paddingVertical: 14, borderRadius: 12,
+    backgroundColor: colors.primaryGhost, paddingVertical: 14, borderRadius: 22,
     alignItems: 'center', borderWidth: 1, borderColor: colors.primaryBorder,
   },
-  newBtnText: { fontSize: 15, fontWeight: '600', color: colors.primary },
+  newBtnText: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   findBtn: {
-    backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+    backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 22, alignItems: 'center',
   },
-  findBtnText: { fontSize: 15, fontWeight: '600', color: colors.white },
+  findBtnText: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.white },
+
+  // Recommendations
+  recoSection: { marginTop: 28, marginBottom: 0 },
+  recoTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  recoSubtitle: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 14 },
+  recoProviderCard: {
+    flexDirection: 'row', alignItems: 'center', padding: 14,
+    backgroundColor: colors.card, borderRadius: 16, marginBottom: 10, gap: 12,
+  },
+  recoProviderAvatar: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  recoProviderInitial: { fontSize: 18, color: colors.white, fontFamily: 'Poppins_700Bold' },
+  recoProviderName: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  recoProviderSpecialty: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
+  recoProviderRating: { fontSize: 12, color: colors.terracotta, fontFamily: 'Poppins_600SemiBold' },
+  recoSeeAll: { paddingVertical: 8 },
+  recoSeeAllText: { fontSize: 12, color: colors.primary, fontFamily: 'Poppins_600SemiBold' },
+  recoTipCard: {
+    flexDirection: 'row', padding: 14, backgroundColor: colors.card,
+    borderRadius: 16, marginBottom: 10, gap: 12,
+  },
+  recoTipIcon: { fontSize: 24 },
+  recoTipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  recoTipText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 18, marginTop: 4 },
+  recoCta: {
+    backgroundColor: colors.accent, borderRadius: 16, paddingVertical: 14,
+    alignItems: 'center', marginTop: 16, marginBottom: 8,
+  },
+  recoCtaText: { color: colors.white, fontSize: 15, fontFamily: 'Poppins_600SemiBold' },
 });

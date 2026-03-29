@@ -2,12 +2,15 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
+const PROD_API = 'https://tokoss-production.up.railway.app/api';
+
 const DEV_API = Platform.select({
   web: 'http://localhost:3001/api',
   default: 'http://localhost:3001/api',
 });
 
-const API_URL = __DEV__ ? DEV_API : 'https://tokoss-production.up.railway.app/api';
+// Always use production API for web builds (PWA/testers)
+const API_URL = Platform.OS === 'web' ? PROD_API : (__DEV__ ? DEV_API : PROD_API);
 
 let authToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;

@@ -202,54 +202,54 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20 },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 15, color: colors.textSecondary, marginBottom: 24, lineHeight: 22 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', fontWeight: '700', color: colors.accent, marginBottom: 4 },
+  subtitle: { fontSize: 15, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 24, lineHeight: 22 },
 
   section: { marginBottom: 24 },
   sectionLabel: {
-    fontSize: 11, fontWeight: '700', color: colors.textMuted,
+    fontSize: 11, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.textMuted,
     letterSpacing: 1, marginBottom: 10,
   },
 
   // Stars
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   starButton: { padding: 4 },
-  starText: { fontSize: 36, color: colors.border },
-  starActive: { color: colors.terracotta },
-  ratingLabel: { fontSize: 14, color: colors.terracotta, fontWeight: '600' },
+  starText: { fontSize: 36, color: colors.n300 },
+  starActive: { color: colors.star },
+  ratingLabel: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.star, fontWeight: '600' },
 
   // Tags
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: {
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16,
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
   },
   tagSelected: {
     backgroundColor: colors.primaryGhost, borderColor: colors.primaryBorder,
   },
-  tagText: { fontSize: 13, fontWeight: '500', color: colors.textSecondary },
-  tagTextSelected: { color: colors.primary, fontWeight: '600' },
+  tagText: { fontSize: 13, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.textSecondary },
+  tagTextSelected: { color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
 
   // Comment
   textInput: {
-    backgroundColor: colors.card, borderRadius: 12, padding: 16,
-    fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, borderRadius: 20, padding: 16,
+    fontSize: 15, fontFamily: 'Poppins_400Regular', color: colors.text, borderWidth: 1, borderColor: colors.border,
     minHeight: 120,
   },
-  charCount: { fontSize: 12, color: colors.textMuted, textAlign: 'right', marginTop: 4 },
+  charCount: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'right', marginTop: 4 },
 
   // Photos
   photosRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   photoWrapper: { position: 'relative' },
-  photo: { width: 72, height: 72, borderRadius: 10 },
+  photo: { width: 72, height: 72, borderRadius: 12 },
   photoRemove: {
     position: 'absolute', top: -6, right: -6,
     width: 22, height: 22, borderRadius: 11,
     backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center',
   },
-  photoRemoveText: { color: colors.white, fontSize: 12, fontWeight: '700' },
+  photoRemoveText: { color: colors.white, fontSize: 12, fontFamily: 'Poppins_700Bold', fontWeight: '700' },
   addPhotoButton: {
-    width: 72, height: 72, borderRadius: 10,
+    width: 72, height: 72, borderRadius: 12,
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
     justifyContent: 'center', alignItems: 'center',
     borderStyle: 'dashed',
@@ -258,9 +258,9 @@ const styles = StyleSheet.create({
 
   // Submit
   submitButton: {
-    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 14,
+    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 25,
     alignItems: 'center', marginTop: 8,
   },
   submitDisabled: { opacity: 0.5 },
-  submitText: { color: colors.white, fontSize: 17, fontWeight: '700' },
+  submitText: { color: colors.white, fontSize: 17, fontFamily: 'Poppins_700Bold', fontWeight: '700' },
 });

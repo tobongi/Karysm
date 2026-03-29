@@ -32,6 +32,7 @@ model User {
   bookings      Booking[]       @relation("ClientBookings")
   reviews       Review[]
   favorites     Favorite[]
+  savedLooks    SavedLook[]
   refreshTokens RefreshToken[]
   notifications Notification[]
   requests      BeautyRequest[] @relation("ClientRequests")
@@ -381,6 +382,8 @@ model PortfolioItem {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
+  savedBy     SavedLook[]
+
   @@index([providerId])
   @@map("portfolio_items")
 }
@@ -396,6 +399,20 @@ model Favorite {
 
   @@unique([userId, providerId])
   @@map("favorites")
+}
+
+// ==================== SAVED LOOKS ====================
+
+model SavedLook {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  portfolioItemId String
+  portfolioItem   PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+
+  @@unique([userId, portfolioItemId])
+  @@map("saved_looks")
 }
 
 // ==================== TRANSPORT ====================

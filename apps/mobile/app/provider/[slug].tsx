@@ -5,15 +5,20 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
   Linking,
   RefreshControl,
   Image,
+  Platform,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { IconRosetteDiscountCheck, IconShare } from '@tabler/icons-react-native';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
+import { addRecentlyViewed } from '../../src/lib/recently-viewed';
+import Skeleton from '../../src/components/Skeleton';
+import BeforeAfter from '../../src/components/BeforeAfter';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,6 +112,12 @@ const DAY_LABELS: Record<string, string> = {
 
 const ALL_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
+const MOCK_TRANSFORMATIONS = [
+  { id: '1', service: 'Box Braids Jumbo', before: null, after: null },
+  { id: '2', service: 'Twist Out Naturel', before: null, after: null },
+  { id: '3', service: 'Soin Kératine', before: null, after: null },
+];
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -137,6 +148,14 @@ export default function ProviderProfile() {
       const res: any = await api(`/search/providers/${slug}`);
       if (res.success && res.data) {
         setProvider(res.data);
+        // Track recently viewed
+        addRecentlyViewed({
+          id: res.data.id,
+          slug: res.data.slug,
+          displayName: res.data.displayName,
+          city: res.data.city,
+          avgRating: res.data.avgRating,
+        });
         // Fetch reviews
         try {
           const reviewsRes: any = await api(`/reviews/provider/${res.data.id}`);
@@ -166,8 +185,15 @@ export default function ProviderProfile() {
   if (loading) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <View style={{ width: '100%', paddingHorizontal: 20, alignItems: 'center' }}>
+          <Skeleton width="100%" height={240} borderRadius={24} />
+          <View style={{ height: 16 }} />
+          <Skeleton width="60%" height={22} borderRadius={8} />
+          <View style={{ height: 10 }} />
+          <Skeleton width="40%" height={16} borderRadius={8} />
+          <View style={{ height: 10 }} />
+          <Skeleton width="70%" height={14} borderRadius={8} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -205,6 +231,13 @@ export default function ProviderProfile() {
     }
   };
 
+  const shareProfile = async () => {
+    try {
+      const message = `Je te recommande ${provider.displayName} sur Tokoss ✨\n\n${provider.avgRating.toFixed(1)}⭐ (${provider.totalReviews} avis)\n📍 ${provider.city}\n\nRéserve ici 👉 https://tokoss.app/provider/${provider.slug}`;
+      await Share.share({ message, title: `${provider.displayName} sur Tokoss` });
+    } catch {}
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
@@ -233,7 +266,9 @@ export default function ProviderProfile() {
           <View style={styles.nameRow}>
             <Text style={styles.displayName}>{provider.displayName}</Text>
             {provider.idVerified && (
-              <Text style={styles.verifiedBadge}>✅</Text>
+              <View style={styles.verifiedBadge}>
+                <IconRosetteDiscountCheck size={20} color="#00875A" fill="#00875A" strokeWidth={1.5} />
+              </View>
             )}
           </View>
 
@@ -241,10 +276,13 @@ export default function ProviderProfile() {
             <Text style={styles.specialty}>{specialty}</Text>
           )}
 
-          <Text style={styles.ratingLine}>
-            ⭐ {provider.avgRating.toFixed(1)} ({provider.totalReviews})
-            {provider.commune ? `  ·  📍 ${provider.commune}, ${provider.city}` : `  ·  📍 ${provider.city}`}
-          </Text>
+          <View style={styles.ratingLine}>
+            <Text style={styles.ratingLineStar}>{'\u2605'}</Text>
+            <Text style={styles.ratingLineText}>
+              {provider.avgRating.toFixed(1)} ({provider.totalReviews})
+              {provider.commune ? `  ·  ${provider.commune}, ${provider.city}` : `  ·  ${provider.city}`}
+            </Text>
+          </View>
         </View>
 
         {/* ── Stats Row ── */}
@@ -319,6 +357,21 @@ export default function ProviderProfile() {
           </View>
         )}
 
+        {/* ── Transformations Avant/Après ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Transformations</Text>
+          <Text style={styles.sectionSubtitle}>Résultats sur de vraies clientes</Text>
+
+          {MOCK_TRANSFORMATIONS.map((t) => (
+            <BeforeAfter
+              key={t.id}
+              beforeImage={t.before}
+              afterImage={t.after}
+              serviceName={t.service}
+            />
+          ))}
+        </View>
+
         {/* ── Disponibilités ── */}
         {provider.availability.length > 0 && (
           <View style={styles.section}>
@@ -390,6 +443,16 @@ export default function ProviderProfile() {
                 </Pressable>
               )}
             </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareButton,
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={shareProfile}
+            >
+              <IconShare size={18} color={colors.primary} strokeWidth={2} />
+              <Text style={styles.shareButtonText}>Partager ce profil</Text>
+            </Pressable>
           </View>
         )}
 
@@ -509,6 +572,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
   },
   errorEmoji: {
@@ -517,12 +581,14 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   errorSubtitle: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -532,11 +598,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: 28,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: 25,
   },
   retryButtonText: {
     color: colors.white,
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -549,17 +616,20 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: colors.primaryGhost,
-    borderWidth: 2,
-    borderColor: colors.primaryBorder,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0 4px 24px rgba(90,56,60,0.12)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 24, elevation: 4 },
+    }) as any,
   },
   avatarText: {
     fontSize: 26,
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
@@ -570,57 +640,74 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   displayName: {
-    fontSize: 22,
+    fontSize: 28,
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontWeight: '700',
     color: colors.accent,
   },
   verifiedBadge: {
-    fontSize: 16,
+    marginLeft: 6,
   },
   specialty: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginBottom: 6,
   },
   ratingLine: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 2,
+  },
+  ratingLineStar: {
+    fontSize: 14,
+    color: '#A77366',
+  },
+  ratingLineText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
   },
 
   // --- Stats ---
   statsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   statValue: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.accent,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
   },
 
   // --- CTA ---
   ctaButton: {
     backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 27,
+    height: 54,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   ctaButtonPressed: {
     backgroundColor: colors.primaryDark,
@@ -628,6 +715,7 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     color: colors.white,
     fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
@@ -646,22 +734,32 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
     color: colors.primary,
     fontWeight: '500',
   },
 
   // --- Sections ---
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontWeight: '700',
     color: colors.accent,
-    marginBottom: 12,
+    marginBottom: 14,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 14,
+    marginTop: 2,
+    fontFamily: 'Poppins_400Regular',
   },
   bioText: {
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     lineHeight: 22,
   },
@@ -676,9 +774,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   serviceInfo: {
     flex: 1,
@@ -686,16 +786,19 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.text,
     marginBottom: 2,
   },
   serviceDuration: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
   },
   servicePrice: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.terracotta,
   },
@@ -710,18 +813,17 @@ const styles = StyleSheet.create({
   dayChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 100,
+    borderRadius: 16,
   },
   dayChipActive: {
     backgroundColor: colors.primary,
   },
   dayChipInactive: {
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   dayChipText: {
     fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   dayChipTextActive: {
@@ -732,6 +834,7 @@ const styles = StyleSheet.create({
   },
   availabilityTime: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginTop: 4,
   },
@@ -743,39 +846,62 @@ const styles = StyleSheet.create({
   },
   whatsappButton: {
     flex: 1,
-    backgroundColor: '#25D366',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
   },
   whatsappButtonText: {
     color: colors.white,
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
   instagramButton: {
     flex: 1,
     backgroundColor: colors.card,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
   },
   instagramButtonText: {
     color: colors.text,
     fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    paddingVertical: 12,
+    marginTop: 10,
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.primary,
   },
 
   // --- Reviews ---
   ratingDistribution: {
     marginBottom: 16,
     backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    padding: 16,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -785,36 +911,40 @@ const styles = StyleSheet.create({
   ratingRowStar: {
     width: 32,
     fontSize: 12,
-    color: colors.terracotta,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.star,
     fontWeight: '600',
   },
   ratingBar: {
     flex: 1,
     height: 6,
-    backgroundColor: colors.cardHover,
+    backgroundColor: colors.n300,
     borderRadius: 3,
     marginHorizontal: 8,
     overflow: 'hidden',
   },
   ratingBarFill: {
     height: '100%',
-    backgroundColor: colors.terracotta,
+    backgroundColor: colors.star,
     borderRadius: 3,
   },
   ratingRowCount: {
     width: 20,
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     textAlign: 'right',
   },
 
   reviewCard: {
     backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 10,
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 12,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -832,24 +962,28 @@ const styles = StyleSheet.create({
   },
   reviewAvatarText: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
   reviewName: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.text,
   },
   reviewDate: {
     fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
   },
   reviewStars: {
     fontSize: 14,
-    color: colors.terracotta,
+    color: colors.star,
   },
   reviewComment: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
@@ -864,10 +998,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 100,
+    borderRadius: 16,
   },
   reviewTagText: {
     fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
     color: colors.primary,
     fontWeight: '500',
   },
@@ -877,7 +1012,7 @@ const styles = StyleSheet.create({
   reviewPhoto: {
     width: 64,
     height: 64,
-    borderRadius: 8,
+    borderRadius: 12,
     marginRight: 8,
   },
   showAllButton: {
@@ -886,6 +1021,7 @@ const styles = StyleSheet.create({
   },
   showAllText: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.primary,
   },

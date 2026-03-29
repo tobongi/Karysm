@@ -9,13 +9,13 @@ import { showAlert, showConfirm } from '../../../src/lib/alert';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   REQUESTED:    { label: 'En attente',    color: colors.warning, bg: 'rgba(245,158,11,0.1)' },
-  CONFIRMED:    { label: 'Confirmée',     color: colors.success, bg: 'rgba(16,185,129,0.1)' },
-  DEPOSIT_PAID: { label: 'Acompte payé',  color: '#8B5CF6',      bg: 'rgba(139,92,246,0.1)' },
-  IN_PROGRESS:  { label: 'En cours',      color: colors.primary, bg: 'rgba(124,58,237,0.1)' },
-  COMPLETED:    { label: 'Terminée',      color: colors.textMuted, bg: 'rgba(156,163,175,0.1)' },
-  CANCELLED:    { label: 'Annulée',       color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
-  NO_SHOW:      { label: 'Absent',        color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
-  DISPUTED:     { label: 'En litige',     color: colors.error,   bg: 'rgba(239,68,68,0.1)' },
+  CONFIRMED:    { label: 'Confirmée',     color: colors.success, bg: 'rgba(0,135,90,0.1)' },
+  DEPOSIT_PAID: { label: 'Acompte payé',  color: colors.primary, bg: colors.primaryGhost },
+  IN_PROGRESS:  { label: 'En cours',      color: colors.primaryDark, bg: colors.primaryGhost },
+  COMPLETED:    { label: 'Terminée',      color: colors.textMuted, bg: 'rgba(160,164,150,0.1)' },
+  CANCELLED:    { label: 'Annulée',       color: colors.error,   bg: 'rgba(222,53,11,0.1)' },
+  NO_SHOW:      { label: 'Absent',        color: colors.error,   bg: 'rgba(222,53,11,0.1)' },
+  DISPUTED:     { label: 'En litige',     color: colors.error,   bg: 'rgba(222,53,11,0.1)' },
 };
 
 function formatPrice(amount: number | null | undefined, currency: string) {
@@ -326,12 +326,18 @@ export default function BookingDetail() {
 
         {/* Leave review */}
         {isClient && booking.status === 'COMPLETED' && !booking.review && (
-          <Pressable
-            style={styles.reviewButton}
-            onPress={() => router.push(`/booking/review/${booking.id}?providerName=${encodeURIComponent(booking.provider.displayName)}`)}
-          >
-            <Text style={styles.reviewButtonText}>⭐ Laisser un avis</Text>
-          </Pressable>
+          <View style={styles.reviewPrompt}>
+            <Text style={styles.reviewPromptTitle}>Comment s'est passé votre service ?</Text>
+            <Text style={styles.reviewPromptSubtitle}>
+              Votre avis aide les autres clientes à trouver les meilleures professionnelles
+            </Text>
+            <Pressable
+              style={styles.reviewButton}
+              onPress={() => router.push(`/booking/review/${booking.id}?providerName=${encodeURIComponent(booking.provider.displayName)}`)}
+            >
+              <Text style={styles.reviewButtonText}>Laisser un avis</Text>
+            </Pressable>
+          </View>
         )}
 
         {/* Rebook */}
@@ -373,22 +379,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
-  errorText: { fontSize: 16, color: colors.textMuted },
-  backButton: { marginTop: 16, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  backButtonText: { color: '#FFFFFF', fontWeight: '600' },
+  errorText: { fontSize: 16, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  backButton: { marginTop: 16, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 },
+  backButtonText: { color: colors.white, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
 
   // Success banner
   successBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16,185,129,0.1)',
+    backgroundColor: 'rgba(0,135,90,0.1)',
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     marginBottom: 16,
   },
   successIcon: { fontSize: 24, marginRight: 12 },
-  successTitle: { fontSize: 16, fontWeight: '700', color: colors.success },
-  successText: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  successTitle: { fontSize: 16, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.success },
+  successText: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
 
   // Header
   headerCard: {
@@ -397,14 +403,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  ref: { fontSize: 15, fontWeight: '700', color: colors.accent },
+  ref: { fontSize: 15, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.accent },
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 },
-  statusText: { fontSize: 13, fontWeight: '600' },
+  statusText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
 
   // Provider row
   providerRow: {
@@ -412,7 +418,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -427,64 +433,88 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primaryBorder,
   },
-  providerAvatarText: { fontSize: 18, fontWeight: '700', color: colors.primary },
-  providerName: { fontSize: 16, fontWeight: '600', color: colors.accent },
-  providerLocation: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  providerAvatarText: { fontSize: 18, fontFamily: 'PlayfairDisplay_700Bold', fontWeight: '700', color: colors.primary },
+  providerName: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.accent },
+  providerLocation: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   chevron: { fontSize: 24, color: colors.textMuted },
 
   // Sections
   section: { marginBottom: 20 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: colors.textMuted, letterSpacing: 1, marginBottom: 8 },
-  value: { fontSize: 16, fontWeight: '600', color: colors.text },
-  subvalue: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  priceValue: { fontSize: 28, fontWeight: '800', color: colors.terracotta },
+  sectionLabel: { fontSize: 11, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.textMuted, letterSpacing: 1, marginBottom: 8 },
+  value: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.text },
+  subvalue: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 4 },
+  priceValue: { fontSize: 28, fontFamily: 'Poppins_700Bold', fontWeight: '800', color: colors.terracotta },
 
   // Actions
   actions: { marginTop: 8, gap: 12 },
   whatsappButton: {
-    backgroundColor: '#25D366',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
   },
-  whatsappText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  whatsappText: { color: colors.white, fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
   confirmButton: {
     backgroundColor: colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
   },
-  confirmButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  confirmButtonText: { color: colors.white, fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
   cancelButton: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.error,
   },
-  cancelText: { fontSize: 15, fontWeight: '600', color: colors.error },
-  reviewButton: {
-    backgroundColor: colors.primaryGhost,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
+  cancelText: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.error },
+  reviewPrompt: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 16,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
+    alignItems: 'center',
   },
-  reviewButtonText: { fontSize: 15, fontWeight: '600', color: colors.primary },
+  reviewPromptTitle: {
+    fontSize: 17,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontWeight: '700',
+    color: colors.accent,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  reviewPromptSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  reviewButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  reviewButtonText: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: '600' },
   rebookButton: {
     backgroundColor: colors.card,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  rebookButtonText: { fontSize: 15, fontWeight: '600', color: colors.accent },
+  rebookButtonText: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.accent },
 
   // Existing review
   existingReview: { marginBottom: 20 },
-  existingReviewStars: { fontSize: 20, color: colors.terracotta, marginBottom: 4 },
+  existingReviewStars: { fontSize: 20, color: colors.star, marginBottom: 4 },
 
   // Timeline
   timeline: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border },
@@ -500,6 +530,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     marginRight: 12,
   },
-  timelineLabel: { fontSize: 14, fontWeight: '500', color: colors.text, flex: 1 },
-  timelineDate: { fontSize: 12, color: colors.textMuted },
+  timelineLabel: { fontSize: 14, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.text, flex: 1 },
+  timelineDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
 });

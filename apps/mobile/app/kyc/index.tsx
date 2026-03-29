@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { IconRosetteDiscountCheck, IconCircleCheck } from '@tabler/icons-react-native';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
@@ -38,10 +39,10 @@ const DOC_CONFIG = [
 ];
 
 const STATUS_DISPLAY: Record<string, { label: string; color: string; bg: string }> = {
-  NOT_STARTED: { label: 'Non soumis', color: colors.textMuted, bg: 'rgba(0,0,0,0.04)' },
-  PENDING: { label: 'En attente', color: colors.warning, bg: 'rgba(245,158,11,0.1)' },
-  APPROVED: { label: 'Approuvé', color: colors.success, bg: 'rgba(16,185,129,0.1)' },
-  REJECTED: { label: 'Refusé', color: colors.error, bg: 'rgba(239,68,68,0.1)' },
+  NOT_STARTED: { label: 'Non soumis', color: colors.textMuted, bg: colors.primaryGhost },
+  PENDING: { label: 'En attente', color: colors.warning, bg: 'rgba(255,153,31,0.1)' },
+  APPROVED: { label: 'Approuvé', color: colors.success, bg: 'rgba(0,135,90,0.1)' },
+  REJECTED: { label: 'Refusé', color: colors.error, bg: 'rgba(222,53,11,0.1)' },
 };
 
 export default function KycScreen() {
@@ -115,7 +116,7 @@ export default function KycScreen() {
       >
         <Text style={styles.title}>Vérification d'identité</Text>
         <Text style={styles.subtitle}>
-          Soumettez vos documents pour obtenir le badge vérifié ✅ sur votre profil.
+          Soumettez vos documents pour obtenir le badge vérifié sur votre profil.
         </Text>
 
         {/* Overall status */}
@@ -126,7 +127,10 @@ export default function KycScreen() {
             </Text>
           </View>
           {kycData?.idVerified && (
-            <Text style={styles.verifiedText}>✅ Identité vérifiée</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <IconRosetteDiscountCheck size={20} color="#00875A" fill="#00875A" strokeWidth={1.5} />
+              <Text style={styles.verifiedText}>Identité vérifiée</Text>
+            </View>
           )}
           {overallStatus === 'REJECTED' && (
             <Text style={styles.rejectedHint}>
@@ -195,7 +199,10 @@ export default function KycScreen() {
               )}
 
               {docStatus === 'APPROVED' && (
-                <Text style={styles.approvedHint}>✅ Document approuvé</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  <IconCircleCheck size={14} color="#00875A" strokeWidth={2} />
+                  <Text style={styles.approvedHint}>Document approuvé</Text>
+                </View>
               )}
             </View>
           );
@@ -213,50 +220,50 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
 
   // Overall status
   statusCard: {
-    backgroundColor: colors.card, borderRadius: 14, padding: 16,
+    backgroundColor: colors.card, borderRadius: 24, padding: 16,
     borderWidth: 1, marginBottom: 24,
   },
   statusBadge: {
-    alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
+    alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
   },
-  statusText: { fontSize: 13, fontWeight: '600' },
-  verifiedText: { fontSize: 16, fontWeight: '700', color: colors.success, marginTop: 8 },
-  rejectedHint: { fontSize: 13, color: colors.error, marginTop: 8, lineHeight: 18 },
+  statusText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold' },
+  verifiedText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.success },
+  rejectedHint: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.error, marginTop: 8, lineHeight: 18 },
 
   // Document cards
   docCard: {
-    backgroundColor: colors.card, borderRadius: 14, padding: 16,
+    backgroundColor: colors.card, borderRadius: 24, padding: 16,
     borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
   docHeader: { flexDirection: 'row', marginBottom: 12 },
   docIcon: { fontSize: 28, marginRight: 12, marginTop: 2 },
-  docLabel: { fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 2 },
-  docDescription: { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
+  docLabel: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 2 },
+  docDescription: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, lineHeight: 16 },
 
   docPreview: { marginBottom: 12 },
-  docImage: { width: '100%', height: 160, borderRadius: 10, marginBottom: 8, backgroundColor: colors.cardHover },
+  docImage: { width: '100%', height: 160, borderRadius: 16, marginBottom: 8, backgroundColor: colors.cardHover },
   docStatusBadge: {
-    alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100,
+    alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 16,
   },
-  docStatusText: { fontSize: 12, fontWeight: '600' },
+  docStatusText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold' },
 
   rejectedBox: {
-    backgroundColor: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 12, marginBottom: 12,
+    backgroundColor: 'rgba(222,53,11,0.06)', borderRadius: 12, padding: 12, marginBottom: 12,
   },
-  rejectedLabel: { fontSize: 12, fontWeight: '600', color: colors.error, marginBottom: 4 },
-  rejectedReason: { fontSize: 13, color: colors.error, lineHeight: 18 },
+  rejectedLabel: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.error, marginBottom: 4 },
+  rejectedReason: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.error, lineHeight: 18 },
 
   uploadButton: {
-    backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 10, alignItems: 'center',
+    backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 20, alignItems: 'center',
   },
   uploadDisabled: { opacity: 0.5 },
-  uploadText: { color: colors.white, fontSize: 14, fontWeight: '600' },
+  uploadText: { color: colors.white, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
 
-  pendingHint: { fontSize: 13, color: colors.warning, marginTop: 4 },
-  approvedHint: { fontSize: 13, color: colors.success, marginTop: 4 },
+  pendingHint: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.warning, marginTop: 4 },
+  approvedHint: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.success },
 });

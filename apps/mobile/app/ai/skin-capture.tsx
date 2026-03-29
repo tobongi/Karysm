@@ -230,7 +230,7 @@ export default function SkinCaptureScreen() {
               <Switch
                 value={consent}
                 onValueChange={setConsent}
-                trackColor={{ false: colors.border, true: colors.primaryLight }}
+                trackColor={{ false: colors.n300, true: colors.primaryLight }}
                 thumbColor={consent ? colors.primary : colors.textMuted}
               />
               <Text style={styles.consentText}>
@@ -285,21 +285,21 @@ function AnalysisStep({ label, done, active }: { label: string; done: boolean; a
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0A0A0A' },
+  safeArea: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1 },
   content: { padding: 20 },
 
-  title: { fontSize: 22, fontWeight: '700', color: colors.white, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 20, marginBottom: 20 },
+  title: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
 
   // Scanner
   scannerContainer: { alignItems: 'center', marginBottom: 24 },
   scannerFrame: {
     width: SCAN_SIZE, height: SCAN_SIZE * 1.2,
-    borderRadius: 20, overflow: 'visible', position: 'relative',
+    borderRadius: 24, overflow: 'visible', position: 'relative',
   },
   scannerImage: {
-    width: '100%', height: '100%', borderRadius: 20,
+    width: '100%', height: '100%', borderRadius: 24,
   },
 
   // Oval frame
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   // Corner brackets
   cornerBracket: {
     position: 'absolute', width: 28, height: 28,
-    borderColor: colors.white,
+    borderColor: colors.accent,
   },
   cornerTL: { top: 8, left: 8, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
   cornerTR: { top: 8, right: 8, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
@@ -340,20 +340,21 @@ const styles = StyleSheet.create({
 
   // Detection badges
   detectionBadge: {
-    position: 'absolute', backgroundColor: 'rgba(10,10,10,0.85)',
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
-    borderWidth: 1, borderColor: 'rgba(124,58,237,0.4)',
-    backdropFilter: 'blur(10px)',
+    position: 'absolute', backgroundColor: colors.card,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.border,
+    shadowColor: colors.n800, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4,
   },
-  detectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', letterSpacing: 0.5 },
-  detectionValue: { fontSize: 13, color: colors.white, fontWeight: '700', marginTop: 2 },
+  detectionLabel: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: colors.textMuted, letterSpacing: 0.5 },
+  detectionValue: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.accent, marginTop: 2 },
 
   // Capture zone (empty state)
   captureZone: {
     width: SCAN_SIZE, height: SCAN_SIZE * 1.2,
-    backgroundColor: 'rgba(124,58,237,0.06)', borderRadius: 20,
+    backgroundColor: colors.primaryGhost, borderRadius: 24,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)',
+    borderWidth: 1, borderColor: colors.primaryBorder,
   },
   ovalGuide: {
     width: SCAN_SIZE * 0.6, height: SCAN_SIZE * 0.8,
@@ -361,71 +362,71 @@ const styles = StyleSheet.create({
   },
   ovalGuideBorder: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 999, borderWidth: 2, borderColor: 'rgba(124,58,237,0.3)', borderStyle: 'dashed',
+    borderRadius: 999, borderWidth: 2, borderColor: colors.n300, borderStyle: 'dashed',
   },
   ovalGuideIcon: { fontSize: 48, opacity: 0.3 },
-  captureText: { fontSize: 16, fontWeight: '600', color: colors.primary, marginTop: 16 },
+  captureText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary, marginTop: 16 },
   captureHint: {
-    marginTop: 8, backgroundColor: 'rgba(124,58,237,0.1)',
+    marginTop: 8, backgroundColor: colors.primaryGhost,
     paddingHorizontal: 16, paddingVertical: 6, borderRadius: 100,
   },
-  captureHintText: { fontSize: 12, color: colors.primaryLight },
+  captureHintText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.primaryDark },
 
   // Tips
   tipsRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   tipCard: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 12,
-    alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
+    alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
   tipIcon: { fontSize: 22, marginBottom: 6 },
-  tipTitle: { fontSize: 11, fontWeight: '600', color: colors.white, textAlign: 'center' },
-  tipDesc: { fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 2 },
+  tipTitle: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
+  tipDesc: { fontSize: 10, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginTop: 2 },
 
   // Retake
   retakeButton: {
-    alignSelf: 'center', backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 24, paddingVertical: 10, borderRadius: 100,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', marginBottom: 16,
+    alignSelf: 'center', backgroundColor: colors.card,
+    paddingHorizontal: 24, paddingVertical: 10, borderRadius: 16,
+    borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
-  retakeText: { fontSize: 14, fontWeight: '500', color: 'rgba(255,255,255,0.7)' },
+  retakeText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
 
   // Consent
   consentRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 16,
+    backgroundColor: colors.card, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
-  consentText: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 17 },
+  consentText: { flex: 1, fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 17 },
 
   // Analyze CTA
   analyzeButton: {
-    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 14, alignItems: 'center',
+    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 22, alignItems: 'center',
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 12,
   },
-  analyzeText: { color: colors.white, fontSize: 17, fontWeight: '700' },
+  analyzeText: { color: colors.white, fontSize: 17, fontFamily: 'Poppins_700Bold' },
 
   // Analyzing state
   analyzingContainer: { marginTop: 8 },
   analyzingCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 24,
-    alignItems: 'center', borderWidth: 1, borderColor: 'rgba(124,58,237,0.2)',
+    backgroundColor: colors.card, borderRadius: 24, padding: 24,
+    alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  analyzingTitle: { fontSize: 18, fontWeight: '700', color: colors.white, marginTop: 16, marginBottom: 4 },
-  analyzingDesc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 18, marginBottom: 20 },
+  analyzingTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginTop: 16, marginBottom: 4 },
+  analyzingDesc: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: 20 },
   analyzingSteps: { width: '100%', gap: 12 },
 
   // Analysis steps
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepDot: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.n300, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: colors.border,
   },
   stepDotDone: { backgroundColor: colors.success, borderColor: colors.success },
   stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  stepCheck: { fontSize: 14, color: colors.white, fontWeight: '700' },
-  stepLabel: { fontSize: 14, color: 'rgba(255,255,255,0.3)' },
-  stepLabelDone: { color: 'rgba(255,255,255,0.7)' },
-  stepLabelActive: { color: colors.white, fontWeight: '600' },
+  stepCheck: { fontSize: 14, color: colors.white, fontFamily: 'Poppins_700Bold' },
+  stepLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  stepLabelDone: { color: colors.textSecondary },
+  stepLabelActive: { color: colors.accent, fontFamily: 'Poppins_600SemiBold' },
 });

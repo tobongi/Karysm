@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { BookingStatus } from '@prisma/client';
 
 interface CreateNotificationParams {
   userId: string;
@@ -134,4 +135,70 @@ export async function notifyBookingEvent(
       });
       break;
   }
+}
+
+// Send booking reminders for appointments happening tomorrow
+export async function sendBookingReminders(): Promise<number> {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+  // Find bookings happening tomorrow that are confirmed or deposit paid
+  const bookings = await prisma.booking.findMany({
+    where: {
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.DEPOSIT_PAID] },
+      date: { gte: tomorrow, lt: tomorrowEnd },
+    },
+    include: {
+      client: { select: { id: true, name: true } },
+      provider: {
+        select: {
+          displayName: true,
+          user: { select: { id: true, name: true } },
+        },
+      },
+      service: { select: { name: true } },
+    },
+  });
+
+  let remindersSent = 0;
+
+  for (const booking of bookings) {
+    // Check if a reminder was already sent for this booking
+    const existingReminder = await prisma.notification.findFirst({
+      where: {
+        type: 'BOOKING_REMINDER',
+        data: { path: ['bookingId'], equals: booking.id },
+      },
+    });
+
+    if (existingReminder) continue;
+
+    const serviceName = booking.service.name;
+    const providerName = booking.provider.displayName;
+    const clientName = booking.client.name;
+    const startTime = booking.startTime;
+
+    // Notify client
+    await createNotification({
+      userId: booking.clientId,
+      type: 'BOOKING_REMINDER',
+      title: 'Rappel — RDV demain !',
+      body: `Votre service "${serviceName}" avec ${providerName} est prévu demain à ${startTime}.`,
+      data: { bookingId: booking.id },
+    });
+
+    // Notify provider
+    await createNotification({
+      userId: booking.provider.user.id,
+      type: 'BOOKING_REMINDER',
+      title: 'Rappel — Client demain',
+      body: `${clientName} a réservé "${serviceName}" demain à ${startTime}.`,
+      data: { bookingId: booking.id },
+    });
+
+    remindersSent++;
+  }
+
+  return remindersSent;
 }

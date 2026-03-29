@@ -288,7 +288,7 @@ export default function CreateRequestScreen() {
           <Switch
             value={flexibleDate}
             onValueChange={setFlexibleDate}
-            trackColor={{ true: colors.primary, false: '#ddd' }}
+            trackColor={{ true: colors.primary, false: colors.n300 }}
             thumbColor={colors.white}
           />
         </View>
@@ -384,17 +384,18 @@ export default function CreateRequestScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
-  sectionTitle: { fontSize: 22, fontWeight: '800', color: colors.accent, marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text, marginTop: 16, marginBottom: 8 },
-  hint: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  sectionTitle: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 20 },
+  label: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginTop: 16, marginBottom: 8 },
+  hint: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
   input: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.text,
   },
   textArea: {
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 100,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
@@ -421,8 +422,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   categoryIcon: { fontSize: 16, marginRight: 6 },
-  categoryText: { fontSize: 14, color: colors.text, fontWeight: '500' },
-  categoryTextActive: { color: colors.primary, fontWeight: '700' },
+  categoryText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
+  categoryTextActive: { color: colors.primary, fontFamily: 'Poppins_700Bold' },
   photoButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -430,12 +431,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 20,
     borderStyle: 'dashed',
   },
   photoButtonIcon: { fontSize: 20, marginRight: 8 },
-  photoButtonText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  photoButtonText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -445,14 +446,14 @@ const styles = StyleSheet.create({
   photoThumb: {
     width: 80,
     height: 80,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
   },
   photoThumbImage: {
     width: 80,
     height: 80,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   photoRemove: {
     position: 'absolute',
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
   photoRemoveText: {
     color: colors.white,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   selfieContainer: {
     flexDirection: 'row',
@@ -485,12 +486,12 @@ const styles = StyleSheet.create({
   selfieChange: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: colors.primaryGhost,
   },
   selfieChangeText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.primary,
   },
   budgetRow: {
@@ -498,25 +499,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   budgetInputWrap: { flex: 1 },
-  budgetLabel: { fontSize: 12, color: colors.textMuted, marginBottom: 4 },
+  budgetLabel: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 4 },
   budgetInput: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.text,
   },
-  budgetSep: { fontSize: 18, color: colors.textMuted, marginHorizontal: 12 },
+  budgetSep: { fontSize: 18, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginHorizontal: 12 },
   flexRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  flexLabel: { fontSize: 14, color: colors.textSecondary },
+  flexLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
   cityRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -525,7 +527,7 @@ const styles = StyleSheet.create({
   cityChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
@@ -534,17 +536,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost,
     borderColor: colors.primary,
   },
-  cityText: { fontSize: 14, color: colors.text, fontWeight: '500' },
-  cityTextActive: { color: colors.primary, fontWeight: '700' },
+  cityText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
+  cityTextActive: { color: colors.primary, fontFamily: 'Poppins_700Bold' },
   submitBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 22,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 28,
   },
   submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { fontSize: 16, fontWeight: '700', color: colors.white },
+  submitBtnText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.white },
   // Modal
   modalOverlay: {
     flex: 1,
@@ -555,27 +557,27 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 28,
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
   },
   modalEmoji: { fontSize: 48, marginBottom: 12 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.accent, marginBottom: 8 },
-  modalText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
+  modalTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 8 },
+  modalText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
   modalBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 22,
     paddingVertical: 14,
     paddingHorizontal: 32,
     width: '100%',
     alignItems: 'center',
     marginBottom: 10,
   },
-  modalBtnText: { fontSize: 15, fontWeight: '700', color: colors.white },
+  modalBtnText: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.white },
   modalBtnSecondary: {
     paddingVertical: 10,
   },
-  modalBtnSecondaryText: { fontSize: 14, color: colors.textSecondary },
+  modalBtnSecondaryText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
 });

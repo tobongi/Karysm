@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { rateLimit } from 'express-rate-limit';
 import { errorHandler } from './middleware/error';
+import { sendBookingReminders } from './lib/notifications';
 
 import authRoutes from './routes/auth.routes';
 import providerRoutes from './routes/provider.routes';
@@ -20,6 +21,7 @@ import notificationRoutes from './routes/notification.routes';
 import kycRoutes from './routes/kyc.routes';
 import walletRoutes from './routes/wallet.routes';
 import aiRoutes from './routes/ai.routes';
+import feedRoutes from './routes/feed.routes';
 
 const app = express();
 
@@ -59,8 +61,19 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/kyc', kycRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/feed', feedRoutes);
 
 // Error handler
 app.use(errorHandler);
+
+// Check for booking reminders every hour
+setInterval(async () => {
+  try {
+    const count = await sendBookingReminders();
+    if (count > 0) console.log(`[Reminders] Sent ${count} booking reminders`);
+  } catch (err) {
+    console.error('[Reminders] Error:', err);
+  }
+}, 60 * 60 * 1000);
 
 export { app };

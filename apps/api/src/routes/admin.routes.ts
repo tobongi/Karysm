@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma';
 import { authMiddleware, requireRole, generateToken } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error';
-import { createNotification } from '../lib/notifications';
+import { createNotification, sendBookingReminders } from '../lib/notifications';
 
 const router = Router();
 
@@ -202,6 +202,12 @@ router.patch('/reviews/:id/visibility', asyncHandler(async (req: Request, res: R
     data: { isVisible: !review.isVisible },
   });
   res.json({ success: true, data: updated });
+}));
+
+// POST /api/admin/send-reminders — can be called by a cron job
+router.post('/send-reminders', asyncHandler(async (_req: Request, res: Response) => {
+  const count = await sendBookingReminders();
+  res.json({ success: true, remindersSent: count });
 }));
 
 export default router;

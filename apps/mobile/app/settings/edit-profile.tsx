@@ -111,7 +111,7 @@ export default function EditProfileScreen() {
 
         {/* Phone (read-only) */}
         <View style={styles.field}>
-          <Text style={styles.label}>TÉLÉPHONE</Text>
+          <Text style={styles.label}>TELEPHONE</Text>
           <View style={[styles.input, styles.inputDisabled]}>
             <Text style={styles.disabledText}>{user?.phone}</Text>
           </View>
@@ -198,32 +198,32 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent, marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 16 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 24 },
+  sectionTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 16 },
 
   field: { marginBottom: 20 },
   label: {
-    fontSize: 11, fontWeight: '700', color: colors.textMuted,
+    fontSize: 11, fontFamily: 'Poppins_700Bold', color: colors.textMuted,
     letterSpacing: 1, marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.card, borderRadius: 12, padding: 16,
-    fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, borderRadius: 16, padding: 16,
+    fontSize: 15, fontFamily: 'Poppins_400Regular', color: colors.text, borderWidth: 1, borderColor: colors.border,
   },
   inputMulti: { minHeight: 100 },
   inputDisabled: { backgroundColor: colors.cardHover },
-  disabledText: { fontSize: 15, color: colors.textMuted },
-  hint: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  charCount: { fontSize: 12, color: colors.textMuted, textAlign: 'right', marginTop: 4 },
+  disabledText: { fontSize: 15, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  hint: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
+  charCount: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'right', marginTop: 4 },
 
   divider: {
     height: 1, backgroundColor: colors.border, marginVertical: 24,
   },
 
   saveButton: {
-    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 14,
+    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 22,
     alignItems: 'center', marginTop: 12,
   },
   saveDisabled: { opacity: 0.5 },
-  saveText: { color: colors.white, fontSize: 17, fontWeight: '700' },
+  saveText: { color: colors.white, fontSize: 17, fontFamily: 'Poppins_700Bold' },
 });

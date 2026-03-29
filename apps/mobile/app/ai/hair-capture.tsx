@@ -82,7 +82,7 @@ export default function HairCaptureScreen() {
             <Switch
               value={consent}
               onValueChange={setConsent}
-              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              trackColor={{ false: colors.n300, true: colors.primaryLight }}
               thumbColor={consent ? colors.primary : colors.textMuted}
             />
             <Text style={styles.consentText}>
@@ -118,39 +118,39 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1 },
   content: { padding: 20 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
   tipsRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   tipCard: {
-    flex: 1, backgroundColor: colors.card, borderRadius: 12, padding: 12,
+    flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
   tipIcon: { fontSize: 24, marginBottom: 6 },
-  tipTitle: { fontSize: 12, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  tipDesc: { fontSize: 10, color: colors.textMuted, textAlign: 'center', marginTop: 2 },
+  tipTitle: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
+  tipDesc: { fontSize: 10, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginTop: 2 },
   captureButton: {
-    backgroundColor: colors.primaryGhost, borderRadius: 16, padding: 40,
+    backgroundColor: colors.primaryGhost, borderRadius: 24, padding: 40,
     alignItems: 'center', borderWidth: 2, borderColor: colors.primaryBorder, borderStyle: 'dashed',
   },
   captureIcon: { fontSize: 48, marginBottom: 12 },
-  captureText: { fontSize: 16, fontWeight: '600', color: colors.primary },
+  captureText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   previewContainer: { alignItems: 'center', marginBottom: 16 },
-  preview: { width: 240, height: 240, borderRadius: 16, marginBottom: 12 },
+  preview: { width: 240, height: 240, borderRadius: 24, marginBottom: 12 },
   retakeButton: {
     backgroundColor: colors.card, paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 100, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 16, borderWidth: 1, borderColor: colors.border,
   },
-  retakeText: { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
+  retakeText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
   consentRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: colors.card, borderRadius: 12, padding: 14,
+    backgroundColor: colors.card, borderRadius: 16, padding: 14,
     borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
-  consentText: { flex: 1, fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  consentText: { flex: 1, fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 18 },
   analyzeButton: {
-    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 14, alignItems: 'center',
+    backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 22, alignItems: 'center',
   },
   analyzeDisabled: { opacity: 0.7 },
-  analyzeText: { color: colors.white, fontSize: 17, fontWeight: '700' },
+  analyzeText: { color: colors.white, fontSize: 17, fontFamily: 'Poppins_700Bold' },
   analyzingRow: { flexDirection: 'row', alignItems: 'center' },
 });

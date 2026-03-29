@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -152,6 +153,66 @@ export default function BookingFlow() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
 
+  // ── Success celebration animations ──
+  const successScale = useRef(new Animated.Value(0)).current;
+  const CONFETTI_COLORS = [colors.primary, colors.accent, colors.success, '#FFD700'];
+  const confettiAnims = useRef(
+    Array.from({ length: 8 }, () => ({
+      scale: new Animated.Value(0),
+      translateX: new Animated.Value(0),
+      translateY: new Animated.Value(0),
+      opacity: new Animated.Value(1),
+    }))
+  ).current;
+
+  const triggerCelebration = useCallback(() => {
+    successScale.setValue(0);
+    confettiAnims.forEach(c => {
+      c.scale.setValue(0);
+      c.translateX.setValue(0);
+      c.translateY.setValue(0);
+      c.opacity.setValue(1);
+    });
+
+    Animated.spring(successScale, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+
+    setTimeout(() => {
+      confettiAnims.forEach((c, i) => {
+        const angle = (Math.PI * 2 * i) / confettiAnims.length;
+        const distance = 40 + Math.random() * 40;
+        Animated.parallel([
+          Animated.spring(c.scale, {
+            toValue: 1,
+            tension: 80,
+            friction: 5,
+            useNativeDriver: true,
+          }),
+          Animated.timing(c.translateX, {
+            toValue: Math.cos(angle) * distance,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(c.translateY, {
+            toValue: Math.sin(angle) * distance,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(c.opacity, {
+            toValue: 0,
+            duration: 800,
+            delay: 400,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
+    }, 200);
+  }, [successScale, confettiAnims]);
+
   // ── Auth check ──
   useEffect(() => {
     const token = getAuthToken();
@@ -265,6 +326,7 @@ export default function BookingFlow() {
       if (res.success && res.data?.id) {
         setConfirmedBookingId(res.data.id);
         setShowSuccess(true);
+        triggerCelebration();
       } else {
         showAlert('Erreur', 'La réservation n\'a pas pu être créée. Réessayez.');
       }
@@ -311,19 +373,94 @@ export default function BookingFlow() {
   // ── Main render ──
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      {/* ── Success Modal ── */}
+      {/* ── Success Celebration Modal ── */}
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.modalOverlay}>
+          <ScrollView
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
           <View style={styles.modalCard}>
-            <Text style={styles.modalIcon}>🎉</Text>
-            <Text style={styles.modalTitle}>Réservation confirmée !</Text>
+            {/* Animated checkmark with confetti */}
+            <View style={styles.checkContainer}>
+              <Animated.View
+                style={[
+                  styles.checkCircle,
+                  { transform: [{ scale: successScale }] },
+                ]}
+              >
+                <Text style={styles.checkIcon}>✓</Text>
+              </Animated.View>
+              {/* Confetti pieces */}
+              {confettiAnims.map((c, i) => (
+                <Animated.View
+                  key={i}
+                  style={[
+                    styles.confettiDot,
+                    {
+                      backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                      opacity: c.opacity,
+                      transform: [
+                        { translateX: c.translateX },
+                        { translateY: c.translateY },
+                        { scale: c.scale },
+                      ],
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+
+            <Text style={styles.modalTitle}>Réservation envoyée !</Text>
             <Text style={styles.modalText}>
-              Votre demande a été envoyée à{'\n'}
-              <Text style={{ fontWeight: '700', color: colors.accent }}>{provider?.displayName}</Text>
+              Votre demande a été envoyée à{' '}
+              <Text style={{ fontWeight: '700', color: colors.accent }}>
+                {provider?.displayName}
+              </Text>
+              .{'\n'}Vous recevrez une confirmation très bientôt.
             </Text>
-            <Text style={styles.modalSubtext}>
-              Le prestataire va confirmer votre rendez-vous. Vous serez notifié(e).
-            </Text>
+
+            {/* Recap card */}
+            {selectedService && (
+              <View style={styles.recapCard}>
+                <View style={styles.recapRow}>
+                  <Text style={styles.recapEmoji}>📅</Text>
+                  <Text style={styles.recapText}>{summaryDate}</Text>
+                </View>
+                <View style={styles.recapRow}>
+                  <Text style={styles.recapEmoji}>🕐</Text>
+                  <Text style={styles.recapText}>{selectedTime}</Text>
+                </View>
+                <View style={styles.recapRow}>
+                  <Text style={styles.recapEmoji}>💇</Text>
+                  <Text style={styles.recapText}>{selectedService.name}</Text>
+                </View>
+                <View style={styles.recapRow}>
+                  <Text style={styles.recapEmoji}>💰</Text>
+                  <Text style={styles.recapText}>
+                    {formatPrice(selectedService.priceMin, provider?.currency ?? 'XAF')}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Next steps */}
+            <View style={styles.stepsSection}>
+              <Text style={styles.stepsTitle}>Prochaines étapes</Text>
+              {[
+                'Le prestataire confirme votre demande',
+                'Vous recevez une notification',
+                'Profitez de votre service !',
+              ].map((step, i) => (
+                <View key={i} style={styles.stepRow}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{i + 1}</Text>
+                  </View>
+                  <Text style={styles.stepText}>{step}</Text>
+                </View>
+              ))}
+            </View>
+
             <Pressable
               style={styles.modalButton}
               onPress={() => {
@@ -344,7 +481,22 @@ export default function BookingFlow() {
             >
               <Text style={styles.modalSecondaryText}>Retour à l'accueil</Text>
             </Pressable>
+            <View style={styles.referralPrompt}>
+              <Text style={styles.referralPromptText}>
+                Invitez une amie et gagnez des crédits !
+              </Text>
+              <Pressable
+                style={styles.referralPromptButton}
+                onPress={() => {
+                  setShowSuccess(false);
+                  router.push('/referral' as any);
+                }}
+              >
+                <Text style={styles.referralPromptButtonText}>Inviter une amie</Text>
+              </Pressable>
+            </View>
           </View>
+          </ScrollView>
         </View>
       </Modal>
 
@@ -618,6 +770,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
   },
   errorEmoji: {
@@ -626,12 +779,14 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   errorMessage: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -640,11 +795,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 12,
     backgroundColor: colors.primary,
-    borderRadius: 10,
+    borderRadius: 25,
   },
   retryText: {
     color: colors.white,
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
   },
 
@@ -658,11 +814,13 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.primary,
   },
   headerTitle: {
     fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.accent,
   },
@@ -676,7 +834,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: 8,
@@ -692,6 +850,7 @@ const styles = StyleSheet.create({
   },
   providerInitial: {
     fontSize: 20,
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontWeight: '700',
     color: colors.primary,
   },
@@ -700,11 +859,13 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
   },
   providerCity: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -712,6 +873,7 @@ const styles = StyleSheet.create({
   // Section titles
   sectionTitle: {
     fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.accent,
     marginTop: 24,
@@ -719,6 +881,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     fontStyle: 'italic',
   },
@@ -730,7 +893,7 @@ const styles = StyleSheet.create({
   serviceCard: {
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     borderWidth: 1.5,
     borderColor: colors.border,
   },
@@ -746,6 +909,7 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     flex: 1,
@@ -755,6 +919,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.primary,
     marginLeft: 8,
@@ -767,16 +932,19 @@ const styles = StyleSheet.create({
   },
   serviceDuration: {
     fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     fontWeight: '500',
   },
   servicePrice: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.terracotta,
   },
   serviceCategory: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     marginTop: 2,
   },
@@ -790,7 +958,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 14,
+    borderRadius: 20,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
@@ -806,6 +974,7 @@ const styles = StyleSheet.create({
   },
   dateDay: {
     fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textSecondary,
     marginBottom: 4,
@@ -826,11 +995,13 @@ const styles = StyleSheet.create({
   },
   dateNum: {
     fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
   },
   dateMonth: {
     fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
     fontWeight: '500',
     color: colors.textSecondary,
   },
@@ -857,7 +1028,7 @@ const styles = StyleSheet.create({
   timeChip: {
     paddingHorizontal: 18,
     paddingVertical: 11,
-    borderRadius: 10,
+    borderRadius: 16,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
@@ -868,6 +1039,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     fontWeight: '600',
     color: colors.text,
   },
@@ -885,7 +1057,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: 24,
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -903,6 +1075,7 @@ const styles = StyleSheet.create({
   },
   locationLabel: {
     fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
     marginBottom: 4,
@@ -912,6 +1085,7 @@ const styles = StyleSheet.create({
   },
   locationSub: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
     textAlign: 'center',
   },
@@ -921,9 +1095,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 14,
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.text,
     minHeight: 80,
     lineHeight: 20,
@@ -946,7 +1121,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 8 : 16,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    shadowColor: '#000',
+    shadowColor: colors.n800,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -964,23 +1139,26 @@ const styles = StyleSheet.create({
   },
   summaryService: {
     fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
     color: colors.text,
   },
   summaryDetails: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     marginTop: 2,
   },
   summaryPrice: {
     fontSize: 17,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '800',
     color: colors.terracotta,
   },
   confirmButton: {
     backgroundColor: colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
@@ -991,39 +1169,192 @@ const styles = StyleSheet.create({
   confirmText: {
     color: colors.white,
     fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     fontWeight: '700',
   },
 
-  // Success Modal
+  // Success Celebration Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
+  },
+  modalScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 24,
   },
   modalCard: {
     backgroundColor: colors.white,
     borderRadius: 24,
-    padding: 32,
+    padding: 28,
     alignItems: 'center',
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 380,
   },
-  modalIcon: { fontSize: 56, marginBottom: 16 },
-  modalTitle: { fontSize: 22, fontWeight: '800', color: colors.accent, textAlign: 'center', marginBottom: 8 },
-  modalText: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
-  modalSubtext: { fontSize: 13, color: colors.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 20 },
+  checkContainer: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#00875A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkIcon: {
+    fontSize: 34,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  confettiDot: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 26,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontWeight: '700',
+    color: colors.accent,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+
+  // Recap card
+  recapCard: {
+    width: '100%',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginTop: 16,
+    gap: 10,
+  },
+  recapRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recapEmoji: {
+    fontSize: 16,
+    width: 28,
+  },
+  recapText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.text,
+    flex: 1,
+  },
+
+  // Next steps
+  stepsSection: {
+    width: '100%',
+    marginTop: 20,
+  },
+  stepsTitle: {
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.accent,
+    marginBottom: 12,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  stepNumberText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  stepText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    flex: 1,
+  },
+
   modalButton: {
     backgroundColor: colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: 25,
     alignItems: 'center',
     width: '100%',
-    marginTop: 24,
+    marginTop: 20,
   },
-  modalButtonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  modalSecondary: { marginTop: 12, paddingVertical: 10 },
-  modalSecondaryText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+  },
+  modalSecondary: {
+    marginTop: 12,
+    paddingVertical: 10,
+  },
+  modalSecondaryText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+  },
+  referralPrompt: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    alignItems: 'center',
+    width: '100%',
+  },
+  referralPromptText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+  },
+  referralPromptButton: {
+    marginTop: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  referralPromptButtonText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+  },
 });

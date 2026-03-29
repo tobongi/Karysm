@@ -195,7 +195,7 @@ export default function AvailabilityScreen() {
                 <Switch
                   value={slot.isActive}
                   onValueChange={() => toggleDay(slot.dayOfWeek)}
-                  trackColor={{ false: colors.border, true: colors.primaryLight }}
+                  trackColor={{ false: colors.n300, true: colors.primaryLight }}
                   thumbColor={slot.isActive ? colors.primary : colors.textMuted}
                 />
               </View>
@@ -265,8 +265,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   scrollContent: { padding: 20, paddingBottom: 100 },
-  title: { fontSize: 22, fontWeight: '700', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  title: { fontSize: 22, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
 
   row: {
     flexDirection: 'row',
@@ -274,20 +274,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 24,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
   },
   rowInactive: { opacity: 0.6 },
   dayInfo: { flex: 1 },
-  day: { fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 4 },
+  day: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 4 },
   timesRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   timeChip: {
     backgroundColor: colors.primaryGhost,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -295,38 +295,38 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primaryGhost,
   },
-  timeChipText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  timeChipText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   timeChipTextActive: { color: colors.primary },
-  timeSeparator: { fontSize: 14, color: colors.textMuted },
-  closedText: { fontSize: 14, color: colors.textMuted, fontStyle: 'italic' },
+  timeSeparator: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  closedText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted, fontStyle: 'italic' },
 
   pickerContainer: {
     backgroundColor: colors.card,
     marginBottom: 8,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
   },
-  pickerLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 },
+  pickerLabel: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary, marginBottom: 8 },
   pickerScroll: { gap: 6, paddingRight: 12 },
   pickerChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 100,
+    borderRadius: 16,
     backgroundColor: colors.primaryGhost,
   },
   pickerChipActive: { backgroundColor: colors.primary },
-  pickerChipText: { fontSize: 13, fontWeight: '500', color: colors.primary },
+  pickerChipText: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.primary },
   pickerChipTextActive: { color: colors.white },
 
   footer: { padding: 20, paddingBottom: 32, backgroundColor: colors.bg },
   saveButton: {
     backgroundColor: colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     alignItems: 'center',
   },
-  saveButtonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
   buttonDisabled: { opacity: 0.6 },
 });

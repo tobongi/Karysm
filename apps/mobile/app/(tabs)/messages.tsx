@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
@@ -253,11 +254,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 16,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   headerRow: {
     flexDirection: 'row',
@@ -266,7 +265,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '700',
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: colors.accent,
   },
   markAllButton: {
@@ -277,13 +276,13 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.primaryDark,
   },
   unreadLabel: {
     fontSize: 13,
     color: colors.primary,
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     marginTop: 4,
   },
   centerContent: {
@@ -303,16 +302,17 @@ const styles = StyleSheet.create({
   notifCard: {
     flexDirection: 'row',
     backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 12,
     alignItems: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   notifCardUnread: {
-    backgroundColor: '#F5F0FF',
-    borderColor: colors.primaryBorder,
+    backgroundColor: colors.n100,
   },
   notifCardPressed: {
     backgroundColor: colors.cardHover,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   notifIconUnread: {
-    backgroundColor: 'rgba(124,58,237,0.15)',
+    backgroundColor: 'rgba(202,152,126,0.15)',
   },
   notifIconText: {
     fontSize: 20,
@@ -337,21 +337,23 @@ const styles = StyleSheet.create({
   },
   notifTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.text,
     marginBottom: 3,
   },
   notifTitleUnread: {
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   notifDescription: {
     fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     lineHeight: 18,
     marginBottom: 4,
   },
   notifTime: {
     fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
   },
   unreadDot: {
@@ -367,13 +369,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: colors.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -382,11 +385,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: 32,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 25,
   },
   loginButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
 });

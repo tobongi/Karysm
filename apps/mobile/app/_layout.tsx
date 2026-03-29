@@ -1,7 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
+import { useFonts } from 'expo-font';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
+import {
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_700Bold,
+} from '@expo-google-fonts/playfair-display';
 import { AuthProvider, useAuth } from '../src/lib/auth-context';
 import { colors } from '../src/theme/colors';
 import { registerForPushNotifications, addNotificationResponseListener } from '../src/lib/notifications';
@@ -36,14 +47,14 @@ function AppContent() {
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.accent,
-          headerTitleStyle: { fontWeight: '700', fontSize: 16 },
+          headerTitleStyle: { fontFamily: 'Poppins_600SemiBold', fontWeight: '600', fontSize: 16 },
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
           headerBackTitle: '',
           headerLeft: ({ canGoBack }) =>
             canGoBack ? (
               <Pressable onPress={() => router.back()} style={{ paddingRight: 16, paddingVertical: 8 }}>
-                <Text style={{ fontSize: 22, color: colors.accent }}>‹</Text>
+                <Text style={{ fontSize: 22, color: colors.accent, fontFamily: 'Poppins_400Regular' }}>‹</Text>
               </Pressable>
             ) : null,
         }}
@@ -72,12 +83,37 @@ function AppContent() {
         <Stack.Screen name="ai/skin-results/[id]" options={{ title: 'Résultats peau' }} />
         <Stack.Screen name="ai/hair-capture" options={{ title: 'Analyse cheveux' }} />
         <Stack.Screen name="ai/hair-results/[id]" options={{ title: 'Résultats cheveux' }} />
+        <Stack.Screen name="permissions/location" options={{ headerShown: false }} />
+        <Stack.Screen name="permissions/notification" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="referral" options={{ title: 'Parrainage' }} />
+        <Stack.Screen name="settings/index" options={{ title: 'Paramètres' }} />
+        <Stack.Screen name="store/[providerId]" options={{ title: 'Boutique' }} />
+        <Stack.Screen name="store/product/[id]" options={{ title: 'Produit' }} />
+        <Stack.Screen name="booking/completed" options={{ headerShown: false }} />
       </Stack>
     </>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 28, color: colors.accent, fontStyle: 'italic' }}>tokoss</Text>
+      </View>
+    );
+  }
+
   return (
     <AuthProvider>
       <PushNotificationSetup />
@@ -97,7 +133,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   webShell: {
     flex: 1,
-    backgroundColor: '#E8E0F0',
+    backgroundColor: '#E9D2C2',
     alignItems: 'center',
   },
   webDevice: {
@@ -105,9 +141,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 430,
     backgroundColor: colors.bg,
-    // Subtle shadow to look like a device
     ...(Platform.OS === 'web' ? {
-      boxShadow: '0 0 40px rgba(124,58,237,0.1)',
+      boxShadow: '0 0 40px rgba(167,115,102,0.15)',
     } : {}),
   },
 });

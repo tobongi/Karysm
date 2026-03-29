@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
   balanceCard: {
     backgroundColor: colors.primary,
     padding: 24,
-    borderRadius: 16,
+    borderRadius: 24,
     alignItems: 'center',
     marginBottom: 20,
   },
-  balanceLabel: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
+  balanceLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
   balanceAmount: {
     fontSize: 34,
-    fontWeight: '800',
+    fontFamily: 'Poppins_700Bold',
     color: colors.white,
     marginBottom: 12,
   },
@@ -201,15 +201,15 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 100,
   },
-  pendingLabel: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
-  pendingAmount: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.9)' },
+  pendingLabel: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.6)' },
+  pendingAmount: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: 'rgba(255,255,255,0.9)' },
   payoutButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 100,
   },
-  payoutText: { color: colors.white, fontSize: 14, fontWeight: '600' },
+  payoutText: { color: colors.white, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
 
   // Stats row
   statsRow: {
@@ -220,17 +220,17 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 14,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  statValue: { fontSize: 16, fontWeight: '700', color: colors.terracotta, marginBottom: 4 },
-  statLabel: { fontSize: 11, color: colors.textMuted, textAlign: 'center' },
+  statValue: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.terracotta, marginBottom: 4 },
+  statLabel: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center' },
 
   // Section
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.accent, marginBottom: 14 },
+  sectionTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 14 },
 
   // Booking rows
   txRow: {
@@ -238,17 +238,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 24,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
   },
   txInfo: { flex: 1 },
-  txLabel: { fontSize: 14, fontWeight: '500', color: colors.text },
-  txDate: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  txAmount: { fontSize: 15, fontWeight: '700', color: colors.success },
+  txLabel: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
+  txDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 2 },
+  txAmount: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.success },
 
   // Empty
   emptyState: { paddingVertical: 24, alignItems: 'center' },
-  emptyText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  emptyText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center' },
 });

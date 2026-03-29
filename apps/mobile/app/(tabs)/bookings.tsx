@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, Pressable, FlatList, StyleSheet, RefreshControl, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
+import Skeleton from '../../src/components/Skeleton';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   REQUESTED: { label: 'En attente', color: colors.warning },
   CONFIRMED: { label: 'Confirmé', color: colors.success },
-  DEPOSIT_PAID: { label: 'Acompte payé', color: '#8B5CF6' },
+  DEPOSIT_PAID: { label: 'Acompte payé', color: colors.primaryDark },
   IN_PROGRESS: { label: 'En cours', color: colors.primary },
   COMPLETED: { label: 'Terminé', color: colors.textMuted },
   CANCELLED: { label: 'Annulé', color: colors.error },
@@ -85,6 +86,10 @@ export default function BookingsTab() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Réservations</Text>
+      </View>
+
       <View style={styles.tabs}>
         <Pressable style={[styles.tab, tab === 'upcoming' && styles.tabActive]} onPress={() => setTab('upcoming')}>
           <Text style={[styles.tabText, tab === 'upcoming' && styles.tabTextActive]}>À venir</Text>
@@ -95,8 +100,10 @@ export default function BookingsTab() {
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={{ padding: 20, gap: 16 }}>
+          <Skeleton width="100%" height={80} borderRadius={16} />
+          <Skeleton width="100%" height={80} borderRadius={16} />
+          <Skeleton width="100%" height={80} borderRadius={16} />
         </View>
       ) : (
         <FlatList
@@ -118,7 +125,7 @@ export default function BookingsTab() {
               <Pressable style={styles.card} onPress={() => router.push(`/booking/detail/${item.id}`)}>
                 <View style={styles.cardTop}>
                   <Text style={styles.cardRef}>{item.ref}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: status.color + '20' }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: status.color + '26' }]}>
                     <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                   </View>
                 </View>
@@ -139,32 +146,50 @@ export default function BookingsTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  tabs: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: colors.card },
+  header: {
+    paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+    backgroundColor: colors.card,
+  },
+  headerTitle: { fontSize: 28, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
+  tabs: {
+    flexDirection: 'row', gap: 8, marginTop: 16,
+    marginHorizontal: 20, backgroundColor: colors.card, borderRadius: 20, padding: 4,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
+  },
+  tab: {
+    flex: 1, paddingVertical: 10, alignItems: 'center',
+    borderRadius: 16, backgroundColor: 'transparent',
+  },
   tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  tabTextActive: { color: '#FFFFFF' },
-  list: { padding: 20, gap: 12 },
+  tabText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
+  tabTextActive: { color: colors.white },
+  list: { padding: 20, gap: 16 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 0,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
+    }) as any,
   },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardRef: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+  cardRef: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.textMuted },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  statusText: { fontSize: 12, fontWeight: '600' },
-  cardProvider: { fontSize: 16, fontWeight: '600', color: colors.text },
-  cardService: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+  statusText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold' },
+  cardProvider: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  cardService: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  cardDate: { fontSize: 13, color: colors.textSecondary },
-  cardPrice: { fontSize: 16, fontWeight: '700', color: colors.terracotta },
+  cardDate: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
+  cardPrice: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 16, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 40 },
-  loginButton: { marginTop: 16, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  loginButtonText: { color: '#FFFFFF', fontWeight: '600', fontSize: 14 },
+  emptyText: { fontSize: 16, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', paddingHorizontal: 40 },
+  loginButton: { marginTop: 16, backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 },
+  loginButtonText: { color: colors.white, fontFamily: 'Poppins_600SemiBold', fontSize: 14 },
 });

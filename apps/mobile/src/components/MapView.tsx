@@ -105,13 +105,13 @@ function WebMap({ pins, onPinPress, center }: Props) {
       if (layer instanceof L.Marker) mapRef.current.removeLayer(layer);
     });
 
-    // Custom violet icon
-    const violetIcon = L.divIcon({
+    // Custom warm icon
+    const pinIcon = L.divIcon({
       className: '',
       html: `<div style="
         width:32px;height:32px;border-radius:50%;
-        background:#2D1B69;border:3px solid white;
-        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+        background:${colors.primary};border:3px solid white;
+        box-shadow:0 2px 8px rgba(167,115,102,0.3);
         display:flex;align-items:center;justify-content:center;
         color:white;font-weight:bold;font-size:12px;
         cursor:pointer;
@@ -126,12 +126,12 @@ function WebMap({ pins, onPinPress, center }: Props) {
     pins.forEach(pin => {
       if (!pin.lat || !pin.lng) return;
 
-      const marker = L.marker([pin.lat, pin.lng], { icon: violetIcon })
+      const marker = L.marker([pin.lat, pin.lng], { icon: pinIcon })
         .addTo(mapRef.current)
         .bindPopup(`
-          <div style="font-family:system-ui;padding:2px;min-width:120px;">
-            <strong style="color:#2D1B69;font-size:13px;">${pin.displayName}</strong><br/>
-            <span style="color:#E07A5F;font-weight:600;font-size:12px;">★ ${pin.avgRating.toFixed(1)}</span>
+          <div style="font-family:'Poppins',system-ui;padding:2px;min-width:120px;">
+            <strong style="color:${colors.accent};font-size:13px;">${pin.displayName}</strong><br/>
+            <span style="color:${colors.star};font-weight:600;font-size:12px;">★ ${pin.avgRating.toFixed(1)}</span>
           </div>
         `);
 
@@ -186,13 +186,13 @@ const styles = StyleSheet.create({
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center', alignItems: 'center',
-    backgroundColor: 'rgba(250,245,255,0.8)',
+    backgroundColor: 'rgba(242,228,217,0.8)',
   },
   fallback: {
     flex: 1, minHeight: 300, justifyContent: 'center', alignItems: 'center',
     backgroundColor: colors.cardHover, borderRadius: 16,
   },
   fallbackIcon: { fontSize: 48, marginBottom: 12 },
-  fallbackText: { fontSize: 15, fontWeight: '600', color: colors.textSecondary },
-  fallbackCount: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  fallbackText: { fontSize: 15, fontWeight: '600', color: colors.textSecondary, fontFamily: 'Poppins_600SemiBold' },
+  fallbackCount: { fontSize: 13, color: colors.textMuted, marginTop: 4, fontFamily: 'Poppins_400Regular' },
 });

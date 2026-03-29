@@ -20,7 +20,7 @@ Monorepo Turborepo + pnpm.
 | Package | Rôle |
 |---------|------|
 | `@tokoss/shared` | Types, constantes, utils (phone, slug, haversine, booking state machine) |
-| `@tokoss/db` | Prisma 6 schema + client (20 modèles) |
+| `@tokoss/db` | Prisma 6 schema + client (24 modèles) |
 | `@tokoss/api` | Express REST API (auth, search, bookings, payments, admin) |
 | `@tokoss/mobile` | Expo 52 + expo-router 4 — webapp d'abord, app native ensuite |
 | `@tokoss/admin` | Next.js 14 + Tailwind dashboard admin (static export) |
@@ -34,8 +34,10 @@ Monorepo Turborepo + pnpm.
 | Admin | Next.js 14 + Tailwind (static export Netlify) |
 | Auth | JWT + OTP SMS (DEMO_OTP=1234 en dev) |
 | Paiement | MBiyo Pay — Phase 2 |
-| Images | Cloudinary — Phase 2 |
-| Notifs | WhatsApp (primary) + Push + SMS |
+| Images | Cloudinary (images, avatars, vidéos, KYC, AI selfies) |
+| Notifs | Expo Push + DB-backed notifications |
+| AI/ML | HuggingFace Inference (skin type, Monk Scale) |
+| Map | Leaflet + OpenStreetMap (gratuit, no token) |
 
 ### Stratégie de lancement
 **Webapp d'abord** (Expo Web) → testable via URL, itération rapide.
@@ -93,6 +95,10 @@ Android = 95% du marché en Afrique, priorité sur iOS.
 - **PortfolioItem** — imageUrl, caption, serviceTag
 - **Favorite** — userId ↔ providerId
 - **TransportRequest** — WhatsApp/InDrive/Yango
+- **Notification** — userId, type, title, body, data (JSON), readAt, pushSent
+- **KycDocument** — providerId, type (ID_FRONT/ID_BACK/SELFIE_WITH_ID), imageUrl, status, rejectedReason
+- **SkinAnalysis** — userId, selfieUrl, monkTone (1-10), undertone, LAB/ITA, 8 métriques skin, recommendations
+- **HairAnalysis** — userId, photoUrl, hairType (4A-4C), porosité, densité, shrinkage, recommendations
 
 Schema: `packages/db/prisma/schema.prisma`
 Seed: `packages/db/prisma/seed.ts` (7 providers, 6 catégories, 14 services, 1 admin, 1 test client)
@@ -148,11 +154,51 @@ POST /api/upload/image            — Upload image (base64, max 10MB)
 POST /api/upload/avatar           — Upload avatar (crop face, 400x400)
 POST /api/upload/video            — Upload vidéo (max 50MB, compression auto)
 
-# Autres
+# Reviews & Favorites
 POST /api/reviews                 — Poster un avis
+GET  /api/reviews/provider/:id    — Avis d'un provider
 POST /api/favorites/:providerId   — Toggle favori
+GET  /api/favorites               — Mes favoris (providers)
 GET  /api/categories              — Liste catégories (avec count services)
-GET  /api/admin/stats, /providers, /bookings — Admin
+
+# User
+GET  /api/user/profile            — Mon profil
+PUT  /api/user/profile            — Modifier profil (name)
+
+# Notifications
+GET  /api/notifications           — Mes notifications (paginées, unreadCount)
+PATCH /api/notifications/:id/read — Marquer lue
+PATCH /api/notifications/read-all — Tout marquer lu
+POST /api/notifications/push-token — Enregistrer push token Expo
+
+# KYC
+POST /api/kyc/upload              — Upload document KYC (base64 → Cloudinary)
+GET  /api/kyc/status              — Mon statut KYC + documents par type
+GET  /api/kyc/documents           — Mes documents soumis
+
+# Wallet
+GET  /api/wallet                  — Solde provider (auto-crée si inexistant)
+GET  /api/wallet/transactions     — Historique transactions
+
+# AI Analysis
+POST /api/ai/skin-analysis        — Selfie → analyse peau (Monk Scale, LAB/ITA, 8 métriques)
+GET  /api/ai/skin-history         — Historique analyses peau
+GET  /api/ai/skin-analysis/:id    — Détail analyse peau
+POST /api/ai/hair-analysis        — Photo → analyse cheveux (4A-4C, porosité, densité)
+GET  /api/ai/hair-history         — Historique analyses cheveux
+GET  /api/ai/hair-analysis/:id    — Détail analyse cheveux
+
+# Admin
+POST /api/admin/login             — Login admin (email + password → JWT 24h)
+GET  /api/admin/stats             — KPIs (providers, bookings, users)
+GET  /api/admin/providers         — Liste providers (filtrable par statut)
+PATCH /api/admin/providers/:id    — Modifier statut provider
+GET  /api/admin/bookings          — Liste bookings
+GET  /api/admin/kyc/pending       — Documents KYC en attente
+PATCH /api/admin/kyc/:id/approve  — Approuver KYC (auto-vérifie si 3 docs OK)
+PATCH /api/admin/kyc/:id/reject   — Rejeter KYC (avec raison + notification)
+GET  /api/admin/reviews           — Liste reviews (modération)
+PATCH /api/admin/reviews/:id/visibility — Toggle visibilité review
 ```
 
 ## Écrans Mobile (expo-router) — Tous connectés à l'API ✅
@@ -163,18 +209,20 @@ app/onboarding.tsx               → 3 slides swipeable
 app/auth/login.tsx               → Phone + OTP
 app/auth/register.tsx            → Nom + OTP
 
-# Tabs principaux
-app/(tabs)/index.tsx             → Explorer: search, grille catégories 3x2, cards providers, banner demande
+# Tabs principaux (5 tabs)
+app/(tabs)/index.tsx             → Explorer: search, grille catégories 3x2, cards providers, banner demande, toggle liste/carte Mapbox
 app/(tabs)/bookings.tsx          → Réservations upcoming/past
-app/(tabs)/messages.tsx          → Notifications / feed d'activité smart
+app/(tabs)/messages.tsx          → Notifications DB-backed (lu/non-lu, mark all read)
+app/(tabs)/beauty.tsx            → Beauté AI: cartes skin + hair, scores, Monk badge, historique
 app/(tabs)/profile.tsx           → Profil + avatar upload + menu prestataire (switch rôle)
 
 # Provider
-app/provider/[slug].tsx          → Profil public (services, dispo, stats, WhatsApp, badge vérifié)
+app/provider/[slug].tsx          → Profil public (services, dispo, stats, WhatsApp, badge vérifié, section avis avec distribution)
 
 # Booking
 app/booking/[providerId].tsx     → Flow 5 étapes + modal succès 🎉
-app/booking/detail/[id].tsx      → Détail + actions statut + timeline + WhatsApp
+app/booking/detail/[id].tsx      → Détail + actions statut + timeline + WhatsApp + avis existant
+app/booking/review/[bookingId].tsx → Créer avis (étoiles, tags, photos Cloudinary, commentaire)
 
 # Register prestataire
 app/provider-register.tsx        → 3 étapes (identité + avatar, localisation, contact + Instagram + TikTok)
@@ -188,13 +236,23 @@ app/provider-dashboard/earnings.tsx    → Solde, stats, historique bookings
 app/request/create.tsx           → Créer demande (titre, catégorie, photos + selfie, budget, date, lieu)
 app/request/[id].tsx             → Détail + propositions reçues/envoyées
 app/request/browse.tsx           → Marketplace demandes ouvertes (côté provider)
+
+# AI Beauty Analysis
+app/ai/skin-capture.tsx          → Capture selfie peau (tips, preview, opt-in dataset)
+app/ai/skin-results/[id].tsx     → Résultats: Monk tone, undertone, score /100, 8 métriques, LAB/ITA, recommandations
+app/ai/hair-capture.tsx          → Capture photo cheveux
+app/ai/hair-results/[id].tsx     → Résultats: type 4A-4C, porosité, densité, shrinkage, recommandations
+
+# Autres
+app/favorites.tsx                → Liste providers favoris + toggle unfavorite
+app/settings/edit-profile.tsx    → Modifier profil (nom, bio, WhatsApp, Instagram)
+app/kyc/index.tsx                → Upload 3 docs KYC + statut + re-soumission
+app/wallet/index.tsx             → Solde, en attente, historique transactions
 ```
 
 ### À créer
 ```
-app/conversation/[id].tsx        → Chat client ↔ provider
-app/wallet/index.tsx             → Portefeuille + solde
-app/settings/edit-profile.tsx    → Modifier profil
+app/conversation/[id].tsx        → Chat client ↔ provider (WhatsApp redirect pour l'instant)
 ```
 
 ## Fichiers clés
@@ -205,6 +263,8 @@ apps/mobile/src/lib/api.ts            — Client API (auto-refresh, redirect log
 apps/mobile/src/lib/auth-context.tsx   — Auth context (login/logout/updateUser, AsyncStorage)
 apps/mobile/src/lib/alert.ts          — showAlert/showConfirm cross-platform (web + native)
 apps/mobile/src/lib/upload.ts         — pickImage, pickMedia, pickAndUploadImage/Avatar/Media (Cloudinary)
+apps/mobile/src/lib/notifications.ts  — Push notification setup (Expo), token registration, tap handler
+apps/mobile/src/components/MapView.tsx — Leaflet + OpenStreetMap (web, gratuit, no token) + fallback natif
 
 # API
 apps/api/src/app.ts                   — Express app (routes, CORS via CORS_ORIGINS env var)
@@ -212,12 +272,24 @@ apps/api/src/middleware/auth.ts       — JWT auth + generateToken + generateRef
 apps/api/src/middleware/error.ts      — Error handler + asyncHandler wrapper
 apps/api/src/lib/errors.ts            — AppError, NotFoundError, ValidationError, etc.
 apps/api/src/lib/cloudinary.ts        — Upload image/avatar/video vers Cloudinary (lazy-loaded)
+apps/api/src/lib/notifications.ts     — createNotification() + notifyBookingEvent() + Expo Push sender
+apps/api/src/lib/huggingface.ts       — RGB→LAB, ITA, Monk Scale, analyzeSkin(), analyzeHair(), recommendations FR
 apps/api/src/schemas/index.ts         — Zod schemas pour toutes les routes
+apps/api/src/routes/ai.routes.ts      — AI skin + hair analysis routes
+apps/api/src/routes/notification.routes.ts — Notifications CRUD + push token
+apps/api/src/routes/kyc.routes.ts     — KYC upload + status
+apps/api/src/routes/wallet.routes.ts  — Wallet balance + transactions
+apps/api/src/routes/user.routes.ts    — User profile GET/PUT
 apps/api/src/routes/request.routes.ts — Beauty Requests + Proposals API
+
+# Admin
+apps/admin/src/app/page.tsx           — Dashboard complet (5 onglets: overview, providers, bookings, KYC, reviews)
+apps/admin/src/app/login/page.tsx     — Login admin
+apps/admin/src/lib/api.ts             — Client API admin (JWT + auto-redirect)
 
 # Shared
 packages/shared/src/utils.ts          — normalizePhone, slugify, formatCurrency, haversine, canTransitionBooking
-packages/shared/src/constants.ts      — BOOKING_STATUS_TRANSITIONS, CITIES, CURRENCIES, COLORS
+packages/shared/src/constants.ts      — BOOKING_STATUS_TRANSITIONS, CITIES, CURRENCIES, COLORS, REVIEW_TAGS
 
 # Deploy
 railway.toml                          — Config déploiement Railway (nixpacks + tsx)
@@ -254,13 +326,14 @@ railway.toml                          — Config déploiement Railway (nixpacks 
 ### Variables d'environnement (Railway)
 ```
 DATABASE_URL=postgresql://...
-JWT_SECRET=tokoss-prod-jwt-secret-2026
+JWT_SECRET=tokoss-prod-jwt-secret-2026          # ⚠️ OBLIGATOIRE en production (crash si absent)
 NODE_ENV=production
 DEMO_OTP=1234
-CORS_ORIGINS=https://tokoss-kappa.vercel.app,https://tokoss.app,https://www.tokoss.app
+CORS_ORIGINS=https://tokoss-kappa.vercel.app,https://tokoss-kappa-ecru.vercel.app,https://tokoss.app,https://www.tokoss.app
 CLOUDINARY_CLOUD_NAME=dppop1fid
 CLOUDINARY_API_KEY=282719287638618
 CLOUDINARY_API_SECRET=kxt7-bJyNVZMvGSvkPOkfrQV2IA
+HUGGINGFACE_API_TOKEN=hf_xxxxx
 ```
 
 ### ⚠️ Notes techniques importantes
@@ -289,18 +362,35 @@ CLOUDINARY_API_SECRET=kxt7-bJyNVZMvGSvkPOkfrQV2IA
 ## Phasage MVP (mis à jour mars 2026)
 1. **Phase 1** ✅ — Core booking loop + Beauty Requests + Provider dashboard + Upload
 2. **Phase 1C** ✅ — Déploiement production (Railway API + Vercel webapp)
-3. **Phase 2** — SMS OTP réel (Africa's Talking) + Messaging + Paiements MBiyo + Escrow
-4. **Phase 3** — Notifications (WhatsApp + Push) + Admin dashboard + KYC + Reviews UI + Map
-5. **Phase 4** — AI skin analysis (Monk Scale, peau noire) + AI hair analysis (4A-4C afro) + Import Instagram/TikTok
+3. **Phase 3** ✅ — Reviews UI + Favoris + Settings + Notifications Push + KYC + Admin Dashboard + Map Leaflet + Wallet
+4. **Phase 4** ✅ — AI Skin Analysis (Monk Scale, HuggingFace) + AI Hair Analysis (4A-4C) + 5ème tab Beauté AI
+5. **Phase 2** ❌ — SMS OTP réel (Africa's Talking) + Paiements MBiyo + Escrow
 
-## Le vrai différenciateur (Phase 4)
-PAS le mode Upwork. C'est l'**AI beauty analysis pour peau noire et cheveux afro** :
-- **Skin analysis** via selfie : hydratation, sébum, hyperpigmentation, sous-ton (Monk Skin Tone Scale)
-- **Hair analysis** via photo : type 4A-4C, porosité, densité, sécheresse (Andre Walker + custom)
-- Datasets gratuits : Fitzpatrick17k, DDI (Stanford), SCIN (Google), Monk Scale
-- Stratégie : construire un dataset propriétaire à partir des selfies utilisatrices
+### Avancement : ~80% fait
+Les 20% restants (Phase 2) = briques business critiques pour le launch :
+- SMS OTP réel → sans ça, pas de vrais utilisateurs
+- Paiements Mobile Money → sans ça, pas de monétisation
+- Landing page tokoss.app → sans ça, pas d'acquisition
+
+## Le vrai différenciateur
+PAS le mode Upwork. C'est l'**AI beauty analysis pour les peaux qui vous ressemblent** :
+- **Skin analysis** via selfie : Monk Scale (1-10), undertone, LAB/ITA, hydratation, sébum, pores, rides, taches, acné, hyperpigmentation, uniformité
+- **Hair analysis** via photo : type 4A-4C, porosité, densité, épaisseur, sécheresse, élasticité, shrinkage, cuir chevelu, style détecté
+- **ML** : HuggingFace Inference API (skin type classification) + conversion RGB→LAB + ITA côté serveur
+- Datasets : SCIN (Google) + DDI (Stanford) — PAS Fitzpatrick17k (licence NC, biais peau claire)
+- Stratégie : construire un dataset propriétaire via opt-in selfies utilisatrices (le vrai moat)
+- Référence code : KREESS/SmartSkin (CNN skin detection)
 - Aucune IA complète pour cheveux afro n'existe encore → opportunité massive
 
 ## Documents de référence
 - `TOKOSS_MARKET_STUDY.md` — Étude de marché complète ($17B+ TAM, 8 pays analysés)
 - `TOKOSS_TECH_SPEC.md` — Spécifications techniques complètes (modèles, API, écrans, paiements, AI)
+- `TOKOSS_STITCH_PROMPTS.md` — Prompts Stitch (Google) pour visuels marketing (logo, App Store, landing page, social media, pitch deck)
+
+## Positionnement marketing
+- **PAS** "beauté pour peau noire" (regard extérieur)
+- **OUI** "pour les peaux qui vous ressemblent" (regard intérieur)
+- Message : "Révélez la beauté qui est déjà en vous" / "L'app qui évolue avec vous"
+- Prestataires : "Vous sublimez vos clientes. On s'occupe du reste."
+- Logo : Playfair Display Bold Italic, T majuscule élégant, typographie fashion house
+- Esthétique : Vogue Afrique × Aesop × Glossier — mature, élégant, confiant
