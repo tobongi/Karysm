@@ -23,9 +23,9 @@ async function main() {
       create: { name: 'Maquillage', nameEn: 'Makeup', icon: '💄', slug: 'maquillage', sortOrder: 3 },
     }),
     prisma.serviceCategory.upsert({
-      where: { slug: 'massage' },
+      where: { slug: 'soins' },
       update: {},
-      create: { name: 'Massage', nameEn: 'Massage', icon: '💆', slug: 'massage', sortOrder: 4 },
+      create: { name: 'Soins', nameEn: 'Care', icon: '💆', slug: 'soins', sortOrder: 4 },
     }),
     prisma.serviceCategory.upsert({
       where: { slug: 'barber' },
@@ -39,7 +39,52 @@ async function main() {
     }),
   ]);
 
-  const [coiffure, ongles, maquillage, massage, barber, spa] = categories;
+  const [coiffure, ongles, maquillage, soins, barber, spa] = categories;
+
+  // === Subcategories ===
+  const subcategories = [
+    // Coiffure
+    { name: 'Tresses', nameEn: 'Braids', slug: 'tresses', parentId: coiffure.id, sortOrder: 1 },
+    { name: 'Tissage', nameEn: 'Weave', slug: 'tissage', parentId: coiffure.id, sortOrder: 2 },
+    { name: 'Locks', nameEn: 'Locs', slug: 'locks', parentId: coiffure.id, sortOrder: 3 },
+    { name: 'Coupe', nameEn: 'Haircut', slug: 'coupe', parentId: coiffure.id, sortOrder: 4 },
+    { name: 'Lissage', nameEn: 'Straightening', slug: 'lissage', parentId: coiffure.id, sortOrder: 5 },
+    { name: 'Soins capillaires', nameEn: 'Hair care', slug: 'soins-capillaires', parentId: coiffure.id, sortOrder: 6 },
+    // Ongles
+    { name: 'Manucure', nameEn: 'Manicure', slug: 'manucure', parentId: ongles.id, sortOrder: 1 },
+    { name: 'Gel UV', nameEn: 'UV Gel', slug: 'gel-uv', parentId: ongles.id, sortOrder: 2 },
+    { name: 'Extension ongles', nameEn: 'Nail extension', slug: 'extension-ongles', parentId: ongles.id, sortOrder: 3 },
+    { name: 'Nail art', nameEn: 'Nail art', slug: 'nail-art', parentId: ongles.id, sortOrder: 4 },
+    { name: 'Pédicure', nameEn: 'Pedicure', slug: 'pedicure', parentId: ongles.id, sortOrder: 5 },
+    // Maquillage
+    { name: 'Maquillage jour', nameEn: 'Daytime makeup', slug: 'maquillage-jour', parentId: maquillage.id, sortOrder: 1 },
+    { name: 'Maquillage soirée', nameEn: 'Evening makeup', slug: 'maquillage-soiree', parentId: maquillage.id, sortOrder: 2 },
+    { name: 'Maquillage mariée', nameEn: 'Bridal makeup', slug: 'maquillage-mariee', parentId: maquillage.id, sortOrder: 3 },
+    // Soins
+    { name: 'Soins visage', nameEn: 'Facial care', slug: 'soins-visage', parentId: soins.id, sortOrder: 1 },
+    { name: 'Soins corps', nameEn: 'Body care', slug: 'soins-corps', parentId: soins.id, sortOrder: 2 },
+    { name: 'Massage relaxant', nameEn: 'Relaxing massage', slug: 'massage-relaxant', parentId: soins.id, sortOrder: 3 },
+    { name: 'Massage drainant', nameEn: 'Draining massage', slug: 'massage-drainant', parentId: soins.id, sortOrder: 4 },
+    { name: 'Soins pieds', nameEn: 'Foot care', slug: 'soins-pieds', parentId: soins.id, sortOrder: 5 },
+    // Barber
+    { name: 'Coupe homme', nameEn: 'Men haircut', slug: 'coupe-homme', parentId: barber.id, sortOrder: 1 },
+    { name: 'Barbe', nameEn: 'Beard', slug: 'barbe', parentId: barber.id, sortOrder: 2 },
+    { name: 'Rasage', nameEn: 'Shave', slug: 'rasage', parentId: barber.id, sortOrder: 3 },
+    // Spa
+    { name: 'Hammam', nameEn: 'Hammam', slug: 'hammam', parentId: spa.id, sortOrder: 1 },
+    { name: 'Sauna', nameEn: 'Sauna', slug: 'sauna', parentId: spa.id, sortOrder: 2 },
+    { name: 'Soin complet', nameEn: 'Full treatment', slug: 'soin-complet', parentId: spa.id, sortOrder: 3 },
+  ];
+
+  for (const sub of subcategories) {
+    await prisma.serviceCategory.upsert({
+      where: { slug: sub.slug },
+      update: {},
+      create: sub,
+    });
+  }
+
+  console.log(`  ✅ ${subcategories.length} subcategories created`);
 
   // === Admin ===
   await prisma.admin.upsert({
@@ -139,8 +184,8 @@ async function main() {
     { name: 'Maquillage soiree', categoryId: maquillage.id, durationMin: 60, priceMin: 10000, priceMax: 20000 },
     { name: 'Maquillage naturel', categoryId: maquillage.id, durationMin: 30, priceMin: 5000, priceMax: null },
     // Massage
-    { name: 'Massage relaxant', categoryId: massage.id, durationMin: 60, priceMin: 15000, priceMax: null },
-    { name: 'Massage sportif', categoryId: massage.id, durationMin: 45, priceMin: 12000, priceMax: null },
+    { name: 'Massage relaxant', categoryId: soins.id, durationMin: 60, priceMin: 15000, priceMax: null },
+    { name: 'Massage sportif', categoryId: soins.id, durationMin: 45, priceMin: 12000, priceMax: null },
     // Barber
     { name: 'Coupe homme classique', categoryId: barber.id, durationMin: 30, priceMin: 3000, priceMax: 5000 },
     { name: 'Barbe + coupe', categoryId: barber.id, durationMin: 45, priceMin: 5000, priceMax: 7000 },

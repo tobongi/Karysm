@@ -2,7 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { IconScissors, IconSparkles, IconBrush, IconHandGrab, IconRazor, IconDroplet, IconMapPin, IconArrowRight, IconSearch, IconX, IconMap, IconList, IconHeart, IconDiamond, IconAward } from '@tabler/icons-react-native';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconBrush from '@tabler/icons-react-native/dist/esm/icons/IconBrush.mjs';
+import IconHandGrab from '@tabler/icons-react-native/dist/esm/icons/IconHandGrab.mjs';
+import IconRazor from '@tabler/icons-react-native/dist/esm/icons/IconRazor.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
+import IconArrowRight from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconMap from '@tabler/icons-react-native/dist/esm/icons/IconMap.mjs';
+import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
+import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
@@ -35,7 +49,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.terracotta} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.terracotta} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.terracotta} strokeWidth={1.5} />,
-  massage: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  soins: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.terracotta} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.terracotta} strokeWidth={1.5} />,
 };
@@ -44,7 +58,7 @@ const CATEGORY_ICONS_ACTIVE: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.white} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.white} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.white} strokeWidth={1.5} />,
-  massage: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
+  soins: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.white} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.white} strokeWidth={1.5} />,
 };
@@ -53,10 +67,50 @@ const SERVICE_CATEGORIES = [
   { slug: 'coiffure', name: 'Coiffure' },
   { slug: 'ongles', name: 'Ongles' },
   { slug: 'maquillage', name: 'Maquillage' },
-  { slug: 'massage', name: 'Massage' },
+  { slug: 'soins', name: 'Soins' },
   { slug: 'barber', name: 'Barbier' },
   { slug: 'spa', name: 'Spa' },
 ];
+
+const SUBCATEGORIES: Record<string, Array<{ name: string; slug: string }>> = {
+  coiffure: [
+    { name: 'Tresses', slug: 'tresses' },
+    { name: 'Tissage', slug: 'tissage' },
+    { name: 'Locks', slug: 'locks' },
+    { name: 'Coupe', slug: 'coupe' },
+    { name: 'Lissage', slug: 'lissage' },
+    { name: 'Soins capillaires', slug: 'soins-capillaires' },
+  ],
+  ongles: [
+    { name: 'Manucure', slug: 'manucure' },
+    { name: 'Gel UV', slug: 'gel-uv' },
+    { name: 'Extension', slug: 'extension-ongles' },
+    { name: 'Nail art', slug: 'nail-art' },
+    { name: 'Pédicure', slug: 'pedicure' },
+  ],
+  maquillage: [
+    { name: 'Jour', slug: 'maquillage-jour' },
+    { name: 'Soirée', slug: 'maquillage-soiree' },
+    { name: 'Mariée', slug: 'maquillage-mariee' },
+  ],
+  soins: [
+    { name: 'Visage', slug: 'soins-visage' },
+    { name: 'Corps', slug: 'soins-corps' },
+    { name: 'Massage relaxant', slug: 'massage-relaxant' },
+    { name: 'Massage drainant', slug: 'massage-drainant' },
+    { name: 'Pieds', slug: 'soins-pieds' },
+  ],
+  barber: [
+    { name: 'Coupe homme', slug: 'coupe-homme' },
+    { name: 'Barbe', slug: 'barbe' },
+    { name: 'Rasage', slug: 'rasage' },
+  ],
+  spa: [
+    { name: 'Hammam', slug: 'hammam' },
+    { name: 'Sauna', slug: 'sauna' },
+    { name: 'Soin complet', slug: 'soin-complet' },
+  ],
+};
 
 interface ProviderResult {
   id: string;
@@ -82,7 +136,9 @@ interface ProviderResult {
 
 export default function ExplorerTab() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [providers, setProviders] = useState<ProviderResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -91,6 +147,13 @@ export default function ExplorerTab() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProvider[]>([]);
+
+  // Debounce search input — only update API query after 500ms idle
+  useEffect(() => {
+    if (!search) { setDebouncedSearch(''); return; }
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useFocusEffect(
     useCallback(() => {
@@ -101,8 +164,9 @@ export default function ExplorerTab() {
   const fetchProviders = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (search) params.set('q', search);
-      if (selectedCategory) params.set('category', selectedCategory);
+      if (debouncedSearch) params.set('q', debouncedSearch);
+      const categoryParam = selectedSubcategory || selectedCategory;
+      if (categoryParam) params.set('category', categoryParam);
       params.set('city', 'Kinshasa');
       params.set('sort', 'rating');
       params.set('pageSize', '20');
@@ -114,12 +178,11 @@ export default function ExplorerTab() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [search, selectedCategory]);
+  }, [debouncedSearch, selectedCategory, selectedSubcategory]);
 
   useEffect(() => {
     setLoading(true);
-    const timeout = setTimeout(fetchProviders, search ? 400 : 0);
-    return () => clearTimeout(timeout);
+    fetchProviders();
   }, [fetchProviders]);
 
   const toggleFavorite = useCallback(async (providerId: string) => {
@@ -272,12 +335,45 @@ export default function ExplorerTab() {
                 label={cat.name}
                 icon={isActive ? CATEGORY_ICONS_ACTIVE[cat.slug] : CATEGORY_ICONS[cat.slug]}
                 isActive={isActive}
-                onPress={() => setSelectedCategory(isActive ? null : cat.slug)}
+                onPress={() => {
+                  setSelectedCategory(isActive ? null : cat.slug);
+                  setSelectedSubcategory(null);
+                }}
               />
             </View>
           );
         })}
       </View>
+
+      {/* Subcategory pills */}
+      {selectedCategory && SUBCATEGORIES[selectedCategory] && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.subcategoryRow}
+          contentContainerStyle={styles.subcategoryContent}
+        >
+          <Pressable
+            style={[styles.subcategoryChip, !selectedSubcategory && styles.subcategoryChipActive]}
+            onPress={() => setSelectedSubcategory(null)}
+          >
+            <Text style={[styles.subcategoryText, !selectedSubcategory && styles.subcategoryTextActive]}>
+              Tout
+            </Text>
+          </Pressable>
+          {SUBCATEGORIES[selectedCategory].map((sub) => (
+            <Pressable
+              key={sub.slug}
+              style={[styles.subcategoryChip, selectedSubcategory === sub.slug && styles.subcategoryChipActive]}
+              onPress={() => setSelectedSubcategory(selectedSubcategory === sub.slug ? null : sub.slug)}
+            >
+              <Text style={[styles.subcategoryText, selectedSubcategory === sub.slug && styles.subcategoryTextActive]}>
+                {sub.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Inspiration banner */}
       <Pressable
@@ -694,6 +790,37 @@ const styles = StyleSheet.create({
     width: '33.33%',
     paddingVertical: spacing.xs,
     marginBottom: 8,
+  },
+
+  // Subcategory pills
+  subcategoryRow: {
+    marginTop: 4,
+    marginBottom: spacing.sm,
+  },
+  subcategoryContent: {
+    paddingHorizontal: screenPadding.horizontal,
+    gap: 8,
+  },
+  subcategoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  subcategoryChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  subcategoryText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.text,
+  },
+  subcategoryTextActive: {
+    color: colors.white,
+    fontFamily: fonts.bodySemiBold,
   },
 
   // Request banner

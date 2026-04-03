@@ -127,15 +127,20 @@ model Provider {
 // ==================== SERVICES ====================
 
 model ServiceCategory {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  nameEn   String?
-  icon     String?
-  slug     String    @unique
-  sortOrder Int      @default(0)
+  id        String    @id @default(cuid())
+  name      String
+  nameEn    String?
+  icon      String?
+  slug      String    @unique
+  sortOrder Int       @default(0)
 
-  services Service[]
+  parentId  String?
+  parent    ServiceCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  ServiceCategory[] @relation("CategoryTree")
 
+  services  Service[]
+
+  @@index([parentId])
   @@map("service_categories")
 }
 

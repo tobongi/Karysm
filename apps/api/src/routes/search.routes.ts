@@ -16,7 +16,18 @@ router.get('/', validateQuery(searchSchema), asyncHandler(async (req: Request, r
   const where: any = { status: 'ACTIVE' };
 
   if (category) {
-    where.services = { some: { category: { slug: category }, isActive: true } };
+    // Check if it's a parent category with children
+    const cat = await prisma.serviceCategory.findUnique({
+      where: { slug: category as string },
+      include: { children: true },
+    });
+    if (cat && cat.children.length > 0) {
+      // Parent category: match services in parent or any child
+      const allIds = [cat.id, ...cat.children.map(c => c.id)];
+      where.services = { some: { categoryId: { in: allIds }, isActive: true } };
+    } else {
+      where.services = { some: { category: { slug: category }, isActive: true } };
+    }
   }
 
   if (q) {
