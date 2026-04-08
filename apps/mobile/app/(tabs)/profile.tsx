@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Image, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Platform, Dimensions } from 'react-native';
 import { router } from 'expo-router';
+import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 import { pickAndUploadAvatar } from '../../src/lib/upload';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
+import { PressableScale, FadeInStagger } from '../../src/components/animations';
 
 export default function ProfileTab() {
   const { user, logout, isProvider } = useAuth();
@@ -19,7 +21,6 @@ export default function ProfileTab() {
       const url = await pickAndUploadAvatar();
       if (!url) { setUploadingAvatar(false); return; }
       setAvatar(url);
-      // Persist avatar to provider profile if provider, otherwise just keep locally
       if (isProvider) {
         try {
           await api('/provider/profile', {
@@ -39,197 +40,233 @@ export default function ProfileTab() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.avatarContainer}>
-        <Pressable onPress={handleAvatarUpload} style={styles.avatarWrapper}>
-          {avatar ? (
-            <Image source={{ uri: avatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || '?'}</Text>
-            </View>
-          )}
-          {uploadingAvatar ? (
-            <View style={styles.cameraOverlay}>
-              <ActivityIndicator color={colors.white} size="small" />
-            </View>
-          ) : (
-            <View style={styles.cameraOverlay}>
-              <Text style={styles.cameraIcon}>{'\uD83D\uDCF7'}</Text>
-            </View>
-          )}
-        </Pressable>
-        <Text style={styles.name}>{user?.name || 'Utilisateur'}</Text>
-        <Text style={styles.phone}>{user?.phone}</Text>
-        {isProvider && (
-          <View style={styles.providerBadge}>
-            <Text style={styles.providerBadgeText}>✨ Prestataire</Text>
+      {/* Dark curved header */}
+      <View style={styles.header}>
+        <View style={styles.headerBg} />
+        <Svg
+          width={Math.min(Dimensions.get('window').width, 480)}
+          height={190}
+          style={styles.headerCurve}
+        >
+          <Path
+            d={`M0,0 L0,${130} C${Math.min(Dimensions.get('window').width, 480) * 0.3},${130 + 45} ${Math.min(Dimensions.get('window').width, 480) * 0.7},${130 - 27} ${Math.min(Dimensions.get('window').width, 480)},${130 - 15} L${Math.min(Dimensions.get('window').width, 480)},0 Z`}
+            fill={colors.headerDark}
+          />
+        </Svg>
+        <View style={styles.headerContent}>
+          <PressableScale onPress={handleAvatarUpload} style={styles.avatarWrapper}>
+            {avatar ? (
+              <Image source={{ uri: avatar }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || '?'}</Text>
+              </View>
+            )}
+            {uploadingAvatar ? (
+              <View style={styles.cameraOverlay}>
+                <ActivityIndicator color={colors.white} size="small" />
+              </View>
+            ) : (
+              <View style={styles.cameraOverlay}>
+                <Text style={styles.cameraIcon}>{'\uD83D\uDCF7'}</Text>
+              </View>
+            )}
+          </PressableScale>
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerName}>{user?.name || 'Utilisateur'}</Text>
+            <Text style={styles.headerPhone}>{user?.phone}</Text>
+            {isProvider && (
+              <View style={styles.providerBadge}>
+                <Text style={styles.providerBadgeText}>Prestataire</Text>
+              </View>
+            )}
           </View>
-        )}
+        </View>
       </View>
 
-      <Text style={styles.sectionHeader}>Compte</Text>
+      {/* Menu Group 1 — Account */}
+      <View style={styles.menuGroup}>
+        <FadeInStagger index={0}><MenuItem emoji="👤" label="Mon profil" onPress={() => router.push('/settings/edit-profile' as any)} /></FadeInStagger>
+        <FadeInStagger index={1}><MenuItem emoji="❤️" label="Favoris" onPress={() => router.push('/favorites' as any)} /></FadeInStagger>
 
-      <View style={styles.section}>
         {!isProvider && (
-          <Pressable style={styles.menuItem} onPress={() => router.push('/provider-register')}>
-            <Text style={styles.menuEmoji}>💼</Text>
-            <Text style={styles.menuText}>Devenir prestataire</Text>
-            <Text style={styles.menuArrow}>{'\u203A'}</Text>
-          </Pressable>
+          <FadeInStagger index={2}><MenuItem emoji="💼" label="Devenir prestataire" onPress={() => router.push('/provider-register')} /></FadeInStagger>
         )}
 
         {isProvider && (
           <>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/services')}>
-              <Text style={styles.menuEmoji}>💇🏿</Text>
-              <Text style={styles.menuText}>Mes services</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/availability')}>
-              <Text style={styles.menuEmoji}>📅</Text>
-              <Text style={styles.menuText}>Disponibilites</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/provider-dashboard/earnings')}>
-              <Text style={styles.menuEmoji}>{'\uD83D\uDCB0'}</Text>
-              <Text style={styles.menuText}>Mes revenus</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/request/browse' as any)}>
-              <Text style={styles.menuEmoji}>{'\uD83D\uDCCB'}</Text>
-              <Text style={styles.menuText}>Demandes ouvertes</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/wallet' as any)}>
-              <Text style={styles.menuEmoji}>💳</Text>
-              <Text style={styles.menuText}>Portefeuille</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/kyc' as any)}>
-              <Text style={styles.menuEmoji}>🪪</Text>
-              <Text style={styles.menuText}>Vérification identité</Text>
-              <Text style={styles.menuArrow}>{'\u203A'}</Text>
-            </Pressable>
+            <FadeInStagger index={2}><MenuItem emoji="💇🏿" label="Mes services" onPress={() => router.push('/provider-dashboard/services')} /></FadeInStagger>
+            <FadeInStagger index={3}><MenuItem emoji="📅" label="Disponibilites" onPress={() => router.push('/provider-dashboard/availability')} /></FadeInStagger>
+            <FadeInStagger index={4}><MenuItem emoji={'\uD83D\uDCB0'} label="Mes revenus" onPress={() => router.push('/provider-dashboard/earnings')} /></FadeInStagger>
+            <FadeInStagger index={5}><MenuItem emoji={'\uD83D\uDCCB'} label="Demandes ouvertes" onPress={() => router.push('/request/browse' as any)} /></FadeInStagger>
+            <FadeInStagger index={6}><MenuItem emoji="💳" label="Portefeuille" onPress={() => router.push('/wallet' as any)} /></FadeInStagger>
+            <FadeInStagger index={7}><MenuItem emoji="🪪" label="Verification identite" onPress={() => router.push('/kyc' as any)} /></FadeInStagger>
           </>
         )}
-
-        <Pressable style={styles.menuItem} onPress={() => router.push('/favorites' as any)}>
-          <Text style={styles.menuEmoji}>❤️</Text>
-          <Text style={styles.menuText}>Favoris</Text>
-          <Text style={styles.menuArrow}>{'\u203A'}</Text>
-        </Pressable>
-
-        <Pressable style={styles.menuItem} onPress={() => router.push('/referral' as any)}>
-          <Text style={styles.menuEmoji}>🎁</Text>
-          <Text style={styles.menuText}>Inviter des amies</Text>
-          <Text style={styles.menuArrow}>{'\u203A'}</Text>
-        </Pressable>
-
-        <Pressable style={styles.menuItem} onPress={() => router.push('/settings/edit-profile' as any)}>
-          <Text style={styles.menuEmoji}>⚙️</Text>
-          <Text style={styles.menuText}>Paramètres</Text>
-          <Text style={styles.menuArrow}>{'\u203A'}</Text>
-        </Pressable>
       </View>
 
-      <Pressable
-        style={styles.referralBanner}
-        onPress={() => router.push('/referral' as any)}
-      >
-        <View style={{ flex: 1 }}>
-          <Text style={styles.referralTitle}>Invitez, gagnez des crédits</Text>
-          <Text style={styles.referralSubtitle}>Partagez Tokoss avec vos amies et gagnez toutes les deux</Text>
-        </View>
-        <Text style={styles.referralArrow}>→</Text>
-      </Pressable>
+      {/* Menu Group 2 — Settings & Social */}
+      <View style={styles.menuGroup}>
+        <FadeInStagger index={8}><MenuItem emoji="⚙️" label="Parametres" onPress={() => router.push('/settings' as any)} /></FadeInStagger>
+        <FadeInStagger index={9}><MenuItem emoji="🎁" label="Inviter des amies" onPress={() => router.push('/referral' as any)} /></FadeInStagger>
+      </View>
 
-      <Pressable style={styles.logoutButton} onPress={() => { logout(); router.replace('/auth/login'); }}>
-        <Text style={styles.logoutText}>Se deconnecter</Text>
-      </Pressable>
+      {/* Logout */}
+      <FadeInStagger index={10}>
+        <PressableScale style={styles.logoutItem} onPress={() => { logout(); router.replace('/auth/login'); }}>
+          <View style={styles.iconCircle}>
+            <Text style={styles.menuEmoji}>🚪</Text>
+          </View>
+          <Text style={styles.logoutText}>Se deconnecter</Text>
+        </PressableScale>
+      </FadeInStagger>
     </ScrollView>
+  );
+}
+
+function MenuItem({ emoji, label, onPress }: { emoji: string; label: string; onPress: () => void }) {
+  return (
+    <PressableScale style={styles.menuItem} onPress={onPress}>
+      <View style={styles.iconCircle}>
+        <Text style={styles.menuEmoji}>{emoji}</Text>
+      </View>
+      <Text style={styles.menuText}>{label}</Text>
+      <Text style={styles.menuArrow}>{'\u203A'}</Text>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 20, paddingTop: 24 },
-  avatarContainer: { alignItems: 'center', marginBottom: 36 },
-  avatarWrapper: { position: 'relative', marginBottom: 14 },
-  avatar: {
-    width: 96, height: 96, borderRadius: 48, backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
-    ...Platform.select({
-      web: { boxShadow: '0 4px 24px rgba(90,56,60,0.15)' },
-      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 5 },
-    }) as any,
+  content: { paddingBottom: 40 },
+
+  // Header
+  header: {
+    height: 190,
+    position: 'relative',
+    marginBottom: 32,
   },
-  cameraOverlay: {
-    position: 'absolute', bottom: 0, right: -2,
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.bg,
+  headerBg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.bg,
   },
-  cameraIcon: { fontSize: 14 },
-  avatarText: { fontSize: 32, fontFamily: 'Poppins_700Bold', color: colors.white },
-  name: { fontSize: 26, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
-  phone: { fontSize: 11, fontFamily: 'Poppins_500Medium', color: colors.textSecondary, marginTop: 6, textTransform: 'uppercase' as const, letterSpacing: 1.5 },
-  providerBadge: {
-    marginTop: 8, backgroundColor: colors.primaryGhost,
-    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100,
+  headerCurve: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
-  providerBadgeText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
-  sectionHeader: {
-    fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.textMuted,
-    textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12,
-  },
-  section: {
-    gap: 0, backgroundColor: colors.card, borderRadius: 20, overflow: 'hidden',
-    marginBottom: 28,
-    ...Platform.select({
-      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
-      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
-    }) as any,
-  },
-  menuItem: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'transparent', paddingHorizontal: 20, paddingVertical: 16,
-  },
-  menuEmoji: { fontSize: 20, marginRight: 14 },
-  menuText: { flex: 1, fontSize: 16, fontFamily: 'Poppins_500Medium', color: colors.text },
-  menuArrow: { fontSize: 22, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
-  logoutButton: {
-    marginTop: 8, paddingVertical: 14, alignItems: 'center',
-    borderRadius: 16,
-    ...Platform.select({
-      web: { boxShadow: '0 2px 12px rgba(222,53,11,0.08)' },
-      default: { shadowColor: colors.error, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 },
-    }) as any,
-  },
-  logoutText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.error },
-  referralBanner: {
-    backgroundColor: colors.accent,
-    borderRadius: 20,
-    padding: 20,
+  headerContent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    paddingTop: 40,
   },
-  referralTitle: {
-    fontFamily: 'Poppins_600SemiBold',
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
+  avatarWrapper: { position: 'relative' },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.25)',
   },
-  referralSubtitle: {
+  cameraOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.headerDark,
+  },
+  cameraIcon: { fontSize: 11 },
+  avatarText: { fontSize: 24, fontFamily: 'Poppins_700Bold', color: colors.white },
+  headerInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  headerName: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: colors.white,
+  },
+  headerPhone: {
+    fontSize: 13,
     fontFamily: 'Poppins_400Regular',
-    fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
-    marginTop: 3,
+    marginTop: 2,
   },
-  referralArrow: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    marginLeft: 12,
+  providerBadge: {
+    marginTop: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 100,
+    alignSelf: 'flex-start',
+  },
+  providerBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.white,
+  },
+
+  // Menu groups
+  menuGroup: {
+    paddingHorizontal: 24,
+    marginBottom: 28,
+  },
+
+  // Menu item
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.n300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  menuEmoji: { fontSize: 18 },
+  menuText: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    color: colors.text,
+  },
+  menuArrow: {
+    fontSize: 22,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textMuted,
+  },
+
+  // Logout
+  logoutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginTop: 8,
+  },
+  logoutText: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    color: colors.error,
   },
 });

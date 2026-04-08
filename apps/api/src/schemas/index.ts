@@ -88,6 +88,7 @@ export const searchSchema = z.object({
   radius: z.coerce.number().min(1).max(50).optional(),
   minRating: z.coerce.number().min(0).max(5).optional(),
   maxPrice: z.coerce.number().optional(),
+  isMobile: z.enum(['true', 'false']).optional(),
   sort: z.enum(['distance', 'price_asc', 'price_desc', 'rating']).optional(),
   page: z.coerce.number().optional(),
   pageSize: z.coerce.number().optional(),

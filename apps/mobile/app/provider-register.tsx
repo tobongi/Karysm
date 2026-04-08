@@ -177,7 +177,7 @@ export default function ProviderRegisterScreen() {
             <Text style={styles.label}>Presentez-vous en quelques mots</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Coiffeuse professionnelle avec 5 ans d'experience..."
+              placeholder="Coiffeuse prestataire avec 5 ans d'experience..."
               placeholderTextColor={colors.textMuted}
               value={bio}
               onChangeText={setBio}

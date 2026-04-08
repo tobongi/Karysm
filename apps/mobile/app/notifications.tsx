@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { api } from '../../src/lib/api';
-import { colors } from '../../src/theme/colors';
-import { useAuth } from '../../src/lib/auth-context';
+import CurveHeader from '../src/components/CurveHeader';
+import { api } from '../src/lib/api';
+import { colors } from '../src/theme/colors';
+import { useAuth } from '../src/lib/auth-context';
 
 // --- Types ---
 
@@ -145,9 +146,7 @@ export default function MessagesTab() {
   if (!authLoading && !user) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Activité</Text>
-        </View>
+        <CurveHeader title="Activité" height={160} />
         <View style={styles.centerContent}>
           <Text style={styles.emptyEmoji}>🔒</Text>
           <Text style={styles.emptyTitle}>Connectez-vous pour voir votre activité</Text>
@@ -164,9 +163,7 @@ export default function MessagesTab() {
   if (loading || authLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Activité</Text>
-        </View>
+        <CurveHeader title="Activité" height={160} />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -211,21 +208,17 @@ export default function MessagesTab() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Activité</Text>
-          {unreadCount > 0 && (
-            <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
-              <Text style={styles.markAllText}>Tout lire</Text>
-            </Pressable>
-          )}
-        </View>
-        {unreadCount > 0 && (
+      <CurveHeader title="Activité" height={160} />
+      {unreadCount > 0 && (
+        <View style={styles.actionBar}>
           <Text style={styles.unreadLabel}>
             {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
           </Text>
-        )}
-      </View>
+          <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
+            <Text style={styles.markAllText}>Tout lire</Text>
+          </Pressable>
+        </View>
+      )}
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
@@ -252,21 +245,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: colors.card,
-  },
-  headerRow: {
+  actionBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontFamily: 'PlayfairDisplay_700Bold',
-    color: colors.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
   markAllButton: {
     paddingHorizontal: 12,

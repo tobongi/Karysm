@@ -13,14 +13,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
-import { colors } from '../src/theme/colors';
-import { fonts } from '../src/theme/typography';
-import { radius, spacing, screenPadding } from '../src/theme/spacing';
-import { shadows } from '../src/theme/shadows';
-import Skeleton from '../src/components/Skeleton';
-import { PressableScale, FadeInStagger, BounceScale, TabCrossfade } from '../src/components/animations';
-import { api } from '../src/lib/api';
+import { colors } from '../../src/theme/colors';
+import { fonts } from '../../src/theme/typography';
+import { radius, spacing, screenPadding } from '../../src/theme/spacing';
+import { shadows } from '../../src/theme/shadows';
+import Skeleton from '../../src/components/Skeleton';
+import CurveHeader from '../../src/components/CurveHeader';
+import { api } from '../../src/lib/api';
 
 interface FeedProvider {
   id: string;
@@ -42,6 +41,28 @@ interface FeedItem {
   createdAt: string;
   provider: FeedProvider;
 }
+
+const LOOKBOOK_IMAGES = [
+  require('../../assets/images/lookbook/look_tresses.webp'),
+  require('../../assets/images/lookbook/look_ongles.webp'),
+  require('../../assets/images/lookbook/look_mariee.webp'),
+  require('../../assets/images/lookbook/look_fade.webp'),
+  require('../../assets/images/lookbook/look_braids.webp'),
+  require('../../assets/images/lookbook/look_soins.webp'),
+  require('../../assets/images/lookbook/look_stiletto.webp'),
+  require('../../assets/images/lookbook/look_cornrows.webp'),
+];
+
+const MOCK_FEED: FeedItem[] = [
+  { id: 'm1', imageUrl: null, caption: 'Tresses coll\u00e9es avec perles dor\u00e9es \u2728', serviceTag: 'coiffure', savedCount: 24, createdAt: '2026-04-01', provider: { id: 'p1', slug: 'amina-beauty', displayName: 'Amina Beauty', city: 'Kinshasa', avgRating: 4.8, avatar: null, instagramHandle: '@amina.beauty', tiktokHandle: null } },
+  { id: 'm2', imageUrl: null, caption: 'Gel UV effet marbre rose', serviceTag: 'ongles', savedCount: 18, createdAt: '2026-04-01', provider: { id: 'p2', slug: 'nails-by-grace', displayName: 'Nails by Grace', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@nailsbygrace', tiktokHandle: '@nailsbygrace' } },
+  { id: 'm3', imageUrl: null, caption: 'Maquillage mari\u00e9e \u2014 teint lumineux Monk 7', serviceTag: 'maquillage', savedCount: 42, createdAt: '2026-03-30', provider: { id: 'p3', slug: 'glam-by-sarah', displayName: 'Glam by Sarah', city: 'Kinshasa', avgRating: 4.7, avatar: null, instagramHandle: '@glambysarah', tiktokHandle: null } },
+  { id: 'm4', imageUrl: null, caption: 'Fade d\u00e9grad\u00e9 + barbe sculpt\u00e9e', serviceTag: 'barber', savedCount: 31, createdAt: '2026-03-29', provider: { id: 'p4', slug: 'king-barber', displayName: 'King Barber', city: 'Kinshasa', avgRating: 4.6, avatar: null, instagramHandle: null, tiktokHandle: '@kingbarber243' } },
+  { id: 'm5', imageUrl: null, caption: 'Box braids mi-longueur couleur caramel \ud83e\udd0e', serviceTag: 'coiffure', savedCount: 56, createdAt: '2026-03-28', provider: { id: 'p1', slug: 'amina-beauty', displayName: 'Amina Beauty', city: 'Kinshasa', avgRating: 4.8, avatar: null, instagramHandle: '@amina.beauty', tiktokHandle: null } },
+  { id: 'm6', imageUrl: null, caption: 'Soin visage hydratant \u2014 peau \u00e9clatante', serviceTag: 'soins', savedCount: 15, createdAt: '2026-03-27', provider: { id: 'p5', slug: 'zen-beauty-spa', displayName: 'Zen Beauty Spa', city: 'Kinshasa', avgRating: 4.5, avatar: null, instagramHandle: '@zenbeautyspa', tiktokHandle: null } },
+  { id: 'm7', imageUrl: null, caption: 'Extension ongles stiletto noir mat + strass', serviceTag: 'ongles', savedCount: 37, createdAt: '2026-03-26', provider: { id: 'p2', slug: 'nails-by-grace', displayName: 'Nails by Grace', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@nailsbygrace', tiktokHandle: '@nailsbygrace' } },
+  { id: 'm8', imageUrl: null, caption: 'Cornrows avec fils dor\u00e9s \u2014 style Fulani', serviceTag: 'coiffure', savedCount: 63, createdAt: '2026-03-25', provider: { id: 'p6', slug: 'tresses-de-mama', displayName: 'Tresses de Mama', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@tressesdemama', tiktokHandle: '@tressesdemama' } },
+];
 
 const CATEGORY_FILTERS = [
   { key: null, label: 'Tout' },
@@ -71,7 +92,7 @@ function LookCardSkeleton({ index }: { index: number }) {
   );
 }
 
-export default function LookbookScreen() {
+export default function LookbookTabScreen() {
   const [tab, setTab] = useState<'discover' | 'saved'>('discover');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [savedItems, setSavedItems] = useState<FeedItem[]>([]);
@@ -187,16 +208,19 @@ export default function LookbookScreen() {
     setHasMore(true);
   }, []);
 
-  const currentData = tab === 'discover' ? items : savedItems;
+  const currentData = tab === 'discover'
+    ? (items.length > 0 ? items : (loading ? [] : MOCK_FEED))
+    : savedItems;
 
   const renderCard = useCallback(
     ({ item, index }: { item: FeedItem; index: number }) => {
       const imageHeight = index % 3 === 0 ? 240 : 180;
       const isSaved = savedIds.has(item.id);
+      const isMock = item.id.startsWith('m');
 
       return (
-        <FadeInStagger index={index} style={styles.cardWrapper}>
-          <PressableScale
+        <View style={styles.cardWrapper}>
+          <Pressable
             style={styles.card}
             onPress={() => router.push(`/provider/${item.provider.slug}` as any)}
           >
@@ -204,6 +228,12 @@ export default function LookbookScreen() {
             {item.imageUrl ? (
               <Image
                 source={{ uri: item.imageUrl }}
+                style={[styles.lookImage, { height: imageHeight }]}
+                resizeMode="cover"
+              />
+            ) : isMock ? (
+              <Image
+                source={LOOKBOOK_IMAGES[index % 8]}
                 style={[styles.lookImage, { height: imageHeight }]}
                 resizeMode="cover"
               />
@@ -222,9 +252,7 @@ export default function LookbookScreen() {
               }}
               hitSlop={8}
             >
-              <BounceScale trigger={isSaved}>
-                <Text style={styles.saveIcon}>{isSaved ? '🔖' : '☆'}</Text>
-              </BounceScale>
+              <Text style={styles.saveIcon}>{isSaved ? '🔖' : '☆'}</Text>
             </Pressable>
 
             {/* Service tag overlay */}
@@ -268,8 +296,8 @@ export default function LookbookScreen() {
             >
               <Text style={styles.wantButtonText}>Je veux ça</Text>
             </Pressable>
-          </PressableScale>
-        </FadeInStagger>
+          </Pressable>
+        </View>
       );
     },
     [savedIds, toggleSave]
@@ -326,18 +354,12 @@ export default function LookbookScreen() {
 
   const listHeader = (
     <>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
-          <IconArrowLeft size={22} color={colors.text} strokeWidth={2} />
-        </Pressable>
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Inspiration</Text>
-          <Text style={styles.headerSubtitle}>
-            Les réalisations de la communauté
-          </Text>
-        </View>
-      </View>
+      {/* CurveHeader */}
+      <CurveHeader
+        title="Inspiration"
+        subtitle="Les réalisations de la communauté"
+        height={160}
+      />
 
       {/* Tab toggle */}
       <View style={styles.tabRow}>
@@ -360,7 +382,7 @@ export default function LookbookScreen() {
       </View>
 
       {/* Category filter chips — only on discover tab */}
-      <TabCrossfade active={tab === 'discover'}>
+      {tab === 'discover' && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -382,12 +404,12 @@ export default function LookbookScreen() {
             );
           })}
         </ScrollView>
-      </TabCrossfade>
+      )}
     </>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.webWrapper}>
         <FlatList
           data={loading ? [] : currentData}
@@ -425,41 +447,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Platform.OS === 'web' ? 480 : undefined,
     alignSelf: 'center',
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: screenPadding.horizontal,
-    paddingTop: 12,
-    paddingBottom: 16,
-    gap: 12,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  headerText: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: fonts.displayBold,
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.accent,
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
   },
 
   // Tab toggle

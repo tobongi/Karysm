@@ -14,6 +14,7 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import Skeleton from '../../src/components/Skeleton';
+import CurveHeader from '../../src/components/CurveHeader';
 
 const BEAUTY_TIPS = [
   { id: '1', icon: '\u{1F4A7}', title: 'Méthode LOC pour cheveux 4C', content: "Liquid, Oil, Cream \u2014 l'ordre d'application qui change tout pour l'hydratation des cheveux crépus." },
@@ -75,9 +76,7 @@ export default function BeautyTab() {
   if (!authLoading && !user) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Beauté AI</Text>
-        </View>
+        <CurveHeader title="Beauté AI" height={160} />
         <View style={styles.centered}>
           <Text style={styles.emptyIcon}>✨</Text>
           <Text style={styles.emptyTitle}>Connectez-vous pour analyser votre peau et vos cheveux</Text>
@@ -92,9 +91,7 @@ export default function BeautyTab() {
   if (loading || authLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Beauté AI</Text>
-        </View>
+        <CurveHeader title="Beauté AI" height={160} />
         <View style={styles.content}>
           <Skeleton width="100%" height={160} borderRadius={24} />
           <View style={{ height: 20 }} />
@@ -109,10 +106,7 @@ export default function BeautyTab() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Beauté AI</Text>
-        <Text style={styles.headerSubtitle}>Analysez votre peau et vos cheveux</Text>
-      </View>
+      <CurveHeader title="Beauté AI" subtitle="Analysez votre peau et vos cheveux" height={160} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -260,12 +254,6 @@ export default function BeautyTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
-    backgroundColor: colors.card,
-  },
-  headerTitle: { fontSize: 28, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
-  headerSubtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
 

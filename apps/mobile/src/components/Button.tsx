@@ -2,17 +2,15 @@ import React from 'react';
 import {
   Pressable,
   Text,
-  StyleSheet,
   ActivityIndicator,
   ViewStyle,
-  TextStyle,
   StyleProp,
   View,
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { shadows } from '../theme/shadows';
 
-type ButtonVariant = 'primary' | 'secondary';
+type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'outline';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -35,9 +33,9 @@ const sizeStyles: Record<ButtonSize, { height: number; borderRadius: number; fon
 
 const variantColors = {
   primary: {
-    bg: colors.primary,        // #CA987E
+    bg: colors.primary,
     text: '#FFFFFF',
-    active: colors.primaryDark, // #A77366
+    active: colors.primaryDark,
     disabledBg: '#E9D2C2',
     disabledText: '#D5AC94',
   },
@@ -47,6 +45,20 @@ const variantColors = {
     active: '#E9D2C2',
     disabledBg: '#F2E4D9',
     disabledText: '#D5AC94',
+  },
+  accent: {
+    bg: colors.secondaryGreen,
+    text: '#FFFFFF',
+    active: colors.secondaryGreenDark,
+    disabledBg: '#D5D7D1',
+    disabledText: '#A0A496',
+  },
+  outline: {
+    bg: 'transparent',
+    text: colors.headerDark,
+    active: 'rgba(58,34,40,0.05)',
+    disabledBg: 'transparent',
+    disabledText: colors.textMuted,
   },
 };
 
@@ -63,7 +75,7 @@ function Button({
 }: ButtonProps) {
   const sizeConfig = sizeStyles[size];
   const colorConfig = variantColors[variant];
-  const fontFamily = size === 'sm' ? 'Poppins_600SemiBold' : 'Poppins_400Regular';
+  const isOutline = variant === 'outline';
 
   return (
     <Pressable
@@ -78,16 +90,17 @@ function Button({
 
         return [
           {
-            height: sizeConfig.height,
+            height: isOutline ? undefined : sizeConfig.height,
             borderRadius: sizeConfig.borderRadius,
-            paddingHorizontal: sizeConfig.paddingHorizontal,
+            paddingHorizontal: isOutline ? 0 : sizeConfig.paddingHorizontal,
+            paddingVertical: isOutline ? 8 : 0,
             backgroundColor: bg,
             flexDirection: 'row' as const,
             alignItems: 'center' as const,
             justifyContent: 'center' as const,
             alignSelf: fullWidth ? ('stretch' as const) : ('flex-start' as const),
             opacity: loading ? 0.85 : 1,
-            ...(variant === 'primary' && !disabled ? shadows.card : {}),
+            ...(!isOutline && variant !== 'secondary' && !disabled ? shadows.card : {}),
           },
           style,
         ];
@@ -103,7 +116,7 @@ function Button({
           {icon && <View style={{ marginRight: 8 }}>{icon}</View>}
           <Text
             style={{
-              fontFamily,
+              fontFamily: 'Poppins_600SemiBold',
               fontSize: sizeConfig.fontSize,
               color: disabled ? colorConfig.disabledText : colorConfig.text,
               letterSpacing: 0.3,

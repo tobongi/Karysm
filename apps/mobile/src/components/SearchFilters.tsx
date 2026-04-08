@@ -15,6 +15,7 @@ interface Filters {
   maxPrice: number | null;
   maxDistance: number | null;
   sortBy: string;
+  isMobile: boolean;
 }
 
 interface SearchFiltersProps {
@@ -29,6 +30,7 @@ const DISTANCE_OPTIONS = [1, 3, 5, 10];
 const SORT_OPTIONS = [
   { value: 'rating', label: 'Note' },
   { value: 'price_asc', label: 'Prix croissant' },
+  { value: 'price_desc', label: 'Prix décroissant' },
   { value: 'distance', label: 'Distance' },
 ];
 
@@ -37,6 +39,7 @@ const defaultFilters: Filters = {
   maxPrice: null,
   maxDistance: null,
   sortBy: 'rating',
+  isMobile: false,
 };
 
 function formatPrice(value: number): string {
@@ -87,6 +90,33 @@ export default function SearchFilters({
             showsVerticalScrollIndicator={false}
             style={styles.scrollContent}
           >
+            {/* Se déplace */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Déplacement</Text>
+              <Pressable
+                onPress={() =>
+                  setFilters((f) => ({ ...f, isMobile: !f.isMobile }))
+                }
+                style={[
+                  styles.toggleRow,
+                  filters.isMobile && styles.toggleRowActive,
+                ]}
+              >
+                <Text style={styles.toggleIcon}>🚗</Text>
+                <Text
+                  style={[
+                    styles.toggleText,
+                    filters.isMobile && styles.toggleTextActive,
+                  ]}
+                >
+                  Se déplace chez vous
+                </Text>
+                {filters.isMobile && (
+                  <Text style={styles.toggleCheck}>✓</Text>
+                )}
+              </Pressable>
+            </View>
+
             {/* Note minimum */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Note minimum</Text>
@@ -360,5 +390,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 10,
+  },
+  toggleRowActive: {
+    backgroundColor: 'rgba(139,105,82,0.08)',
+    borderColor: colors.primary,
+  },
+  toggleIcon: {
+    fontSize: 18,
+  },
+  toggleText: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 14,
+    color: colors.text,
+    flex: 1,
+  },
+  toggleTextActive: {
+    color: colors.primary,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  toggleCheck: {
+    fontSize: 16,
+    color: colors.primary,
+    fontFamily: 'Poppins_700Bold',
   },
 });

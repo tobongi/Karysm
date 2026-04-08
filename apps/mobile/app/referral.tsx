@@ -9,7 +9,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconGift, IconCopy, IconShare, IconUsers, IconCoins, IconArrowLeft } from '@tabler/icons-react-native';
+import IconGift from '@tabler/icons-react-native/dist/esm/icons/IconGift.mjs';
+import IconCopy from '@tabler/icons-react-native/dist/esm/icons/IconCopy.mjs';
+import IconShare from '@tabler/icons-react-native/dist/esm/icons/IconShare.mjs';
+import IconUsers from '@tabler/icons-react-native/dist/esm/icons/IconUsers.mjs';
+import IconCoins from '@tabler/icons-react-native/dist/esm/icons/IconCoins.mjs';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
 import { router } from 'expo-router';
 import { colors } from '../src/theme/colors';
 import Button from '../src/components/Button';

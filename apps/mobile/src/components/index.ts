@@ -11,3 +11,4 @@ export { default as Skeleton, ProviderCardSkeleton } from './Skeleton';
 export { default as SearchFilters } from './SearchFilters';
 export { default as PhotoGallery } from './PhotoGallery';
 export { default as ServiceDetail } from './ServiceDetail';
+export { default as SectionHeader } from './SectionHeader';

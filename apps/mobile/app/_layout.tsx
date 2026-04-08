@@ -76,7 +76,7 @@ function AppContent() {
         <Stack.Screen name="request/browse" options={{ title: 'Demandes ouvertes' }} />
         <Stack.Screen name="booking/review/[bookingId]" options={{ title: 'Laisser un avis' }} />
         <Stack.Screen name="favorites" options={{ title: 'Favoris' }} />
-        <Stack.Screen name="settings/edit-profile" options={{ title: 'Modifier le profil' }} />
+        <Stack.Screen name="settings/edit-profile" options={{ headerShown: false }} />
         <Stack.Screen name="kyc/index" options={{ title: 'Vérification KYC' }} />
         <Stack.Screen name="wallet/index" options={{ title: 'Portefeuille' }} />
         <Stack.Screen name="ai/skin-capture" options={{ title: 'Analyse de peau' }} />
@@ -91,13 +91,14 @@ function AppContent() {
         <Stack.Screen name="store/[providerId]" options={{ title: 'Boutique' }} />
         <Stack.Screen name="store/product/[id]" options={{ title: 'Produit' }} />
         <Stack.Screen name="booking/completed" options={{ headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false }} />
       </Stack>
     </>
   );
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Poppins_600SemiBold,
@@ -106,7 +107,12 @@ export default function RootLayout() {
     PlayfairDisplay_700Bold,
   });
 
-  if (!fontsLoaded) {
+  // On web: don't block on fonts — CSS handles fallback via font-family stacks
+  // On native: wait for fonts to load
+  const isWeb = Platform.OS === 'web';
+  const ready = isWeb ? true : (fontsLoaded || !!fontError);
+
+  if (!ready) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: 28, color: colors.accent, fontStyle: 'italic' }}>tokoss</Text>

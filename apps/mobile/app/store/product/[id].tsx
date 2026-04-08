@@ -8,7 +8,10 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { IconArrowLeft, IconHeart, IconStar, IconShoppingBag } from '@tabler/icons-react-native';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconShoppingBag from '@tabler/icons-react-native/dist/esm/icons/IconShoppingBag.mjs';
 import { colors } from '../../../src/theme/colors';
 import Button from '../../../src/components/Button';
 import { showAlert } from '../../../src/lib/alert';

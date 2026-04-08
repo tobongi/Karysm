@@ -30,7 +30,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Coiffure': '\uD83D\uDC87\u200D\u2640\uFE0F',
   'Ongles': '\uD83D\uDC85',
   'Maquillage': '\uD83D\uDC84',
-  'Massage': '\uD83D\uDC86\u200D\u2640\uFE0F',
+  'Soins': '\uD83D\uDC86\u200D\u2640\uFE0F',
   'Barber': '\u2702\uFE0F',
   'Spa': '\uD83E\uDDD6\u200D\u2640\uFE0F',
 };

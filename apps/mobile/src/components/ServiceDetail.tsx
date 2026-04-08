@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ScrollView, Platform } from 'react-native';
-import { IconClock } from '@tabler/icons-react-native';
+import IconClock from '@tabler/icons-react-native/dist/esm/icons/IconClock.mjs';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { spacing, radius } from '../theme/spacing';

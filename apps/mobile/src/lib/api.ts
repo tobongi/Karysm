@@ -9,8 +9,12 @@ const DEV_API = Platform.select({
   default: 'http://localhost:3001/api',
 });
 
-// Always use production API for web builds (PWA/testers)
-const API_URL = Platform.OS === 'web' ? PROD_API : (__DEV__ ? DEV_API : PROD_API);
+// In dev mode on web, use prod API (local port may conflict with other projects)
+// In dev mode on native, use local API
+// In production builds (expo export), always use prod API
+const API_URL = __DEV__
+  ? Platform.OS === 'web' ? PROD_API : DEV_API!
+  : PROD_API;
 
 let authToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;

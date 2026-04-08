@@ -11,6 +11,8 @@ import {
 import { colors } from '../theme/colors';
 import { shadows } from '../theme/shadows';
 
+type InputVariant = 'bordered' | 'underline';
+
 interface InputProps {
   label?: string;
   value: string;
@@ -22,8 +24,10 @@ interface InputProps {
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
   icon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
+  variant?: InputVariant;
 }
 
 function Input({
@@ -37,27 +41,29 @@ function Input({
   keyboardType,
   multiline = false,
   icon,
+  rightIcon,
   style,
   inputStyle,
+  variant = 'bordered',
 }: InputProps) {
   const [focused, setFocused] = useState(false);
+  const isUnderline = variant === 'underline';
 
-  const hasBorder = !!error || focused;
   const borderColor = error
     ? colors.error
     : focused
-      ? 'rgba(124,58,237,0.4)'
-      : 'transparent';
+      ? (isUnderline ? colors.headerDark : 'rgba(91,33,182,0.5)')
+      : colors.border;
 
   return (
-    <View style={[{ marginBottom: 16 }, style]}>
+    <View style={[{ marginBottom: isUnderline ? 20 : 16 }, style]}>
       {label && (
         <Text
           style={{
             fontFamily: 'Poppins_600SemiBold',
-            fontSize: 13,
-            color: colors.text,
-            marginBottom: 8,
+            fontSize: isUnderline ? 12 : 13,
+            color: isUnderline ? colors.textMuted : colors.text,
+            marginBottom: isUnderline ? 4 : 8,
           }}
         >
           {label}
@@ -65,12 +71,18 @@ function Input({
       )}
 
       <View
-        style={{
+        style={isUnderline ? {
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderBottomColor: borderColor,
+          paddingBottom: 8,
+        } : {
           flexDirection: 'row',
           alignItems: 'center',
           backgroundColor: colors.card,
-          borderWidth: hasBorder ? 1 : 0,
-          borderColor,
+          borderWidth: 1,
+          borderColor: (error || focused) ? borderColor : colors.border,
           borderRadius: 24,
           paddingHorizontal: 16,
           minHeight: multiline ? 100 : 48,
@@ -82,7 +94,7 @@ function Input({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={isUnderline ? colors.primaryLight : colors.textMuted}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           multiline={multiline}
@@ -93,13 +105,14 @@ function Input({
             {
               flex: 1,
               fontFamily: 'Poppins_400Regular',
-              fontSize: 14,
+              fontSize: isUnderline ? 16 : 14,
               color: colors.text,
-              paddingVertical: 16,
+              paddingVertical: isUnderline ? 4 : 16,
             },
             inputStyle,
           ]}
         />
+        {rightIcon && <View style={{ marginLeft: 10 }}>{rightIcon}</View>}
       </View>
 
       {error ? (

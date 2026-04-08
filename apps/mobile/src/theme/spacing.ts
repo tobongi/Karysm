@@ -18,9 +18,11 @@ export const screenPadding = {
 
 // Border radius from Figma Beauty Master
 export const radius = {
-  sm: 16,     // Small buttons, chips
-  md: 20,     // Medium buttons, inputs
-  lg: 24,     // Cards, large buttons
-  xl: 28,     // Full-width CTA buttons (pill-like)
+  xs: 8,      // Small chips, tags
+  sm: 12,     // Beauty Master tight cards
+  md: 16,     // Beauty Master standard cards
+  lg: 20,     // Inputs, medium buttons
+  xl: 24,     // Large cards
+  xxl: 28,    // Full-width CTA buttons (pill-like)
   full: 100,  // Pills, avatars
 } as const;

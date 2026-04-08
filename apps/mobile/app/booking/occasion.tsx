@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { IconArrowLeft, IconCheck } from '@tabler/icons-react-native';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
@@ -32,8 +33,8 @@ const SERVICES = [
   { id: 'coiffure', emoji: '✂️', label: 'Coiffure / Tresses', category: 'coiffure' },
   { id: 'ongles', emoji: '💅', label: 'Ongles / Manucure', category: 'ongles' },
   { id: 'maquillage', emoji: '💄', label: 'Maquillage', category: 'maquillage' },
-  { id: 'soin', emoji: '💆', label: 'Soin visage', category: 'spa' },
-  { id: 'massage', emoji: '💪', label: 'Massage', category: 'massage' },
+  { id: 'soin', emoji: '💆', label: 'Soin visage', category: 'soins' },
+  { id: 'massage', emoji: '💪', label: 'Massage', category: 'soins' },
 ];
 
 const SERVICE_PLANNING: Record<string, { daysBefore: number; duration: string; label: string }> = {
@@ -347,7 +348,7 @@ export default function OccasionBookingScreen() {
             disabled={!canSearch}
           >
             <Text style={[styles.ctaText, !canSearch && styles.ctaTextDisabled]}>
-              Rechercher des professionnelles
+              Rechercher des prestataires
             </Text>
           </Pressable>
         </View>

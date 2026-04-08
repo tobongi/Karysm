@@ -14,12 +14,43 @@ export const BOOKING_STATUS_TRANSITIONS: Record<string, string[]> = {
 export const DEPOSIT_PERCENTAGE = 0.30; // 30% deposit
 
 export const SERVICE_CATEGORIES = [
-  { name: 'Coiffure', nameEn: 'Hair', icon: '💇', slug: 'coiffure' },
-  { name: 'Ongles', nameEn: 'Nails', icon: '💅', slug: 'ongles' },
-  { name: 'Maquillage', nameEn: 'Makeup', icon: '💄', slug: 'maquillage' },
-  { name: 'Massage', nameEn: 'Massage', icon: '💆', slug: 'massage' },
-  { name: 'Barber', nameEn: 'Barber', icon: '✂️', slug: 'barber' },
-  { name: 'Spa', nameEn: 'Spa', icon: '🧖', slug: 'spa' },
+  { name: 'Coiffure', nameEn: 'Hair', icon: '💇', slug: 'coiffure', children: [
+    { name: 'Tresses', slug: 'tresses' },
+    { name: 'Tissage', slug: 'tissage' },
+    { name: 'Locks', slug: 'locks' },
+    { name: 'Coupe', slug: 'coupe' },
+    { name: 'Lissage', slug: 'lissage' },
+    { name: 'Soins capillaires', slug: 'soins-capillaires' },
+  ]},
+  { name: 'Ongles', nameEn: 'Nails', icon: '💅', slug: 'ongles', children: [
+    { name: 'Manucure', slug: 'manucure' },
+    { name: 'Gel UV', slug: 'gel-uv' },
+    { name: 'Extension', slug: 'extension-ongles' },
+    { name: 'Nail art', slug: 'nail-art' },
+    { name: 'Pédicure', slug: 'pedicure' },
+  ]},
+  { name: 'Maquillage', nameEn: 'Makeup', icon: '💄', slug: 'maquillage', children: [
+    { name: 'Maquillage jour', slug: 'maquillage-jour' },
+    { name: 'Maquillage soirée', slug: 'maquillage-soiree' },
+    { name: 'Maquillage mariée', slug: 'maquillage-mariee' },
+  ]},
+  { name: 'Soins', nameEn: 'Care', icon: '💆', slug: 'soins', children: [
+    { name: 'Soins visage', slug: 'soins-visage' },
+    { name: 'Soins corps', slug: 'soins-corps' },
+    { name: 'Massage relaxant', slug: 'massage-relaxant' },
+    { name: 'Massage drainant', slug: 'massage-drainant' },
+    { name: 'Soins pieds', slug: 'soins-pieds' },
+  ]},
+  { name: 'Barbier', nameEn: 'Barber', icon: '✂️', slug: 'barber', children: [
+    { name: 'Coupe homme', slug: 'coupe-homme' },
+    { name: 'Barbe', slug: 'barbe' },
+    { name: 'Rasage', slug: 'rasage' },
+  ]},
+  { name: 'Spa', nameEn: 'Spa', icon: '🧖', slug: 'spa', children: [
+    { name: 'Hammam', slug: 'hammam' },
+    { name: 'Sauna', slug: 'sauna' },
+    { name: 'Soin complet', slug: 'soin-complet' },
+  ]},
 ] as const;
 
 export const CITIES = [

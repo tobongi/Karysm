@@ -9,7 +9,7 @@ const router = Router();
 
 // GET /api/search
 router.get('/', validateQuery(searchSchema), asyncHandler(async (req: Request, res: Response) => {
-  const { q, category, lat, lng, radius = 10, minRating, maxPrice, sort = 'distance' } = req.query as any;
+  const { q, category, lat, lng, radius = 10, minRating, maxPrice, sort = 'distance', isMobile } = req.query as any;
   const { page, pageSize, skip, take } = parsePagination(req.query as any);
 
   // Build where clause
@@ -39,6 +39,10 @@ router.get('/', validateQuery(searchSchema), asyncHandler(async (req: Request, r
 
   if (minRating) {
     where.avgRating = { gte: parseFloat(minRating) };
+  }
+
+  if (isMobile === 'true') {
+    where.isMobile = true;
   }
 
   // Get providers

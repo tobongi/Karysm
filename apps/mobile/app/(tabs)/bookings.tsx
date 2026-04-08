@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, FlatList, StyleSheet, RefreshControl, Platform } from 'react-native';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, Text, Pressable, SectionList, StyleSheet, RefreshControl, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import Skeleton from '../../src/components/Skeleton';
+import CurveHeader from '../../src/components/CurveHeader';
+import { PressableScale, FadeInStagger } from '../../src/components/animations';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   REQUESTED: { label: 'En attente', color: colors.warning },
@@ -28,6 +30,30 @@ interface BookingItem {
   service: { name: string };
   provider: { displayName: string; user: { name: string; avatar?: string | null } };
   client: { name: string };
+}
+
+interface BookingSection {
+  title: string;
+  data: BookingItem[];
+}
+
+function getDateGroupLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  const dayName = d.toLocaleDateString('fr-FR', { weekday: 'long' });
+  const dayNum = d.getDate();
+  const month = d.toLocaleDateString('fr-FR', { month: 'short' });
+  const year = d.getFullYear();
+  const formatted = `${dayNum} ${month} ${year}`;
+
+  if (diffDays === 0) return `Aujourd'hui, ${formatted}`;
+  if (diffDays === 1) return `Demain, ${formatted}`;
+  if (diffDays === -1) return `Hier, ${formatted}`;
+  return `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${formatted}`;
 }
 
 export default function BookingsTab() {
@@ -60,15 +86,20 @@ export default function BookingsTab() {
     fetchBookings();
   }
 
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-
   function formatPrice(amount: number, currency: string) {
     const symbol = currency === 'CDF' ? 'FC' : 'FCFA';
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
   }
+
+  const sections: BookingSection[] = useMemo(() => {
+    const groups: Record<string, BookingItem[]> = {};
+    for (const b of bookings) {
+      const label = getDateGroupLabel(b.date);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(b);
+    }
+    return Object.entries(groups).map(([title, data]) => ({ title, data }));
+  }, [bookings]);
 
   if (!user) {
     return (
@@ -86,56 +117,84 @@ export default function BookingsTab() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Réservations</Text>
-      </View>
+      <CurveHeader title="Rendez-vous" height={160} />
 
-      <View style={styles.tabs}>
-        <Pressable style={[styles.tab, tab === 'upcoming' && styles.tabActive]} onPress={() => setTab('upcoming')}>
-          <Text style={[styles.tabText, tab === 'upcoming' && styles.tabTextActive]}>À venir</Text>
-        </Pressable>
-        <Pressable style={[styles.tab, tab === 'past' && styles.tabActive]} onPress={() => setTab('past')}>
-          <Text style={[styles.tabText, tab === 'past' && styles.tabTextActive]}>Passées</Text>
-        </Pressable>
+      <View style={styles.tabBar}>
+        <PressableScale
+          style={[styles.tabPill, tab === 'upcoming' && styles.tabPillActive]}
+          onPress={() => setTab('upcoming')}
+        >
+          <Text style={[styles.tabPillText, tab === 'upcoming' && styles.tabPillTextActive]}>À venir</Text>
+        </PressableScale>
+        <PressableScale
+          style={[styles.tabPill, tab === 'past' && styles.tabPillActive]}
+          onPress={() => setTab('past')}
+        >
+          <Text style={[styles.tabPillText, tab === 'past' && styles.tabPillTextActive]}>Passées</Text>
+        </PressableScale>
       </View>
 
       {loading ? (
-        <View style={{ padding: 20, gap: 16 }}>
-          <Skeleton width="100%" height={80} borderRadius={16} />
-          <Skeleton width="100%" height={80} borderRadius={16} />
-          <Skeleton width="100%" height={80} borderRadius={16} />
+        <View style={{ padding: 20, gap: 20 }}>
+          <Skeleton width={140} height={14} borderRadius={4} />
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <Skeleton width={48} height={48} borderRadius={24} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <Skeleton width="60%" height={14} borderRadius={4} />
+                <Skeleton width="40%" height={12} borderRadius={4} />
+                <Skeleton width="50%" height={12} borderRadius={4} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : bookings.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyEmoji}>📅</Text>
+          <Text style={styles.emptyText}>
+            {tab === 'upcoming' ? 'Aucune réservation à venir' : 'Aucune réservation passée'}
+          </Text>
         </View>
       ) : (
-        <FlatList
-          data={bookings}
+        <SectionList
+          sections={sections}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>📅</Text>
-              <Text style={styles.emptyText}>
-                {tab === 'upcoming' ? 'Aucune réservation à venir' : 'Aucune réservation passée'}
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => {
+          stickySectionHeadersEnabled={false}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={styles.sectionDate}>{title}</Text>
+          )}
+          renderItem={({ item, index, section }) => {
             const status = STATUS_LABELS[item.status] || { label: item.status, color: colors.textMuted };
+            const providerName = item.provider?.user?.name || item.provider?.displayName || '?';
+            const initial = providerName.charAt(0).toUpperCase();
+            const isLast = index === section.data.length - 1;
+
             return (
-              <Pressable style={styles.card} onPress={() => router.push(`/booking/detail/${item.id}`)}>
-                <View style={styles.cardTop}>
-                  <Text style={styles.cardRef}>{item.ref}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: status.color + '26' }]}>
-                    <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+              <FadeInStagger index={index}>
+                <PressableScale
+                  style={[styles.row, !isLast && styles.rowBorder]}
+                  onPress={() => router.push(`/booking/detail/${item.id}`)}
+                >
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{initial}</Text>
                   </View>
-                </View>
-                <Text style={styles.cardProvider}>{item.provider?.user?.name || item.provider?.displayName}</Text>
-                <Text style={styles.cardService}>{item.service?.name}</Text>
-                <View style={styles.cardBottom}>
-                  <Text style={styles.cardDate}>📅 {formatDate(item.date)} à {item.startTime}</Text>
-                  <Text style={styles.cardPrice}>{formatPrice(item.agreedPrice, item.currency)}</Text>
-                </View>
-              </Pressable>
+                  <View style={styles.rowContent}>
+                    <View style={styles.rowTop}>
+                      <Text style={styles.providerName} numberOfLines={1}>{providerName}</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: status.color + '1A' }]}>
+                        <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.serviceName} numberOfLines={1}>{item.service?.name}</Text>
+                    <View style={styles.rowBottom}>
+                      <Text style={styles.timeText}>🕐 {item.startTime}</Text>
+                      <Text style={styles.priceText}>{formatPrice(item.agreedPrice, item.currency)}</Text>
+                    </View>
+                  </View>
+                </PressableScale>
+              </FadeInStagger>
             );
           }}
         />
@@ -146,47 +205,116 @@ export default function BookingsTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
-    backgroundColor: colors.card,
+  tabBar: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 20,
+    marginBottom: 8,
   },
-  headerTitle: { fontSize: 28, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
-  tabs: {
-    flexDirection: 'row', gap: 8, marginTop: 16,
-    marginHorizontal: 20, backgroundColor: colors.card, borderRadius: 20, padding: 4,
-    ...Platform.select({
-      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
-      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
-    }) as any,
+  tabPill: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
   },
-  tab: {
-    flex: 1, paddingVertical: 10, alignItems: 'center',
-    borderRadius: 16, backgroundColor: 'transparent',
+  tabPillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
-  tabTextActive: { color: colors.white },
-  list: { padding: 20, gap: 16 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
-  card: {
-    backgroundColor: colors.card,
+  tabPillText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tabPillTextActive: {
+    color: colors.white,
+  },
+  list: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  sectionDate: {
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    color: colors.text,
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 14,
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
     borderRadius: 24,
-    padding: 20,
-    marginBottom: 0,
-    ...Platform.select({
-      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
-      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
-    }) as any,
+    backgroundColor: colors.primaryLight,
+    borderWidth: 2,
+    borderColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardRef: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.textMuted },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 },
-  statusText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold' },
-  cardProvider: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
-  cardService: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
-  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  cardDate: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
-  cardPrice: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
+  avatarText: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: colors.white,
+  },
+  rowContent: {
+    flex: 1,
+  },
+  rowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  providerName: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.text,
+    flex: 1,
+    marginRight: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 100,
+  },
+  statusText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  serviceName: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  rowBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textMuted,
+  },
+  priceText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
+    color: colors.terracotta,
+  },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyText: { fontSize: 16, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', paddingHorizontal: 40 },

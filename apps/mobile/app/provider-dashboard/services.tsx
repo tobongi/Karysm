@@ -13,6 +13,8 @@ interface Category {
   id: string;
   name: string;
   icon: string;
+  parentId?: string | null;
+  children?: Category[];
 }
 
 interface Service {
@@ -291,26 +293,63 @@ export default function ServicesScreen() {
 
             <Text style={styles.label}>Catégorie</Text>
             <View style={styles.categoryPicker}>
-              {categories.map(cat => (
-                <Pressable
-                  key={cat.id}
-                  style={[
-                    styles.categoryChip,
-                    form.categoryId === cat.id && styles.categoryChipActive,
-                  ]}
-                  onPress={() => setForm(f => ({ ...f, categoryId: cat.id }))}
-                >
-                  <Text
+              {categories.map(cat => {
+                const isParentSelected = form.categoryId === cat.id ||
+                  (cat.children || []).some(c => c.id === form.categoryId);
+                return (
+                  <Pressable
+                    key={cat.id}
                     style={[
-                      styles.categoryChipText,
-                      form.categoryId === cat.id && styles.categoryChipTextActive,
+                      styles.categoryChip,
+                      isParentSelected && styles.categoryChipActive,
                     ]}
+                    onPress={() => setForm(f => ({ ...f, categoryId: cat.id }))}
                   >
-                    {cat.name}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        isParentSelected && styles.categoryChipTextActive,
+                      ]}
+                    >
+                      {cat.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
+            {/* Subcategory picker */}
+            {(() => {
+              const parentCat = categories.find(c =>
+                c.id === form.categoryId || (c.children || []).some(ch => ch.id === form.categoryId)
+              );
+              const subs = parentCat?.children || [];
+              if (subs.length === 0) return null;
+              return (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8, marginBottom: 4 }} contentContainerStyle={{ gap: 8 }}>
+                  {subs.map(sub => (
+                    <Pressable
+                      key={sub.id}
+                      style={[
+                        styles.categoryChip,
+                        { paddingHorizontal: 14, paddingVertical: 6 },
+                        form.categoryId === sub.id && styles.categoryChipActive,
+                      ]}
+                      onPress={() => setForm(f => ({ ...f, categoryId: sub.id }))}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryChipText,
+                          { fontSize: 12 },
+                          form.categoryId === sub.id && styles.categoryChipTextActive,
+                        ]}
+                      >
+                        {sub.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              );
+            })()}
 
             <View style={styles.rowInputs}>
               <View style={styles.halfInput}>
@@ -513,6 +552,30 @@ export default function ServicesScreen() {
       <Pressable style={styles.addButton} onPress={openCreateForm}>
         <Text style={styles.addText}>+ Ajouter un service</Text>
       </Pressable>
+
+      {/* Import Social — Coming Soon */}
+      <View style={styles.comingSoonSection}>
+        <View style={styles.comingSoonHeader}>
+          <Text style={styles.comingSoonTitle}>Importer depuis les réseaux</Text>
+          <View style={styles.comingSoonBadge}>
+            <Text style={styles.comingSoonBadgeText}>Prochainement</Text>
+          </View>
+        </View>
+        <Text style={styles.comingSoonDesc}>
+          Importez vos meilleures réalisations directement depuis Instagram, TikTok et Facebook en un clic.
+        </Text>
+        <View style={styles.socialIcons}>
+          <View style={[styles.comingSoonSocialIcon, { backgroundColor: '#E1306C' }]}>
+            <Text style={styles.socialEmoji}>📷</Text>
+          </View>
+          <View style={[styles.comingSoonSocialIcon, { backgroundColor: '#000000' }]}>
+            <Text style={styles.socialEmoji}>🎵</Text>
+          </View>
+          <View style={[styles.comingSoonSocialIcon, { backgroundColor: '#1877F2' }]}>
+            <Text style={styles.socialEmoji}>👤</Text>
+          </View>
+        </View>
+      </View>
     </View>
     </>
   );
@@ -727,4 +790,63 @@ const styles = StyleSheet.create({
   },
   saveButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
   buttonDisabled: { opacity: 0.6 },
+
+  // Coming Soon section
+  comingSoonSection: {
+    margin: 20,
+    marginTop: 32,
+    padding: 20,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    opacity: 0.8,
+  },
+  comingSoonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  comingSoonTitle: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+  },
+  comingSoonBadge: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+  },
+  comingSoonBadgeText: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 10,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  comingSoonDesc: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  socialIcons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  comingSoonSocialIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  socialEmoji: {
+    fontSize: 20,
+  },
 });

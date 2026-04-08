@@ -11,7 +11,11 @@ import {
   Dimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { IconArrowLeft, IconFilter, IconSearch, IconHeart, IconStar } from '@tabler/icons-react-native';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
+import IconFilter from '@tabler/icons-react-native/dist/esm/icons/IconFilter.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import { colors } from '../../src/theme/colors';
 
 const CATEGORIES = ['Tout', 'Soins', 'Cheveux', 'Huiles', 'Accessoires'];

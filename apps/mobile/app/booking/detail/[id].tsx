@@ -329,7 +329,7 @@ export default function BookingDetail() {
           <View style={styles.reviewPrompt}>
             <Text style={styles.reviewPromptTitle}>Comment s'est passé votre service ?</Text>
             <Text style={styles.reviewPromptSubtitle}>
-              Votre avis aide les autres clientes à trouver les meilleures professionnelles
+              Votre avis aide les autres clientes à trouver les meilleures prestataires
             </Text>
             <Pressable
               style={styles.reviewButton}

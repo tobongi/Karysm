@@ -35,11 +35,11 @@ export default function BeforeAfter({ beforeImage, afterImage, serviceName, onPr
             {afterImage ? (
               <Image source={{ uri: afterImage }} style={styles.img} resizeMode="cover" />
             ) : (
-              <Text style={styles.placeholderText}>Apr\u00e8s</Text>
+              <Text style={styles.placeholderText}>Après</Text>
             )}
           </View>
           <View style={[styles.labelBadge, styles.labelAfter]}>
-            <Text style={[styles.labelText, styles.labelAfterText]}>APR\u00c8S</Text>
+            <Text style={[styles.labelText, styles.labelAfterText]}>APRÈS</Text>
           </View>
         </View>
       </View>

@@ -17,13 +17,20 @@ import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
 import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
 import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
+import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
+import IconAdjustments from '@tabler/icons-react-native/dist/esm/icons/IconAdjustments.mjs';
+import IconCar from '@tabler/icons-react-native/dist/esm/icons/IconCar.mjs';
+import IconSortAscending from '@tabler/icons-react-native/dist/esm/icons/IconSortAscending.mjs';
+import IconSortDescending from '@tabler/icons-react-native/dist/esm/icons/IconSortDescending.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 import { shadows } from '../../src/theme/shadows';
 import { api } from '../../src/lib/api';
+import { useAuth } from '../../src/lib/auth-context';
 import { getRecentlyViewed, RecentProvider } from '../../src/lib/recently-viewed';
-import { SearchBar, CategoryIcon, ProviderCardSkeleton } from '../../src/components';
+import { SearchBar, CategoryIcon, ProviderCardSkeleton, SectionHeader, SearchFilters } from '../../src/components';
+import { PressableScale, FadeInStagger } from '../../src/components/animations';
 import MapView from '../../src/components/MapView';
 
 const PLACEHOLDER_IMAGES = [
@@ -135,6 +142,7 @@ interface ProviderResult {
 }
 
 export default function ExplorerTab() {
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -147,6 +155,12 @@ export default function ExplorerTab() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentProvider[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterIsMobile, setFilterIsMobile] = useState(false);
+  const [filterMaxPrice, setFilterMaxPrice] = useState<number | null>(null);
+  const [filterMaxDistance, setFilterMaxDistance] = useState<number | null>(null);
+  const [filterMinRating, setFilterMinRating] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState('rating');
 
   // Debounce search input — only update API query after 500ms idle
   useEffect(() => {
@@ -168,8 +182,12 @@ export default function ExplorerTab() {
       const categoryParam = selectedSubcategory || selectedCategory;
       if (categoryParam) params.set('category', categoryParam);
       params.set('city', 'Kinshasa');
-      params.set('sort', 'rating');
+      params.set('sort', sortBy);
       params.set('pageSize', '20');
+      if (filterIsMobile) params.set('isMobile', 'true');
+      if (filterMaxPrice) params.set('maxPrice', String(filterMaxPrice));
+      if (filterMinRating) params.set('minRating', String(filterMinRating));
+      if (filterMaxDistance) params.set('radius', String(filterMaxDistance));
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
     } catch (e) {
@@ -178,10 +196,11 @@ export default function ExplorerTab() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [debouncedSearch, selectedCategory, selectedSubcategory]);
+  }, [debouncedSearch, selectedCategory, selectedSubcategory, sortBy, filterIsMobile, filterMaxPrice, filterMinRating, filterMaxDistance]);
 
+  const isInitialLoad = providers.length === 0 && loading;
   useEffect(() => {
-    setLoading(true);
+    if (providers.length === 0) setLoading(true);
     fetchProviders();
   }, [fetchProviders]);
 
@@ -210,24 +229,36 @@ export default function ExplorerTab() {
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
   }
 
+  const activeFilterCount = [filterIsMobile, filterMaxPrice, filterMaxDistance, filterMinRating, sortBy !== 'rating'].filter(Boolean).length;
+
   const listHeader = (
     <>
-      {/* Header */}
+      {/* Greeting Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Tokoss</Text>
-          <Text style={styles.headerSubtitle}>Beauté & bien-être</Text>
+          <Text style={styles.headerTitle}>
+            {user?.name ? `Salut, ${user.name.split(' ')[0]}` : 'Salut'} {'\uD83D\uDC4B'}
+          </Text>
+          <Text style={styles.headerSubtitle}>Kinshasa</Text>
         </View>
-        <Pressable
-          style={styles.viewToggle}
-          onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
-        >
-          {viewMode === 'list' ? (
-            <IconMap size={18} color={colors.white} strokeWidth={2} />
-          ) : (
-            <IconList size={18} color={colors.white} strokeWidth={2} />
-          )}
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable
+            style={styles.bellButton}
+            onPress={() => router.push('/(tabs)/messages' as any)}
+          >
+            <IconBell size={22} color={colors.text} strokeWidth={1.8} />
+          </Pressable>
+          <Pressable
+            style={styles.viewToggle}
+            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
+          >
+            {viewMode === 'list' ? (
+              <IconMap size={18} color={colors.white} strokeWidth={2} />
+            ) : (
+              <IconList size={18} color={colors.white} strokeWidth={2} />
+            )}
+          </Pressable>
+        </View>
       </View>
 
       {/* Hero Banner */}
@@ -241,96 +272,216 @@ export default function ExplorerTab() {
         <View style={styles.heroContent}>
           <Text style={styles.heroLabel}>NOUVEAU</Text>
           <Text style={styles.heroTitle}>{'Votre beauté,\nsublimée'}</Text>
-          <Text style={styles.heroSubtitle}>Trouvez les meilleures professionnelles près de chez vous</Text>
+          <Text style={styles.heroSubtitle}>Trouvez les meilleures prestataires près de chez vous</Text>
         </View>
       </View>
 
-      {/* Search with quartier suggestions */}
+      {/* Mes Favorites — horizontal avatar scroll */}
+      {recentlyViewed.length > 0 && (
+        <>
+          <SectionHeader
+            title="Mes Favorites"
+            onSeeAll={() => router.push('/favorites' as any)}
+          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: screenPadding.horizontal, gap: 16 }}
+            style={{ marginBottom: 8, marginTop: -8 }}
+          >
+            {recentlyViewed.slice(0, 8).map((item) => (
+              <Pressable
+                key={item.id}
+                style={styles.favoriteAvatarCard}
+                onPress={() => router.push(`/provider/${item.slug}`)}
+              >
+                <View style={styles.favoriteAvatarCircle}>
+                  <Text style={styles.favoriteAvatarText}>{item.displayName[0]}</Text>
+                </View>
+                <Text style={styles.favoriteAvatarName} numberOfLines={1}>{item.displayName.split(' ')[0]}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </>
+      )}
+
+      {/* Search with smart suggestions */}
       <View style={styles.searchContainer}>
         <SearchBar
           value={search}
           onChangeText={(text) => {
             setSearch(text);
-            setShowSuggestions(text.length > 0);
+            setShowSuggestions(true);
           }}
           onFocus={() => setShowSuggestions(true)}
-          placeholder="Que recherchez-vous ?"
+          placeholder="Prestation, quartier, prestataire..."
         />
-        {showSuggestions && search.length === 0 && (
-          <View style={styles.suggestions}>
-            <Text style={styles.suggestionsTitle}>Quartiers populaires</Text>
-            {QUARTIERS.map((q) => (
-              <Pressable
-                key={q.name}
-                style={styles.suggestionRow}
-                onPress={() => {
-                  setSelectedQuartier(q.name);
-                  setShowSuggestions(false);
-                }}
-              >
-                <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
-                <Text style={styles.suggestionText}>{q.name}</Text>
-                {selectedQuartier === q.name && (
-                  <Text style={styles.suggestionActive}>✓</Text>
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
-        {showSuggestions && search.length > 0 && (() => {
-          const matchingQuartiers = QUARTIERS.filter(q =>
-            q.name.toLowerCase().includes(search.toLowerCase())
+        {showSuggestions && (() => {
+          const q = search.toLowerCase();
+          const matchingQuartiers = q
+            ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q))
+            : QUARTIERS;
+          // Flatten all services for suggestions
+          const allServices = SERVICE_CATEGORIES.flatMap(cat =>
+            [{ name: cat.name, slug: cat.slug, type: 'category' as const },
+             ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug }))]
           );
-          return matchingQuartiers.length > 0 ? (
-            <View style={styles.suggestions}>
-              {matchingQuartiers.map((q) => (
-                <Pressable
-                  key={q.name}
-                  style={styles.suggestionRow}
-                  onPress={() => {
-                    setSelectedQuartier(q.name);
-                    setSearch('');
-                    setShowSuggestions(false);
-                  }}
-                >
-                  <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
-                  <Text style={styles.suggestionText}>{q.name}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null;
+          const matchingServices = q
+            ? allServices.filter(s => s.name.toLowerCase().includes(q))
+            : allServices.filter(s => s.type === 'category');
+          const hasResults = matchingQuartiers.length > 0 || matchingServices.length > 0;
+          if (!hasResults && q) return null;
+          return (
+            <Pressable style={styles.suggestions} onPress={() => {}}>
+              {/* Service suggestions */}
+              {matchingServices.length > 0 && (
+                <>
+                  <Text style={styles.suggestionsTitle}>Prestations</Text>
+                  {matchingServices.slice(0, 5).map((svc) => (
+                    <Pressable
+                      key={svc.slug}
+                      style={styles.suggestionRow}
+                      onPress={() => {
+                        if (svc.type === 'category') {
+                          setSelectedCategory(svc.slug);
+                          setSelectedSubcategory(null);
+                        } else {
+                          setSelectedCategory((svc as any).parent || null);
+                          setSelectedSubcategory(svc.slug);
+                        }
+                        setSearch('');
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <IconScissors size={16} color={colors.primary} strokeWidth={1.5} />
+                      <Text style={styles.suggestionText}>{svc.name}</Text>
+                      {svc.type === 'subcategory' && (
+                        <Text style={styles.suggestionHint}>
+                          {SERVICE_CATEGORIES.find(c => c.slug === (svc as any).parent)?.name}
+                        </Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </>
+              )}
+              {/* Quartier suggestions */}
+              {matchingQuartiers.length > 0 && (
+                <>
+                  <Text style={styles.suggestionsTitle}>Quartiers</Text>
+                  {matchingQuartiers.map((item) => (
+                    <Pressable
+                      key={item.name}
+                      style={styles.suggestionRow}
+                      onPress={() => {
+                        setSelectedQuartier(item.name);
+                        setSearch('');
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
+                      <Text style={styles.suggestionText}>{item.name}</Text>
+                      {selectedQuartier === item.name && (
+                        <Text style={styles.suggestionActive}>✓</Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </>
+              )}
+            </Pressable>
+          );
         })()}
       </View>
 
-      {/* City selector */}
-      <View style={styles.cityRow}>
-        {QUARTIERS.map((city) => (
-          <Pressable
-            key={city.name}
-            style={[styles.cityChip, selectedQuartier === city.name && styles.cityChipActive]}
-            onPress={() => setSelectedQuartier(city.name)}
+      {/* Quick filter bar */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterBarContent}
+      >
+        {/* Quartier selector (inline) */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipQuartier]}
+          onPress={() => {
+            const idx = QUARTIERS.findIndex(q => q.name === selectedQuartier);
+            const next = QUARTIERS[(idx + 1) % QUARTIERS.length];
+            setSelectedQuartier(next.name);
+          }}
+        >
+          <IconMapPin size={13} color={colors.accent} strokeWidth={2} />
+          <Text style={[styles.filterChipText, { color: colors.accent, fontFamily: fonts.bodySemiBold }]}>
+            {selectedQuartier}
+          </Text>
+        </PressableScale>
+
+        {/* Se déplace toggle */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
+          onPress={() => setFilterIsMobile(v => !v)}
+        >
+          <IconCar size={14} color={filterIsMobile ? colors.white : colors.text} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, filterIsMobile && styles.filterChipTextActive]}>
+            Se déplace
+          </Text>
+        </PressableScale>
+
+        {/* Sort toggle */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
+          onPress={() => {
+            if (sortBy === 'price_asc') setSortBy('price_desc');
+            else if (sortBy === 'price_desc') setSortBy('rating');
+            else setSortBy('price_asc');
+          }}
+        >
+          {sortBy === 'price_desc'
+            ? <IconSortDescending size={14} color={colors.white} strokeWidth={1.8} />
+            : <IconSortAscending size={14} color={sortBy === 'price_asc' ? colors.white : colors.text} strokeWidth={1.8} />
+          }
+          <Text style={[styles.filterChipText, sortBy.startsWith('price') && styles.filterChipTextActive]}>
+            {sortBy === 'price_asc' ? 'Prix ↑' : sortBy === 'price_desc' ? 'Prix ↓' : 'Prix'}
+          </Text>
+        </PressableScale>
+
+        {/* Distance chips */}
+        {[3, 5, 10].map(km => (
+          <PressableScale
+            key={km}
+            scale={0.95}
+            style={[styles.filterChip, filterMaxDistance === km && styles.filterChipActive]}
+            onPress={() => setFilterMaxDistance(v => v === km ? null : km)}
           >
-            {selectedQuartier === city.name && (
-              <IconMapPin size={12} color={colors.white} strokeWidth={2} style={{ marginRight: 4 }} />
-            )}
-            <Text style={[styles.cityText, selectedQuartier === city.name && styles.cityTextActive]}>
-              {city.name}
+            <Text style={[styles.filterChipText, filterMaxDistance === km && styles.filterChipTextActive]}>
+              {km} km
             </Text>
-          </Pressable>
+          </PressableScale>
         ))}
-      </View>
+
+        {/* All filters button */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipOutline]}
+          onPress={() => setShowFilters(true)}
+        >
+          <IconAdjustments size={14} color={colors.primary} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, { color: colors.primary }]}>
+            Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+          </Text>
+        </PressableScale>
+      </ScrollView>
 
       {/* Section title: Categories */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Catégories</Text>
-      </View>
+      <SectionHeader title="Catégories" />
 
       {/* Categories — 3x2 grid with Tabler icons */}
       <View style={styles.categoriesGrid}>
-        {SERVICE_CATEGORIES.map((cat) => {
+        {SERVICE_CATEGORIES.map((cat, catIndex) => {
           const isActive = selectedCategory === cat.slug;
           return (
-            <View key={cat.slug} style={styles.categoryCell}>
+            <FadeInStagger key={cat.slug} index={catIndex} style={styles.categoryCell}>
               <CategoryIcon
                 label={cat.name}
                 icon={isActive ? CATEGORY_ICONS_ACTIVE[cat.slug] : CATEGORY_ICONS[cat.slug]}
@@ -340,7 +491,7 @@ export default function ExplorerTab() {
                   setSelectedSubcategory(null);
                 }}
               />
-            </View>
+            </FadeInStagger>
           );
         })}
       </View>
@@ -400,7 +551,7 @@ export default function ExplorerTab() {
       >
         <View style={{ flex: 1 }}>
           <Text style={styles.requestTitle}>Décrivez ce que vous voulez</Text>
-          <Text style={styles.requestSubtitle}>Recevez des propositions de professionnelles</Text>
+          <Text style={styles.requestSubtitle}>Recevez des propositions de prestataires</Text>
         </View>
         <View style={styles.requestArrowWrap}>
           <IconArrowRight size={18} color={colors.white} strokeWidth={2} />
@@ -450,12 +601,7 @@ export default function ExplorerTab() {
       )}
 
       {/* Section title: Providers */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recommandés</Text>
-        <Pressable>
-          <Text style={styles.seeAll}>Voir tout</Text>
-        </Pressable>
-      </View>
+      <SectionHeader title="Recommandées" />
 
       {/* Map view inline */}
       {viewMode === 'map' && (
@@ -491,21 +637,22 @@ export default function ExplorerTab() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
-        {loading ? (
-          <View style={{ paddingHorizontal: screenPadding.horizontal, paddingTop: 20 }}>
-            <ProviderCardSkeleton />
-            <ProviderCardSkeleton />
-            <ProviderCardSkeleton />
-          </View>
-        ) : (
+        {(
           <FlatList
-            data={viewMode === 'map' ? [] : providers}
+            data={loading ? [] : (viewMode === 'map' ? [] : providers)}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             ListHeaderComponent={listHeader}
+            onScrollBeginDrag={() => setShowSuggestions(false)}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProviders(); }} tintColor={colors.primary} />}
             ListEmptyComponent={
-              viewMode === 'map' ? null : (
+              loading ? (
+                <View style={{ paddingHorizontal: screenPadding.horizontal, paddingTop: 8 }}>
+                  <ProviderCardSkeleton />
+                  <ProviderCardSkeleton />
+                  <ProviderCardSkeleton />
+                </View>
+              ) : viewMode === 'map' ? null : (
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyTitle}>Aucun résultat</Text>
                   <Text style={styles.emptySubtitle}>Essayez une autre recherche</Text>
@@ -513,82 +660,103 @@ export default function ExplorerTab() {
               )
             }
             renderItem={({ item, index }) => (
-              <Pressable style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
-                {/* Gallery */}
-                <View style={styles.cardGallery}>
-                  <Image
-                    source={PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length]}
-                    style={styles.galleryImage}
-                    resizeMode="cover"
-                  />
-                  {/* TOP PRO badge */}
-                  {item.avgRating >= 4.5 && (
-                    <View style={styles.topProBadge}>
-                      <IconAward size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={styles.topProText}>TOP PRO</Text>
-                    </View>
-                  )}
-                  {/* Favorite heart overlay */}
-                  <Pressable
-                    style={styles.heartOverlay}
-                    onPress={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
-                    hitSlop={8}
-                  >
-                    <View style={styles.heartCircle}>
-                      <IconHeart
-                        size={22}
-                        color={favoriteIds.has(item.id) ? colors.primary : colors.white}
-                        fill={favoriteIds.has(item.id) ? colors.primary : 'none'}
-                        strokeWidth={2}
-                      />
-                    </View>
-                  </Pressable>
-                </View>
-
-                <View style={styles.cardContent}>
-                  <View style={styles.cardRow}>
-                    <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
-                    <View style={styles.ratingBadge}>
-                      <Text style={styles.ratingStar}>{'\u2605'}</Text>
-                      <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
-                      <Text style={styles.reviewCount}>({item.totalReviews})</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.locationRow}>
-                    <IconMapPin size={13} color={colors.textSecondary} strokeWidth={1.5} />
-                    <Text style={styles.cardLocation}>
-                      {item.commune ? `${item.commune}, ` : ''}{item.city}
-                      {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
-                    </Text>
-                  </View>
-
-                  <View style={styles.servicesPreview}>
-                    {item.services.slice(0, 2).map((svc, i) => (
-                      <View key={i} style={styles.serviceRow}>
-                        <Text style={styles.serviceName} numberOfLines={1}>{svc.name}</Text>
-                        <Text style={styles.servicePrice}>{formatPrice(svc.priceMin, item.currency)}</Text>
+              <FadeInStagger index={index}>
+                <PressableScale style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
+                  {/* Gallery */}
+                  <View style={styles.cardGallery}>
+                    <Image
+                      source={PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length]}
+                      style={styles.galleryImage}
+                      resizeMode="cover"
+                    />
+                    {/* TOP PRO badge */}
+                    {item.avgRating >= 4.5 && (
+                      <View style={styles.topProBadge}>
+                        <IconAward size={12} color="#FFFFFF" strokeWidth={2} />
+                        <Text style={styles.topProText}>TOP PRO</Text>
                       </View>
-                    ))}
-                    {item.services.length > 2 && (
-                      <Text style={styles.moreServices}>+{item.services.length - 2} autres</Text>
                     )}
+                    {/* Favorite heart overlay */}
+                    <Pressable
+                      style={styles.heartOverlay}
+                      onPress={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
+                      hitSlop={8}
+                    >
+                      <View style={styles.heartCircle}>
+                        <IconHeart
+                          size={22}
+                          color={favoriteIds.has(item.id) ? colors.primary : colors.white}
+                          fill={favoriteIds.has(item.id) ? colors.primary : 'none'}
+                          strokeWidth={2}
+                        />
+                      </View>
+                    </Pressable>
                   </View>
 
-                  <View style={styles.tags}>
-                    {item.isMobile && (
-                      <View style={styles.tag}><Text style={styles.tagText}>Se deplace</Text></View>
-                    )}
-                    {item.minPrice != null && (
-                      <View style={styles.tagPrice}><Text style={styles.tagPriceText}>des {formatPrice(item.minPrice, item.currency)}</Text></View>
-                    )}
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardRow}>
+                      <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
+                      <View style={styles.ratingBadge}>
+                        <Text style={styles.ratingStar}>{'\u2605'}</Text>
+                        <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
+                        <Text style={styles.reviewCount}>({item.totalReviews})</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.locationRow}>
+                      <IconMapPin size={13} color={colors.textSecondary} strokeWidth={1.5} />
+                      <Text style={styles.cardLocation}>
+                        {item.commune ? `${item.commune}, ` : ''}{item.city}
+                        {item.distance != null ? ` · ${item.distance.toFixed(1)} km` : ''}
+                      </Text>
+                    </View>
+
+                    <View style={styles.servicesPreview}>
+                      {item.services.slice(0, 2).map((svc, i) => (
+                        <View key={i} style={styles.serviceRow}>
+                          <Text style={styles.serviceName} numberOfLines={1}>{svc.name}</Text>
+                          <Text style={styles.servicePrice}>{formatPrice(svc.priceMin, item.currency)}</Text>
+                        </View>
+                      ))}
+                      {item.services.length > 2 && (
+                        <Text style={styles.moreServices}>+{item.services.length - 2} autres</Text>
+                      )}
+                    </View>
+
+                    <View style={styles.tags}>
+                      {item.isMobile && (
+                        <View style={styles.tag}><Text style={styles.tagText}>Se déplace</Text></View>
+                      )}
+                      {item.minPrice != null && (
+                        <View style={styles.tagPrice}><Text style={styles.tagPriceText}>des {formatPrice(item.minPrice, item.currency)}</Text></View>
+                      )}
+                    </View>
                   </View>
-                </View>
-              </Pressable>
+                </PressableScale>
+              </FadeInStagger>
             )}
           />
         )}
       </View>
+
+      <SearchFilters
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        initialFilters={{
+          minRating: filterMinRating,
+          maxPrice: filterMaxPrice,
+          maxDistance: filterMaxDistance,
+          sortBy,
+          isMobile: filterIsMobile,
+        }}
+        onApply={(filters) => {
+          setFilterMinRating(filters.minRating);
+          setFilterMaxPrice(filters.maxPrice);
+          setFilterMaxDistance(filters.maxDistance);
+          setSortBy(filters.sortBy);
+          setFilterIsMobile(filters.isMobile);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -608,23 +776,64 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   headerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: '700',
-    color: colors.accent,
-    fontStyle: 'italic',
-    letterSpacing: -1,
+    color: colors.text,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontFamily: fonts.body,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textMuted,
-    letterSpacing: 1.5,
     marginTop: 2,
-    textTransform: 'uppercase' as const,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+
+  // Favorites horizontal avatars
+  favoriteAvatarCard: {
+    alignItems: 'center',
+    width: 64,
+  } as ViewStyle,
+  favoriteAvatarCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(91,33,182,0.2)',
+  } as ViewStyle,
+  favoriteAvatarText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontFamily: fonts.displayBold,
+    fontWeight: '700' as const,
+  },
+  favoriteAvatarName: {
+    fontSize: 11,
+    color: colors.text,
+    fontFamily: 'Poppins_500Medium',
+    marginTop: 6,
+    textAlign: 'center' as const,
   },
 
   // Hero Banner
@@ -646,9 +855,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(45,27,105,0.85)',
+    backgroundColor: 'rgba(45,27,105,0.55)',
     ...(Platform.OS === 'web'
-      ? { background: 'linear-gradient(to top, rgba(45,27,105,0.85) 0%, rgba(45,27,105,0.4) 50%, transparent 100%)' } as any
+      ? { background: 'linear-gradient(to top, rgba(45,27,105,0.75) 0%, rgba(45,27,105,0.35) 50%, transparent 100%)' } as any
       : {}),
   },
   heroContent: {
@@ -723,35 +932,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.primary,
   },
-
-  // City selector
-  cityRow: {
-    flexDirection: 'row',
-    paddingHorizontal: screenPadding.horizontal,
-    marginTop: spacing.sm,
-    gap: 8,
-    flexWrap: 'wrap',
+  suggestionHint: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 11,
+    color: colors.textMuted,
   },
-  cityChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radius.md,
-    backgroundColor: colors.card,
+
+  // Quick filter bar
+  filterBar: {
+    marginTop: spacing.sm,
+    maxWidth: '100%',
+    overflow: 'hidden' as any,
+  },
+  filterBarContent: {
+    paddingHorizontal: screenPadding.horizontal,
+    gap: 8,
+  },
+  filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cityChipActive: {
+  filterChipActive: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  cityText: {
+  filterChipOutline: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(139,105,82,0.06)',
+  },
+  filterChipQuartier: {
+    borderColor: 'rgba(91,33,182,0.2)',
+    backgroundColor: 'rgba(91,33,182,0.06)',
+  },
+  filterChipText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.textSecondary,
+    color: colors.text,
   },
-  cityTextActive: {
-    fontFamily: fonts.bodySemiBold,
+  filterChipTextActive: {
     color: colors.white,
-    fontWeight: '600',
+    fontFamily: fonts.bodySemiBold,
   },
 
   // Section headers
@@ -796,10 +1023,13 @@ const styles = StyleSheet.create({
   subcategoryRow: {
     marginTop: 4,
     marginBottom: spacing.sm,
+    maxWidth: '100%',
+    overflow: 'hidden' as any,
   },
   subcategoryContent: {
     paddingHorizontal: screenPadding.horizontal,
     gap: 8,
+    flexWrap: 'nowrap' as any,
   },
   subcategoryChip: {
     paddingHorizontal: 16,
@@ -910,7 +1140,7 @@ const styles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: colors.card,
-    borderRadius: 24,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 20,
     ...(Platform.OS === 'web'

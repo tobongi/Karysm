@@ -2,18 +2,17 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import {
-  IconChevronRight,
-  IconUser,
-  IconShieldCheck,
-  IconBell,
-  IconCalendar,
-  IconLanguage,
-  IconMoon,
-  IconLock,
-  IconFileText,
-  IconTrash,
-} from '@tabler/icons-react-native';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import IconUser from '@tabler/icons-react-native/dist/esm/icons/IconUser.mjs';
+import IconShieldCheck from '@tabler/icons-react-native/dist/esm/icons/IconShieldCheck.mjs';
+import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
+import IconCalendar from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
+import IconLanguage from '@tabler/icons-react-native/dist/esm/icons/IconLanguage.mjs';
+import IconMoon from '@tabler/icons-react-native/dist/esm/icons/IconMoon.mjs';
+import IconLock from '@tabler/icons-react-native/dist/esm/icons/IconLock.mjs';
+import IconFileText from '@tabler/icons-react-native/dist/esm/icons/IconFileText.mjs';
+import IconTrash from '@tabler/icons-react-native/dist/esm/icons/IconTrash.mjs';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
 import { colors } from '../../src/theme/colors';
 
 function Toggle({ value, onToggle, disabled }: { value: boolean; onToggle: () => void; disabled?: boolean }) {
@@ -48,7 +47,9 @@ function MenuItem({ icon, label, onPress, right, labelColor }: MenuItemProps) {
   return (
     <Pressable onPress={onPress} style={styles.menuItem}>
       <View style={styles.menuLeft}>
-        {icon}
+        <View style={styles.iconCircle}>
+          {icon}
+        </View>
         <Text style={[styles.menuLabel, labelColor ? { color: labelColor } : undefined]}>
           {label}
         </Text>
@@ -67,8 +68,17 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <Pressable onPress={() => router.back()} hitSlop={12}>
+          <IconArrowLeft size={24} color={colors.text} />
+        </Pressable>
         <Text style={styles.header}>Parametres</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Section: Compte */}
         <Text style={styles.sectionTitle}>COMPTE</Text>
@@ -156,42 +166,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  scroll: {
-    padding: 24,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
   header: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 28,
-    color: colors.accent,
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 20,
+    color: colors.text,
+  },
+  scroll: {
+    paddingHorizontal: 24,
   },
   sectionTitle: {
     fontFamily: 'Poppins_600SemiBold',
     fontSize: 13,
     color: colors.textMuted,
     letterSpacing: 1,
-    marginTop: 24,
-    marginBottom: 8,
+    marginTop: 32,
+    marginBottom: 12,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 2,
+    paddingVertical: 18,
   },
   menuLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E9D2C2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   menuLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 15,
     color: colors.text,
-    marginLeft: 12,
+    marginLeft: 14,
   },
   menuRight: {
     flexDirection: 'row',

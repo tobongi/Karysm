@@ -400,7 +400,7 @@ export default function SkinResultsScreen() {
           ))}
 
           <Pressable style={styles.recoSeeAll} onPress={() => router.push('/(tabs)')}>
-            <Text style={styles.recoSeeAllText}>Voir toutes les professionnelles →</Text>
+            <Text style={styles.recoSeeAllText}>Voir toutes les prestataires →</Text>
           </Pressable>
         </View>
 

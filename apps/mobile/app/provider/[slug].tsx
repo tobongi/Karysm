@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { IconRosetteDiscountCheck, IconShare } from '@tabler/icons-react-native';
+import IconRosetteDiscountCheck from '@tabler/icons-react-native/dist/esm/icons/IconRosetteDiscountCheck.mjs';
+import IconShare from '@tabler/icons-react-native/dist/esm/icons/IconShare.mjs';
+import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { addRecentlyViewed } from '../../src/lib/recently-viewed';
@@ -141,6 +143,7 @@ export default function ProviderProfile() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [activeTab, setActiveTab] = useState<'services' | 'portfolio' | 'avis' | 'about'>('services');
 
   const fetchProvider = useCallback(async () => {
     try {
@@ -240,6 +243,11 @@ export default function ProviderProfile() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {/* Back button */}
+      <Pressable style={styles.backButton} onPress={() => router.back()} hitSlop={8}>
+        <IconArrowLeft size={20} color={colors.text} strokeWidth={2} />
+      </Pressable>
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -325,16 +333,31 @@ export default function ProviderProfile() {
           </View>
         )}
 
-        {/* ── À propos ── */}
-        {provider.bio ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>À propos</Text>
-            <Text style={styles.bioText}>{provider.bio}</Text>
-          </View>
-        ) : null}
+        {/* ── Tab Bar ── */}
+        <View style={styles.tabBar}>
+          {([
+            { key: 'services' as const, label: 'Services' },
+            { key: 'portfolio' as const, label: 'Portfolio' },
+            { key: 'avis' as const, label: 'Avis' },
+            { key: 'about' as const, label: '\u00C0 propos' },
+          ]).map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                style={[styles.tabItem, isActive && styles.tabItemActive]}
+                onPress={() => setActiveTab(tab.key)}
+              >
+                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-        {/* ── Services ── */}
-        {provider.services.length > 0 && (
+        {/* ── Tab Content: Services ── */}
+        {activeTab === 'services' && provider.services.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Services</Text>
             <View style={styles.servicesList}>
@@ -357,183 +380,204 @@ export default function ProviderProfile() {
           </View>
         )}
 
-        {/* ── Transformations Avant/Après ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Transformations</Text>
-          <Text style={styles.sectionSubtitle}>Résultats sur de vraies clientes</Text>
-
-          {MOCK_TRANSFORMATIONS.map((t) => (
-            <BeforeAfter
-              key={t.id}
-              beforeImage={t.before}
-              afterImage={t.after}
-              serviceName={t.service}
-            />
-          ))}
-        </View>
-
-        {/* ── Disponibilités ── */}
-        {provider.availability.length > 0 && (
+        {/* ── Tab Content: Portfolio ── */}
+        {activeTab === 'portfolio' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Disponibilités</Text>
-            <View style={styles.daysRow}>
-              {ALL_DAYS.map((day) => {
-                const isActive = activeDays.has(day);
-                return (
-                  <View
-                    key={day}
-                    style={[
-                      styles.dayChip,
-                      isActive ? styles.dayChipActive : styles.dayChipInactive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dayChipText,
-                        isActive
-                          ? styles.dayChipTextActive
-                          : styles.dayChipTextInactive,
-                      ]}
-                    >
-                      {DAY_LABELS[day] || day}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-            {/* Show time range for active days */}
-            {provider.availability
-              .filter((a) => a.isActive)
-              .slice(0, 1)
-              .map((a) => (
-                <Text key={a.dayOfWeek} style={styles.availabilityTime}>
-                  {a.startTime} — {a.endTime}
-                </Text>
-              ))}
-          </View>
-        )}
+            <Text style={styles.sectionTitle}>Transformations</Text>
+            <Text style={styles.sectionSubtitle}>Résultats sur de vraies clientes</Text>
 
-        {/* ── Contact ── */}
-        {(provider.whatsappNumber || provider.instagramHandle) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact</Text>
-            <View style={styles.contactRow}>
-              {provider.whatsappNumber && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.whatsappButton,
-                    pressed && { opacity: 0.8 },
-                  ]}
-                  onPress={openWhatsApp}
-                >
-                  <Text style={styles.whatsappButtonText}>💬 WhatsApp</Text>
-                </Pressable>
-              )}
-              {provider.instagramHandle && (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.instagramButton,
-                    pressed && { opacity: 0.8 },
-                  ]}
-                  onPress={openInstagram}
-                >
-                  <Text style={styles.instagramButtonText}>
-                    📷 {provider.instagramHandle}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.shareButton,
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={shareProfile}
-            >
-              <IconShare size={18} color={colors.primary} strokeWidth={2} />
-              <Text style={styles.shareButtonText}>Partager ce profil</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* ── Avis ── */}
-        {reviews.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Avis ({provider.totalReviews})
-            </Text>
-
-            {/* Rating distribution */}
-            <View style={styles.ratingDistribution}>
-              {[5, 4, 3, 2, 1].map((star) => {
-                const count = reviews.filter((r) => r.rating === star).length;
-                const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-                return (
-                  <View key={star} style={styles.ratingRow}>
-                    <Text style={styles.ratingRowStar}>{star} ★</Text>
-                    <View style={styles.ratingBar}>
-                      <View style={[styles.ratingBarFill, { width: `${pct}%` }]} />
-                    </View>
-                    <Text style={styles.ratingRowCount}>{count}</Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Review list */}
-            {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => (
-              <View key={review.id} style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.reviewAvatar}>
-                    <Text style={styles.reviewAvatarText}>
-                      {review.client.name[0]?.toUpperCase()}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewName}>{review.client.name}</Text>
-                    <Text style={styles.reviewDate}>
-                      {new Date(review.createdAt).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                  </View>
-                  <Text style={styles.reviewStars}>
-                    {'★'.repeat(review.rating)}
-                    {'☆'.repeat(5 - review.rating)}
-                  </Text>
-                </View>
-                {review.comment && (
-                  <Text style={styles.reviewComment}>{review.comment}</Text>
-                )}
-                {review.tags.length > 0 && (
-                  <View style={styles.reviewTags}>
-                    {review.tags.map((tag) => (
-                      <View key={tag} style={styles.reviewTag}>
-                        <Text style={styles.reviewTagText}>{tag.replace('_', ' ')}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                {review.photos.length > 0 && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
-                    {review.photos.map((url, i) => (
-                      <Image key={i} source={{ uri: url }} style={styles.reviewPhoto} />
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
+            {MOCK_TRANSFORMATIONS.map((t) => (
+              <BeforeAfter
+                key={t.id}
+                beforeImage={t.before}
+                afterImage={t.after}
+                serviceName={t.service}
+              />
             ))}
+          </View>
+        )}
 
-            {reviews.length > 3 && !showAllReviews && (
-              <Pressable style={styles.showAllButton} onPress={() => setShowAllReviews(true)}>
-                <Text style={styles.showAllText}>
-                  Voir tous les avis ({reviews.length})
+        {/* ── Tab Content: Avis ── */}
+        {activeTab === 'avis' && (
+          <View style={styles.section}>
+            {reviews.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>
+                  Avis ({provider.totalReviews})
                 </Text>
-              </Pressable>
+
+                {/* Rating distribution */}
+                <View style={styles.ratingDistribution}>
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = reviews.filter((r) => r.rating === star).length;
+                    const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                    return (
+                      <View key={star} style={styles.ratingRow}>
+                        <Text style={styles.ratingRowStar}>{star} ★</Text>
+                        <View style={styles.ratingBar}>
+                          <View style={[styles.ratingBarFill, { width: `${pct}%` }]} />
+                        </View>
+                        <Text style={styles.ratingRowCount}>{count}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                {/* Review list */}
+                {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <View style={styles.reviewAvatar}>
+                        <Text style={styles.reviewAvatarText}>
+                          {review.client.name[0]?.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.reviewName}>{review.client.name}</Text>
+                        <Text style={styles.reviewDate}>
+                          {new Date(review.createdAt).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </View>
+                      <Text style={styles.reviewStars}>
+                        {'★'.repeat(review.rating)}
+                        {'☆'.repeat(5 - review.rating)}
+                      </Text>
+                    </View>
+                    {review.comment && (
+                      <Text style={styles.reviewComment}>{review.comment}</Text>
+                    )}
+                    {review.tags.length > 0 && (
+                      <View style={styles.reviewTags}>
+                        {review.tags.map((tag) => (
+                          <View key={tag} style={styles.reviewTag}>
+                            <Text style={styles.reviewTagText}>{tag.replace('_', ' ')}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.photos.length > 0 && (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
+                        {review.photos.map((url, i) => (
+                          <Image key={i} source={{ uri: url }} style={styles.reviewPhoto} />
+                        ))}
+                      </ScrollView>
+                    )}
+                  </View>
+                ))}
+
+                {reviews.length > 3 && !showAllReviews && (
+                  <Pressable style={styles.showAllButton} onPress={() => setShowAllReviews(true)}>
+                    <Text style={styles.showAllText}>
+                      Voir tous les avis ({reviews.length})
+                    </Text>
+                  </Pressable>
+                )}
+              </>
+            ) : (
+              <Text style={styles.emptyTabText}>Aucun avis pour le moment</Text>
             )}
           </View>
+        )}
+
+        {/* ── Tab Content: À propos ── */}
+        {activeTab === 'about' && (
+          <>
+            {/* Bio */}
+            {provider.bio ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{'\u00C0'} propos</Text>
+                <Text style={styles.bioText}>{provider.bio}</Text>
+              </View>
+            ) : null}
+
+            {/* Disponibilités */}
+            {provider.availability.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Disponibilités</Text>
+                <View style={styles.daysRow}>
+                  {ALL_DAYS.map((day) => {
+                    const isActive = activeDays.has(day);
+                    return (
+                      <View
+                        key={day}
+                        style={[
+                          styles.dayChip,
+                          isActive ? styles.dayChipActive : styles.dayChipInactive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.dayChipText,
+                            isActive
+                              ? styles.dayChipTextActive
+                              : styles.dayChipTextInactive,
+                          ]}
+                        >
+                          {DAY_LABELS[day] || day}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                {/* Show time range for active days */}
+                {provider.availability
+                  .filter((a) => a.isActive)
+                  .slice(0, 1)
+                  .map((a) => (
+                    <Text key={a.dayOfWeek} style={styles.availabilityTime}>
+                      {a.startTime} — {a.endTime}
+                    </Text>
+                  ))}
+              </View>
+            )}
+
+            {/* Contact */}
+            {(provider.whatsappNumber || provider.instagramHandle) && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Contact</Text>
+                <View style={styles.contactRow}>
+                  {provider.whatsappNumber && (
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.whatsappButton,
+                        pressed && { opacity: 0.8 },
+                      ]}
+                      onPress={openWhatsApp}
+                    >
+                      <Text style={styles.whatsappButtonText}>💬 WhatsApp</Text>
+                    </Pressable>
+                  )}
+                  {provider.instagramHandle && (
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.instagramButton,
+                        pressed && { opacity: 0.8 },
+                      ]}
+                      onPress={openInstagram}
+                    >
+                      <Text style={styles.instagramButtonText}>
+                        📷 {provider.instagramHandle}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.shareButton,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={shareProfile}
+                >
+                  <IconShare size={18} color={colors.primary} strokeWidth={2} />
+                  <Text style={styles.shareButtonText}>Partager ce profil</Text>
+                </Pressable>
+              </View>
+            )}
+          </>
         )}
 
         {/* Bottom spacer */}
@@ -551,6 +595,20 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   container: {
     flex: 1,
@@ -737,6 +795,47 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     color: colors.primary,
     fontWeight: '500',
+  },
+
+  // --- Tab Bar ---
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    marginBottom: 24,
+    paddingVertical: 4,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+    }) as any,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabItemActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  tabTextActive: {
+    fontFamily: 'Poppins_700Bold',
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  emptyTabText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 32,
   },
 
   // --- Sections ---
