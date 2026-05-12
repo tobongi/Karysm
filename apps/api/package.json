@@ -1,5 +1,5 @@
 {
-  "name": "@tokoss/api",
+  "name": "@karysm/api",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
   "dependencies": {
     "@huggingface/inference": "^4.13.15",
     "@prisma/client": "^6.4.0",
-    "@tokoss/shared": "workspace:*",
+    "@karysm/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.5",

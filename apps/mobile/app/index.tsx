@@ -9,7 +9,7 @@ export default function Index() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.logo}>Tokoss</Text>
+        <Text style={styles.logo}>Karysm</Text>
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 24 }} />
       </View>
     );

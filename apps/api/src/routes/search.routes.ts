@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { validateQuery } from '../middleware/validate';
 import { searchSchema } from '../schemas';
-import { parsePagination } from '@tokoss/shared';
+import { parsePagination } from '@karysm/shared';
 import { asyncHandler } from '../middleware/error';
 
 const router = Router();

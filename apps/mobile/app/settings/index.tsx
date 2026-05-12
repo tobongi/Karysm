@@ -155,7 +155,7 @@ export default function SettingsScreen() {
           onPress={() => {}}
         />
 
-        <Text style={styles.version}>Tokoss v1.0.0</Text>
+        <Text style={styles.version}>Karysm v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );

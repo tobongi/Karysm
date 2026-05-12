@@ -115,7 +115,7 @@ export default function RootLayout() {
   if (!ready) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 28, color: colors.accent, fontStyle: 'italic' }}>tokoss</Text>
+        <Text style={{ fontSize: 28, color: colors.accent, fontStyle: 'italic' }}>Karysm</Text>
       </View>
     );
   }

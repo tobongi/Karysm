@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Tokoss Admin',
-  description: 'Tableau de bord administrateur Tokoss',
+  title: 'Karysm Admin',
+  description: 'Tableau de bord administrateur Karysm',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

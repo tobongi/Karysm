@@ -1,5 +1,5 @@
 {
-  "name": "@tokoss/mobile",
+  "name": "@karysm/mobile",
   "version": "0.0.1",
   "private": true,
   "main": "expo-router/entry",
@@ -18,7 +18,7 @@
     "@expo/vector-icons": "^14.0.0",
     "@react-native-async-storage/async-storage": "^3.0.1",
     "@tabler/icons-react-native": "^3.41.0",
-    "@tokoss/shared": "workspace:*",
+    "@karysm/shared": "workspace:*",
     "expo": "~52.0.0",
     "expo-constants": "~17.0.0",
     "expo-font": "14.0.11",

@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
           </View>
         </View>
 
-        <Text style={styles.title}>Bienvenue sur Tokoss !</Text>
+        <Text style={styles.title}>Bienvenue sur Karysm !</Text>
         <Text style={styles.subtitle}>
           Trouvez les meilleures prestataires de beauté près de chez vous et réservez en un instant.
         </Text>

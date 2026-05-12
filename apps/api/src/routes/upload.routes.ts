@@ -93,7 +93,7 @@ router.post('/video', authMiddleware, asyncHandler(async (req: Request, res: Res
   const result = await cloudinary.uploader.upload(
     `data:video/mp4;base64,${data}`,
     {
-      folder: `tokoss/${targetFolder}`,
+      folder: `karysm/${targetFolder}`,
       resource_type: 'video',
       transformation: [
         { quality: 'auto:good' },

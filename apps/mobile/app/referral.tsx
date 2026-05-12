@@ -23,7 +23,7 @@ import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
 
 function generateReferralCode(user: { name?: string; phone?: string } | null): string {
-  if (!user) return 'TOKOSS0000';
+  if (!user) return 'Karysm0000';
   const namePrefix = (user.name || 'TOK').slice(0, 3).toUpperCase();
   const phoneSuffix = (user.phone || '0000').slice(-4);
   return `${namePrefix}${phoneSuffix}`;
@@ -46,7 +46,7 @@ export default function ReferralScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Rejoins Tokoss ! Utilise mon code ${referralCode} pour t'inscrire. https://tokoss.app`,
+        message: `Rejoins Karysm ! Utilise mon code ${referralCode} pour t'inscrire. https://karysm.com`,
       });
     } catch {
       // user cancelled
@@ -90,7 +90,7 @@ export default function ReferralScreen() {
           </View>
           <Text style={styles.title}>Invitez vos amis</Text>
           <Text style={styles.subtitle}>
-            Partagez Tokoss et gagnez des recompenses pour chaque ami inscrit
+            Partagez Karysm et gagnez des recompenses pour chaque ami inscrit
           </Text>
         </View>
 

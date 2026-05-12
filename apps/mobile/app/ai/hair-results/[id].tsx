@@ -261,8 +261,8 @@ export default function HairResultsScreen() {
                 const hairTypeLabel = data.hairType && HAIR_TYPE_INFO[data.hairType] ? HAIR_TYPE_INFO[data.hairType].label : '';
                 const porosityLabel = data.porosity && POROSITY_INFO[data.porosity] ? POROSITY_INFO[data.porosity].label : (data.porosity || '');
                 const densityLabel = data.density ? (DENSITY_INFO[data.density] || data.density) : '';
-                const message = `💇🏿 Mon analyse capillaire Tokoss\n\nType : ${data.hairType ?? '-'} — ${hairTypeLabel}\nPorosité : ${porosityLabel}\nDensité : ${densityLabel}\n\nDécouvre ton type de cheveux sur Tokoss ! 👉 https://tokoss.app`;
-                await Share.share({ message, title: 'Mon analyse capillaire Tokoss' });
+                const message = `💇🏿 Mon analyse capillaire Karysm\n\nType : ${data.hairType ?? '-'} — ${hairTypeLabel}\nPorosité : ${porosityLabel}\nDensité : ${densityLabel}\n\nDécouvre ton type de cheveux sur Karysm ! 👉 https://karysm.com`;
+                await Share.share({ message, title: 'Mon analyse capillaire Karysm' });
               } catch {}
             }}
           >

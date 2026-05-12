@@ -1,4 +1,4 @@
-# Tokoss — Prompts Stitch (Google) — Pack visuel complet
+# Karysm — Prompts Stitch (Google) — Pack visuel complet
 
 ## Brand Guidelines pour tous les visuels
 
@@ -42,12 +42,12 @@
 
 ---
 
-## Prompt 1 — Logo Tokoss (typographie seule)
+## Prompt 1 — Logo Karysm (typographie seule)
 
 ```
-Create a luxury typographic logo for "Tokoss" — a premium beauty app brand.
+Create a luxury typographic logo for "Karysm" — a premium beauty app brand.
 
-The word "Tokoss" written in a single elegant serif font:
+The word "Karysm" written in a single elegant serif font:
 - Font style: Playfair Display Bold Italic or Didot Bold Italic
 - The capital "T" is large, elegant, with a sweeping serif — slightly taller than the rest
 - "okos" flows naturally in the same italic serif style, lowercase
@@ -70,10 +70,10 @@ Output: clean logo on white background, horizontal layout, suitable for app head
 ## Prompt 2 — App Store Screenshots (5 écrans iPhone)
 
 ```
-Design a premium luxury mobile app screenshot set (5 screens) for "Tokoss" — an AI-powered beauty & wellness marketplace app made for African women.
+Design a premium luxury mobile app screenshot set (5 screens) for "Karysm" — an AI-powered beauty & wellness marketplace app made for African women.
 
 BRAND IDENTITY:
-- Name: TOKOSS
+- Name: Karysm
 - Tagline: "Beauté & bien-être en Afrique"
 - Colors: deep violet (#2D1B69) as primary dark, bright violet (#7C3AED) for accents and buttons, terracotta (#E07A5F) for ratings/stars/price highlights, pure black (#0A0A0A) for contrast, off-white lavender (#FAF5FF) for light backgrounds
 - Aesthetic: ultra-premium, editorial beauty magazine feel — think Vogue Afrique meets Uber. Clean, minimal, sophisticated. NOT playful or childish.
@@ -130,11 +130,11 @@ STYLE DIRECTION:
 ## Prompt 3 — Landing Page Hero (dual-target)
 
 ```
-Design a premium dual-purpose landing page hero for "Tokoss" — an AI-powered beauty & wellness marketplace app serving both clients and beauty professionals in Africa.
+Design a premium dual-purpose landing page hero for "Karysm" — an AI-powered beauty & wellness marketplace app serving both clients and beauty professionals in Africa.
 
 FORMAT: Wide banner (1920x1080), designed to feel like a luxury fashion editorial meets a tech product page.
 
-LOGO "Tokoss" — centered top:
+LOGO "Karysm" — centered top:
 - Typography: Playfair Display Bold Italic or Didot Bold Italic
 - Capital "T" slightly larger with elegant serif sweep
 - "okoss" lowercase, same italic serif, tight luxurious kerning
@@ -176,7 +176,7 @@ BOTTOM BAR — spanning full width, dark violet background:
 - Left: "Télécharger sur App Store | Google Play" — white buttons with violet accents
 - Center: three value pillars in small elegant text:
   "IA Beauté · Réservation instantanée · Pour les peaux qui vous ressemblent"
-- Right: "Rejoignez Tokoss" CTA button in terracotta (#E07A5F)
+- Right: "Rejoignez Karysm" CTA button in terracotta (#E07A5F)
 
 MODELS & REPRESENTATION:
 - Exclusively Black African women, Monk Skin Tone 5-9 range
@@ -212,10 +212,10 @@ AESTHETIC DIRECTION:
 ## Prompt 4 — Social Media (4 posts Instagram/TikTok)
 
 ```
-Design a set of 4 social media posts (square 1080x1080) for "Tokoss" beauty app, targeting African women.
+Design a set of 4 social media posts (square 1080x1080) for "Karysm" beauty app, targeting African women.
 
 LOGO on every post:
-- "Tokoss" in Playfair Display Bold Italic or Didot Bold Italic
+- "Karysm" in Playfair Display Bold Italic or Didot Bold Italic
 - Solid black or white depending on background contrast
 - Subtle placement: bottom-right corner or top-left
 - Fashion house masthead style — elegant, minimal, no icon
@@ -225,10 +225,10 @@ STYLE: ultra-premium, luxury beauty brand aesthetic. Deep violet (#2D1B69) and b
 MODELS: exclusively Black African women, unified skin tone range Monk 5-9 (medium-brown to deep-brown — cohesive and harmonious), diverse afro hairstyles (braids, locs, TWA, cornrows), flawless beauty close-ups.
 
 Post 1 — LAUNCH ANNOUNCEMENT
-- Large text: "TOKOSS EST LÀ" in white bold
+- Large text: "Karysm EST LÀ" in white bold
 - Subtitle: "La beauté africaine, réinventée par l'IA"
 - Background: close-up of African woman's face (Monk 7-8), half in violet light, half in warm golden light
-- Tokoss logo subtle in corner
+- Karysm logo subtle in corner
 
 Post 2 — AI FEATURE
 - Text: "Votre peau analysée en 30 secondes"
@@ -237,13 +237,13 @@ Post 2 — AI FEATURE
 
 Post 3 — BOOKING
 - Text: "Trouvez votre coiffeuse en 2 clics"
-- Show: African woman (Monk 8) getting braids done, phone screen overlay showing Tokoss booking confirmation
+- Show: African woman (Monk 8) getting braids done, phone screen overlay showing Karysm booking confirmation
 - Warm, intimate salon lighting
 
 Post 4 — COMMUNITY
 - Text: "Rejoignez 1000+ African Queens"
 - Grid mosaic of diverse Black women portraits — Monk tones 5 through 9, different hairstyles, ages, styles — all cohesive warm undertones
-- Violet overlay gradient, terracotta "Tokoss" watermark
+- Violet overlay gradient, terracotta "Karysm" watermark
 ```
 
 ---
@@ -251,12 +251,12 @@ Post 4 — COMMUNITY
 ## Prompt 5 — Pitch Deck (3 slides investisseurs)
 
 ```
-Design 3 pitch deck slides for "Tokoss" — AI beauty marketplace for Africa.
+Design 3 pitch deck slides for "Karysm" — AI beauty marketplace for Africa.
 
 STYLE: clean, premium, investor-friendly. Dark backgrounds (deep violet #2D1B69 or black #0A0A0A). White text. Terracotta #E07A5F for highlights/numbers. Violet #7C3AED for accent elements.
 
 Slide 1 — TITLE
-- "TOKOSS" large centered in white, Playfair Display Bold Italic
+- "Karysm" large centered in white, Playfair Display Bold Italic
 - Below: "La marketplace beauté pour l'Afrique"
 - Below: "IA × Booking × Mobile Money"
 - Background: abstract African textile pattern in subtle violet tones, with a single iPhone mockup showing the app
@@ -277,7 +277,7 @@ Slide 3 — PRODUCT
 
 ---
 
-## Contenu inspiré de Glambook (adapté Tokoss)
+## Contenu inspiré de Glambook (adapté Karysm)
 
 ### Messages marketing validés
 
@@ -294,9 +294,9 @@ Slide 3 — PRODUCT
 - "Fini les appels, les DM, les rendez-vous oubliés"
 - "Dashboard complet · Notifications intelligentes"
 
-### Avantages Tokoss vs concurrence
+### Avantages Karysm vs concurrence
 
-| Ce que Tokoss a | Ce que personne d'autre n'a |
+| Ce que Karysm a | Ce que personne d'autre n'a |
 |---|---|
 | AI Skin Analysis (Monk Scale 1-10) | Premier au monde pour peaux foncées |
 | AI Hair Analysis (4A-4C) | Premier au monde pour cheveux afro |

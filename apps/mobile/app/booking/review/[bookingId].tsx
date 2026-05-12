@@ -15,7 +15,7 @@ import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
 import { showAlert } from '../../../src/lib/alert';
 import { pickAndUploadImage } from '../../../src/lib/upload';
-import { REVIEW_TAGS } from '@tokoss/shared';
+import { REVIEW_TAGS } from '@karysm/shared';
 
 const TAG_LABELS: Record<string, string> = {
   ponctuel: '⏰ Ponctuel',

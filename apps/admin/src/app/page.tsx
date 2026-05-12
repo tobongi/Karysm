@@ -101,7 +101,7 @@ export default function AdminDashboard() {
       return;
     }
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('tokoss_admin_user');
+      const saved = localStorage.getItem('karysm_admin_user');
       if (saved) setAdminUser(JSON.parse(saved));
     }
   }, [router]);
@@ -163,8 +163,8 @@ export default function AdminDashboard() {
 
   function handleLogout() {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('tokoss_admin_token');
-      localStorage.removeItem('tokoss_admin_user');
+      localStorage.removeItem('karysm_admin_token');
+      localStorage.removeItem('karysm_admin_user');
     }
     router.push('/login');
   }
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="bg-accent text-white px-8 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold">Tokoss Admin</h1>
+          <h1 className="text-xl font-bold">Karysm Admin</h1>
           <p className="text-sm text-white/60">Tableau de bord</p>
         </div>
         <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { generateRef, computeEndTime, canTransitionBooking, DEPOSIT_PERCENTAGE } from '@tokoss/shared';
+import { generateRef, computeEndTime, canTransitionBooking, DEPOSIT_PERCENTAGE } from '@karysm/shared';
 import { authMiddleware } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { createBookingSchema, updateBookingStatusSchema } from '../schemas';

@@ -1,4 +1,4 @@
-# Tokoss — Marketplace Beauté/Bien-être pour l'Afrique
+# Karysm — Marketplace Beauté/Bien-être pour l'Afrique
 
 ## Vision
 **Le Glossier africain qui connecte clientes et prestataires de la beauté.**
@@ -20,7 +20,7 @@ App unique avec switch de rôle CLIENT ↔ PROVIDER (comme Uber driver/rider).
 | Presse | La première marketplace beauté pensée pour l'Afrique — la beauté à votre image |
 
 ## Dossier projet
-`C:\Users\glaib\tokoss\`
+`C:\Users\glaib\Karysm\`
 
 ## Architecture
 Monorepo Turborepo + pnpm.
@@ -28,11 +28,11 @@ Monorepo Turborepo + pnpm.
 ### Packages
 | Package | Rôle |
 |---------|------|
-| `@tokoss/shared` | Types, constantes, utils (phone, slug, haversine, booking state machine) |
-| `@tokoss/db` | Prisma 6 schema + client (25 modèles — incl. SavedLook) |
-| `@tokoss/api` | Express REST API (auth, search, bookings, payments, admin) |
-| `@tokoss/mobile` | Expo 52 + expo-router 4 — webapp d'abord, app native ensuite |
-| `@tokoss/admin` | Next.js 14 + Tailwind dashboard admin (static export) |
+| `@karysm/shared` | Types, constantes, utils (phone, slug, haversine, booking state machine) |
+| `@karysm/db` | Prisma 6 schema + client (25 modèles — incl. SavedLook) |
+| `@karysm/api` | Express REST API (auth, search, bookings, payments, admin) |
+| `@karysm/mobile` | Expo 52 + expo-router 4 — webapp d'abord, app native ensuite |
+| `@karysm/admin` | Next.js 14 + Tailwind dashboard admin (static export) |
 
 ### Stack
 | Composant | Tech |
@@ -136,12 +136,14 @@ Seed: `packages/db/prisma/seed.ts` (7 providers, 6 catégories, 14 services, 1 a
 ## URLs Production
 | Service | URL |
 |---------|-----|
-| **Webapp (PWA)** | https://tokoss.app |
-| **Webapp (alias)** | https://tokoss-kappa.vercel.app |
-| **API** | https://tokoss-production.up.railway.app |
-| **API Health** | https://tokoss-production.up.railway.app/api/health |
-| **GitHub** | https://github.com/tobongi/tokoss |
-| **Domaine** | tokoss.app (Namecheap → Vercel NS) |
+| **Site vitrine** | https://karysm.com (projet Vercel: Karysm-website) |
+| **Webapp (PWA)** | https://app.karysm.com (projet Vercel: Karysm-kappa) |
+| **Webapp (alias)** | https://Karysm-kappa.vercel.app |
+| **API** | https://Karysm-production.up.railway.app |
+| **API Health** | https://Karysm-production.up.railway.app/api/health |
+| **GitHub** | https://github.com/tobongi/Karysm |
+| **Domaine** | karysm.com (Namecheap → Vercel NS) |
+| **Site vitrine source** | `C:\Users\glaib\Karysm-website\` |
 
 ## API Routes (toutes fonctionnelles ✅)
 ```
@@ -158,7 +160,7 @@ POST /api/auth/refresh            — Refresh token
 POST /api/auth/logout             — Révocation refresh token
 
 # Search
-GET  /api/search                  — Providers (q, category + subcategory auto-expand, lat/lng, radius, rating, price, sort, pagination)
+GET  /api/search                  — Providers (q, category + subcategory auto-expand, lat/lng, radius, rating, price, isMobile, sort, pagination)
 GET  /api/search/providers/:slug  — Profil complet provider (services, availability, portfolio)
 
 # Bookings
@@ -375,9 +377,10 @@ railway.toml                          — Config déploiement Railway (nixpacks 
 | Commande | Action |
 |----------|--------|
 | `git push` | Auto-deploy API sur Railway |
-| Webapp deploy | Voir script ci-dessous |
+| Webapp deploy | Voir script ci-dessous → déploie sur app.karysm.com |
+| Site vitrine deploy | `cd Karysm-website && npx vercel --prod --yes` → déploie sur karysm.com |
 
-#### Script de déploiement webapp (PWA)
+#### Script de déploiement webapp (PWA) → app.karysm.com
 ```bash
 cd apps/mobile
 
@@ -408,14 +411,14 @@ console.log('Patched registerWebModule');
 node -e "
 const fs = require('fs');
 let h = fs.readFileSync('index.html', 'utf8');
-h = h.replace('</head>', '<link rel=\"manifest\" href=\"/manifest.json\" /><meta name=\"theme-color\" content=\"#F2E4D9\" /><meta name=\"apple-mobile-web-app-capable\" content=\"yes\" /><meta name=\"apple-mobile-web-app-title\" content=\"Tokoss\" /></head>');
+h = h.replace('</head>', '<link rel=\"manifest\" href=\"/manifest.json\" /><meta name=\"theme-color\" content=\"#F2E4D9\" /><meta name=\"apple-mobile-web-app-capable\" content=\"yes\" /><meta name=\"apple-mobile-web-app-title\" content=\"Karysm\" /></head>');
 fs.writeFileSync('index.html', h);
 "
 cp ../public/manifest.json .
 echo '{"rewrites":[{"source":"/((?!_expo|assets|favicon|manifest).*)", "destination":"/index.html"}]}' > vercel.json
 
 # 4. Deploy
-npx vercel link --yes --project tokoss-kappa && npx vercel --prod --yes
+npx vercel link --yes --project Karysm-kappa && npx vercel --prod --yes
 ```
 
 ⚠️ **Post-build patch obligatoire** : `expo-modules-core` crashe sur mobile web avec "Module implementation must be a class" et "ExpoFontLoader.isLoaded undefined". Le patch (1) donne un nom fallback aux modules sans `.name` et (2) wrappe `new l` dans try/catch pour les non-constructeurs.
@@ -434,10 +437,10 @@ npx vercel link --yes --project tokoss-kappa && npx vercel --prod --yes
 ### Variables d'environnement (Railway)
 ```
 DATABASE_URL=postgresql://...
-JWT_SECRET=tokoss-prod-jwt-secret-2026          # ⚠️ OBLIGATOIRE en production (crash si absent)
+JWT_SECRET=Karysm-prod-jwt-secret-2026          # ⚠️ OBLIGATOIRE en production (crash si absent)
 NODE_ENV=production
 DEMO_OTP=1234
-CORS_ORIGINS=https://tokoss-kappa.vercel.app,https://tokoss-kappa-ecru.vercel.app,https://tokoss.app,https://www.tokoss.app
+CORS_ORIGINS=https://Karysm-kappa.vercel.app,https://Karysm-kappa-ecru.vercel.app,https://karysm.com,https://www.karysm.com,https://app.karysm.com
 CLOUDINARY_CLOUD_NAME=dppop1fid
 CLOUDINARY_API_KEY=282719287638618
 CLOUDINARY_API_SECRET=kxt7-bJyNVZMvGSvkPOkfrQV2IA
@@ -496,7 +499,7 @@ HUGGINGFACE_API_TOKEN=hf_xxxxx
 - Vu récemment sur home
 - Review prompt amélioré
 - Push notifications 24h avant RDV (API cron)
-- PWA installable sur tokoss.app
+- PWA installable sur karysm.com
 
 ### Phase 5B ✅ — Retours testeuse (avril 2026)
 - Search debounce 500ms (fix bug refresh à chaque lettre)
@@ -520,8 +523,24 @@ HUGGINGFACE_API_TOKEN=hf_xxxxx
 - **Images Higgsfield AI** : 8 lookbook (tresses dorées, gel UV marbre, mariée Monk 7, fade barbe, box braids caramel, soin visage, stiletto strass, cornrows Fulani)
 - **Bundle** : 1.98 MB (Reanimated ajouté, toujours sous 2MB)
 
-### Avancement : ~88% fait
-Les 12% restants = briques business critiques pour le launch :
+### Phase 5C ✅ — Retours testeuse Dolores (avril 2026)
+- **Filtres rapides** : barre horizontale avec chips "Se déplace", "Prix ↑/↓", "3/5/10 km", "Filtres (N)"
+- **Recherche polyvalente** : barre cherche prestations + quartiers + prestataires (pas juste les villes)
+- **Suggestions smart** : dropdown montre Prestations (catégories + sous-catégories) + Quartiers
+- **API isMobile** : nouveau param de filtre sur /api/search
+- **SearchFilters modal** : connecté avec toggle "Se déplace", prix max, note min, distance, tri (4 options)
+- **Quartiers fusionnés** : pills quartiers intégrés dans la filter bar (cycle tap)
+- **UX polish (Impeccable + Emil Kowalski)** : FadeInStagger 40ms/280ms, BounceScale 1.15x, PressableScale sur tous chips, hero overlay réduit, card radius 16px
+
+### Phase 7 ✅ — Site vitrine + Architecture domaines (avril 2026)
+- **karysm.com** → site vitrine marketing (Vercel: Karysm-website)
+- **app.karysm.com** → webapp PWA (Vercel: Karysm-kappa)
+- **Site vitrine UX polish** : `:active` scale sur boutons/cards, `ease-out` 200ms partout, H3 font-weight 700, footer opacités WCAG, reveal 16px/0.4s, hover media queries, stagger rotation supprimé, bounce CTA 1.2
+- Tous les CTA du site pointent vers app.karysm.com
+- CORS API mis à jour avec app.karysm.com
+
+### Avancement : ~90% fait
+Les 10% restants = briques business critiques pour le launch :
 - SMS OTP réel → sans ça, pas de vrais utilisateurs
 - Paiements Mobile Money → sans ça, pas de monétisation
 - Import social oEmbed (Niveau 1) → prestataires collent un lien Instagram/TikTok
@@ -579,9 +598,9 @@ model PortfolioItem {
 ```
 
 ## Documents de référence
-- `TOKOSS_MARKET_STUDY.md` — Étude de marché complète ($17B+ TAM, 8 pays analysés)
-- `TOKOSS_TECH_SPEC.md` — Spécifications techniques complètes (modèles, API, écrans, paiements, AI)
-- `TOKOSS_STITCH_PROMPTS.md` — Prompts Stitch (Google) pour visuels marketing (logo, App Store, landing page, social media, pitch deck)
+- `Karysm_MARKET_STUDY.md` — Étude de marché complète ($17B+ TAM, 8 pays analysés)
+- `Karysm_TECH_SPEC.md` — Spécifications techniques complètes (modèles, API, écrans, paiements, AI)
+- `Karysm_STITCH_PROMPTS.md` — Prompts Stitch (Google) pour visuels marketing (logo, App Store, landing page, social media, pitch deck)
 
 ## Positionnement marketing
 - **PAS** "beauté pour peau noire" (regard extérieur)
@@ -590,4 +609,4 @@ model PortfolioItem {
 - Prestataires : "Vous sublimez vos clientes. On s'occupe du reste."
 - Logo : Playfair Display Bold Italic, T majuscule élégant, typographie fashion house
 - Esthétique : Vogue Afrique × Aesop × Glossier — mature, élégant, confiant
-- **Site vitrine** : `C:\Users\glaib\tokoss-website\` — 3 pages (accueil, clientes, prestataires), HTML/CSS/JS + GSAP, pas encore déployé
+- **Site vitrine** : `C:\Users\glaib\Karysm-website\` — 8 pages (accueil, clientes, prestataires, about, contact, cgu, confidentialite, mentions-legales), HTML/CSS/JS + GSAP, déployé sur https://karysm.com (Vercel: Karysm-website)

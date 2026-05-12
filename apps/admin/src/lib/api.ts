@@ -1,6 +1,6 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tokoss-production.up.railway.app/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://Karysm-production.up.railway.app/api';
 
 let authToken: string | null = null;
 
@@ -8,9 +8,9 @@ export function setAdminToken(token: string | null) {
   authToken = token;
   if (typeof window !== 'undefined') {
     if (token) {
-      localStorage.setItem('tokoss_admin_token', token);
+      localStorage.setItem('karysm_admin_token', token);
     } else {
-      localStorage.removeItem('tokoss_admin_token');
+      localStorage.removeItem('karysm_admin_token');
     }
   }
 }
@@ -18,7 +18,7 @@ export function setAdminToken(token: string | null) {
 export function getAdminToken(): string | null {
   if (authToken) return authToken;
   if (typeof window !== 'undefined') {
-    authToken = localStorage.getItem('tokoss_admin_token');
+    authToken = localStorage.getItem('karysm_admin_token');
   }
   return authToken;
 }

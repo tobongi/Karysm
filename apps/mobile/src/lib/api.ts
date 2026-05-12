@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
-const PROD_API = 'https://tokoss-production.up.railway.app/api';
+const PROD_API = 'https://Karysm-production.up.railway.app/api';
 
 const DEV_API = Platform.select({
   web: 'http://localhost:3001/api',
@@ -29,7 +29,7 @@ export function getAuthToken(): string | null {
 
 async function refreshToken(): Promise<string | null> {
   try {
-    const savedRefresh = await AsyncStorage.getItem('tokoss_refresh');
+    const savedRefresh = await AsyncStorage.getItem('karysm_refresh');
     if (!savedRefresh) return null;
 
     const res = await fetch(`${API_URL}/auth/refresh`, {
@@ -43,7 +43,7 @@ async function refreshToken(): Promise<string | null> {
     const data = await res.json();
     if (data.success && data.token) {
       authToken = data.token;
-      await AsyncStorage.setItem('tokoss_token', data.token);
+      await AsyncStorage.setItem('karysm_token', data.token);
       return data.token;
     }
     return null;
@@ -54,7 +54,7 @@ async function refreshToken(): Promise<string | null> {
 
 async function forceLogout() {
   authToken = null;
-  await AsyncStorage.multiRemove(['tokoss_token', 'tokoss_refresh', 'tokoss_user']);
+  await AsyncStorage.multiRemove(['karysm_token', 'karysm_refresh', 'karysm_user']);
   // Redirect to login on web and native
   try {
     router.replace('/auth/login');

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import type { JwtPayload } from '@tokoss/shared';
+import type { JwtPayload } from '@karysm/shared';
 import { UnauthorizedError } from '../lib/errors';
 
 const JWT_SECRET = (() => {
@@ -8,7 +8,7 @@ const JWT_SECRET = (() => {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('JWT_SECRET must be set in production');
   }
-  return 'tokoss-dev-secret';
+  return 'karysm-dev-secret';
 })();
 
 declare global {

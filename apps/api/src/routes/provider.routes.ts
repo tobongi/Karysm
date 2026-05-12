@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { slugify } from '@tokoss/shared';
+import { slugify } from '@karysm/shared';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { providerProfileSchema, serviceSchema, availabilitySchema } from '../schemas';

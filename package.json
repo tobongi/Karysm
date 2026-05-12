@@ -1,5 +1,5 @@
 {
-  "name": "tokoss",
+  "name": "Karysm",
   "private": true,
   "scripts": {
     "dev": "turbo dev",
@@ -7,8 +7,8 @@
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push",
-    "db:studio": "pnpm --filter @tokoss/db studio",
-    "db:seed": "pnpm --filter @tokoss/db db:seed"
+    "db:studio": "pnpm --filter @karysm/db studio",
+    "db:seed": "pnpm --filter @karysm/db db:seed"
   },
   "devDependencies": {
     "playwright": "^1.59.1",

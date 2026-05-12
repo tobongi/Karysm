@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function loadAuth() {
     try {
-      const savedToken = await AsyncStorage.getItem('tokoss_token');
-      const savedUser = await AsyncStorage.getItem('tokoss_user');
+      const savedToken = await AsyncStorage.getItem('karysm_token');
+      const savedUser = await AsyncStorage.getItem('karysm_user');
       if (savedToken && savedUser) {
         setToken(savedToken);
         setAuthToken(savedToken);
@@ -48,21 +48,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     setAuthToken(newToken);
     setUser(newUser);
-    await AsyncStorage.setItem('tokoss_token', newToken);
-    await AsyncStorage.setItem('tokoss_refresh', refreshToken);
-    await AsyncStorage.setItem('tokoss_user', JSON.stringify(newUser));
+    await AsyncStorage.setItem('karysm_token', newToken);
+    await AsyncStorage.setItem('karysm_refresh', refreshToken);
+    await AsyncStorage.setItem('karysm_user', JSON.stringify(newUser));
   }
 
   async function updateUser(updatedUser: AuthUser) {
     setUser(updatedUser);
-    await AsyncStorage.setItem('tokoss_user', JSON.stringify(updatedUser));
+    await AsyncStorage.setItem('karysm_user', JSON.stringify(updatedUser));
   }
 
   async function logout() {
     setToken(null);
     setAuthToken(null);
     setUser(null);
-    await AsyncStorage.multiRemove(['tokoss_token', 'tokoss_refresh', 'tokoss_user']);
+    await AsyncStorage.multiRemove(['karysm_token', 'karysm_refresh', 'karysm_user']);
   }
 
   return (

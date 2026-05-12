@@ -10,7 +10,7 @@ export async function uploadImage(base64Data: string, folder: string): Promise<s
   const result = await cloudinary.uploader.upload(
     `data:image/jpeg;base64,${base64Data}`,
     {
-      folder: `tokoss/${folder}`,
+      folder: `karysm/${folder}`,
       transformation: [
         { width: 1200, height: 1200, crop: 'limit' },
         { quality: 'auto:good' },
@@ -25,7 +25,7 @@ export async function uploadAvatar(base64Data: string): Promise<string> {
   const result = await cloudinary.uploader.upload(
     `data:image/jpeg;base64,${base64Data}`,
     {
-      folder: 'tokoss/avatars',
+      folder: 'karysm/avatars',
       transformation: [
         { width: 400, height: 400, crop: 'fill', gravity: 'face' },
         { quality: 'auto:good' },

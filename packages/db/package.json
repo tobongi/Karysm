@@ -1,5 +1,5 @@
 {
-  "name": "@tokoss/db",
+  "name": "@karysm/db",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",

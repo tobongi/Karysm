@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding Tokoss database...');
+  console.log('🌱 Seeding Karysm database...');
 
   // === Service Categories ===
   const categories = await Promise.all([
@@ -88,12 +88,12 @@ async function main() {
 
   // === Admin ===
   await prisma.admin.upsert({
-    where: { email: 'admin@tokoss.com' },
+    where: { email: 'admin@Karysm.com' },
     update: {},
     create: {
-      name: 'Tokoss Admin',
-      email: 'admin@tokoss.com',
-      password: '$2a$10$dummyHashForDevOnly', // bcrypt hash of 'TokossAdmin2026!'
+      name: 'Karysm Admin',
+      email: 'admin@Karysm.com',
+      password: '$2a$10$dummyHashForDevOnly', // bcrypt hash of 'KarysmAdmin2026!'
       role: 'SUPER_ADMIN',
     },
   });
@@ -226,7 +226,7 @@ async function main() {
   console.log('\n✅ Seed completed!');
   console.log(`  ${categories.length} categories`);
   console.log(`  ${providers.length} providers with services + availability`);
-  console.log('  1 admin (admin@tokoss.com)');
+  console.log('  1 admin (admin@Karysm.com)');
   console.log('  1 test client (+243812340000)');
 }
 

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { generateRef, computeEndTime } from '@tokoss/shared';
+import { generateRef, computeEndTime } from '@karysm/shared';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validateBody, validateQuery } from '../middleware/validate';
 import {

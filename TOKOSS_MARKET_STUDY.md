@@ -1,4 +1,4 @@
-# TOKOSS — Complete Market Study
+# Karysm — Complete Market Study
 ## Beauty Services Marketplace for Africa
 ### Investor-Level Analysis | March 2026
 
@@ -6,13 +6,13 @@
 
 # Executive Summary
 
-Tokoss targets a **$17B+ addressable beauty services market** across Sub-Saharan Africa, where **90%+ of transactions happen informally** via Instagram, WhatsApp, and phone calls. No dominant digital platform exists. The combination of rising smartphone penetration (50%+ of mobile sales), near-universal WhatsApp adoption (95%+ in target markets), and $1.1T in annual mobile money transactions creates a unique window to build the **first beauty ecosystem for Africa** — combining booking, AI skin/hair analysis for dark skin, product e-commerce, and integrated payments.
+Karysm targets a **$17B+ addressable beauty services market** across Sub-Saharan Africa, where **90%+ of transactions happen informally** via Instagram, WhatsApp, and phone calls. No dominant digital platform exists. The combination of rising smartphone penetration (50%+ of mobile sales), near-universal WhatsApp adoption (95%+ in target markets), and $1.1T in annual mobile money transactions creates a unique window to build the **first beauty ecosystem for Africa** — combining booking, AI skin/hair analysis for dark skin, product e-commerce, and integrated payments.
 
-**Positioning:** Tokoss is not Treatwell for Africa. It's a **4-layer beauty ecosystem**:
+**Positioning:** Karysm is not Treatwell for Africa. It's a **4-layer beauty ecosystem**:
 
 1. **Marketplace** — Booking + Upwork-style requests (Instagram + Mobile Money + Freelance)
 2. **AI Beauty Analysis** — First-ever AI skin analysis for dark skin (Monk Scale) + afro hair analysis (4A-4C) via selfie
-3. **Product E-commerce** — Providers sell products on tokoss.bizz/slug shops, AI recommends products based on skin analysis
+3. **Product E-commerce** — Providers sell products on Karysm.bizz/slug shops, AI recommends products based on skin analysis
 4. **Integrated Wallet** — Privy wallet (shared with Tobongi ecosystem) + Mobile Money (MBiyo Pay)
 
 **Key insight:** Zero competitors exist in Francophone Africa for any of these 4 layers, let alone the combination. First-mover window: 18-24 months.
@@ -32,11 +32,11 @@ Tokoss targets a **$17B+ addressable beauty services market** across Sub-Saharan
 | Projected Size (2033) | **$7.02B** (cosmetics only) | Market Data Forecast |
 | CAGR | **6.85% – 8.51%** depending on scope | Multiple sources |
 
-> **Note:** The wide range ($3.9B to $17B) reflects different scopes. The narrow definition covers manufactured cosmetics. The broad definition includes **beauty services** (salons, freelancers, home services) — which is Tokoss's actual TAM.
+> **Note:** The wide range ($3.9B to $17B) reflects different scopes. The narrow definition covers manufactured cosmetics. The broad definition includes **beauty services** (salons, freelancers, home services) — which is Karysm's actual TAM.
 
 ## 1.2 Hair Market (Braids, Wigs, Extensions)
 
-This is the **crown jewel** of African beauty — and Tokoss's strongest vertical.
+This is the **crown jewel** of African beauty — and Karysm's strongest vertical.
 
 | Metric | Value | Source |
 |--------|-------|--------|
@@ -67,7 +67,7 @@ This is the **crown jewel** of African beauty — and Tokoss's strongest vertica
 
 ## 1.4 The Informal Beauty Economy
 
-This is Tokoss's real opportunity — the numbers above **undercount** the market massively.
+This is Karysm's real opportunity — the numbers above **undercount** the market massively.
 
 **Key characteristics of the African beauty services market:**
 - **80-90% informal:** Most hairdressers, nail technicians, makeup artists, and braiders operate without formal business registration. In DRC, Cameroon, and Gabon, **70-80% of the working population is in the informal sector** (World Bank)
@@ -97,7 +97,7 @@ This is Tokoss's real opportunity — the numbers above **undercount** the marke
 | Registered accounts | **1.1 billion** |
 | Active users (major platforms) | **200M+** |
 
-Mobile money is the **payment rail** for Tokoss. Beauty services are increasingly paid via mobile money, but no platform structures this.
+Mobile money is the **payment rail** for Karysm. Beauty services are increasingly paid via mobile money, but no platform structures this.
 
 ---
 
@@ -138,7 +138,7 @@ Mobile money is the **payment rail** for Tokoss. Beauty services are increasingl
 
 ### Detailed Analysis: Tausi App (Main Competitor)
 
-Tausi is the **closest existing competitor** to Tokoss:
+Tausi is the **closest existing competitor** to Karysm:
 - **AI-powered matching** between clients and beauticians
 - **Verified professional profiles**
 - **Location-based booking**
@@ -147,7 +147,7 @@ Tausi is the **closest existing competitor** to Tokoss:
 - Integrated with **MiniPay** for payments
 - Expanding to **Ghana, Nigeria, South Africa**
 
-**Tausi's weaknesses vs. Tokoss:**
+**Tausi's weaknesses vs. Karysm:**
 - Very small funding ($150K total) — limited execution capacity
 - No visual/image-based booking (upload what you want)
 - No AI try-on/preview features
@@ -173,7 +173,7 @@ Tausi is the **closest existing competitor** to Tokoss:
 4. **Phone contacts** = Client database
 5. **Notes app** = Schedule management
 
-> **This is exactly the stack Tokoss replaces** with a single integrated platform.
+> **This is exactly the stack Karysm replaces** with a single integrated platform.
 
 ## 2.4 AI Beauty Try-On Landscape
 
@@ -193,7 +193,7 @@ Tausi is the **closest existing competitor** to Tokoss:
 
 ## 3.1 What's Missing in African Beauty Booking
 
-| Gap | Impact | Tokoss Opportunity |
+| Gap | Impact | Karysm Opportunity |
 |-----|--------|-------------------|
 | **No structured marketplace** | Clients can't compare, filter, or discover providers beyond their network | Build the marketplace layer |
 | **No image-based booking** | Clients share photos on WhatsApp but can't match to providers who can deliver | Visual request matching engine |
@@ -203,7 +203,7 @@ Tausi is the **closest existing competitor** to Tokoss:
 | **No portfolio platform** | Instagram serves as portfolio but isn't designed for it | Structured portfolio with service categories |
 | **No payment integration** | Cash or manual mobile money transfers with no escrow | Integrated mobile money with escrow |
 | **No AI preview** | Clients describe what they want; results vary | AI try-on for braids, wigs, nails, makeup |
-| **Francophone Africa = zero** | All existing startups target Anglophone Africa | Tokoss is bilingual/Francophone-first |
+| **Francophone Africa = zero** | All existing startups target Anglophone Africa | Karysm is bilingual/Francophone-first |
 
 ## 3.2 Problems Freelance Beauty Professionals Face
 
@@ -244,7 +244,7 @@ Tausi is the **closest existing competitor** to Tokoss:
 
 ## 3.5 The Real Differentiator: AI Skin & Hair Analysis for Dark Skin
 
-**This is the core competitive moat of Tokoss — not the marketplace.**
+**This is the core competitive moat of Karysm — not the marketplace.**
 
 ### The Problem
 Every existing AI beauty app (ModiFace, Perfect Corp, YouCam, SkinVision, TroveSkin) is trained primarily on **Caucasian and Asian skin types**. They fail on dark skin:
@@ -321,9 +321,9 @@ User takes selfie
   → AI: "Peau sèche, sous-ton chaud, hyperpigmentation légère"
     → Recommends: Natural mask recipe (free content)
     → Recommends: "Crème hydratante par Marie Kabila"
-        → Buy on tokoss.bizz/marie-kabila
+        → Buy on Karysm.bizz/marie-kabila
     → Recommends: "Soin hydratant professionnel"
-        → Book on Tokoss marketplace
+        → Book on Karysm marketplace
           → Pay via Privy wallet / Mobile Money
 ```
 
@@ -351,7 +351,7 @@ This is exactly how L'Oréal, SkinVision, and TroveSkin built their AI. **The re
 
 ## 3.6 Francophone Africa: Zero Competition Confirmed
 
-After extensive research, **no competitor exists in Francophone Africa** for any layer of the Tokoss ecosystem:
+After extensive research, **no competitor exists in Francophone Africa** for any layer of the Karysm ecosystem:
 
 | Layer | Francophone Africa Competitors | Global Competitors in Africa |
 |-------|-------------------------------|------------------------------|
@@ -420,17 +420,17 @@ After extensive research, **no competitor exists in Francophone Africa** for any
 | Model | Description | Projected Revenue | Feasibility |
 |-------|-------------|------------------|-------------|
 | **AI skin/hair analysis (premium)** | Advanced analysis, personalized routines, tracking over time | $2-5/month per user | HIGH — Unique for dark skin |
-| **Product e-commerce (tokoss.bizz)** | Providers sell beauty products (creams, natural masks) on their shop | 15-20% commission | HIGH — Flows from AI recommendations |
+| **Product e-commerce (Karysm.bizz)** | Providers sell beauty products (creams, natural masks) on their shop | 15-20% commission | HIGH — Flows from AI recommendations |
 | **AI product recommendations** | AI suggests products based on skin analysis → drives sales | Embedded in e-commerce commission | HIGH — Automated sales |
 | **Training marketplace** | Courses for beauty professionals | 20-30% commission on courses | MEDIUM |
 | **SaaS for salons** | Full management suite for established salons | $20-50/month | MEDIUM |
 | **Data/insights** | Beauty trends data for brands (L'Oréal, Unilever, local brands) | B2B licensing | MEDIUM (needs scale) |
 | **Financial services** | Micro-loans for providers via Privy wallet transaction history | Interest income | MEDIUM — Partnership model |
 
-### The E-commerce Layer: tokoss.bizz
+### The E-commerce Layer: Karysm.bizz
 
 Providers can sell beauty products (creams, natural treatments, hair products) on their own shop:
-- **tokoss.bizz/slug** = provider's e-commerce page (alias of tobongi.bizz/slug — same Bongi-OS engine)
+- **Karysm.bizz/slug** = provider's e-commerce page (alias of tobongi.bizz/slug — same Bongi-OS engine)
 - AI skin analysis recommends specific products → automatic traffic to shops
 - Natural mask recipes (free content) build trust → lead to premium product purchases
 - Payment through integrated **Privy wallet** (shared with Tobongi ecosystem) + Mobile Money
@@ -441,7 +441,7 @@ Providers can sell beauty products (creams, natural treatments, hair products) o
 |-------|-------------|--------|
 | **Marketplace** | 12% commission on bookings | Core |
 | **AI Analysis** | $2-5/month premium subscription | High margin |
-| **E-commerce** | 15-20% on product sales via tokoss.bizz | Recurring |
+| **E-commerce** | 15-20% on product sales via Karysm.bizz | Recurring |
 | **Wallet** | Transaction fees + float income | Passive |
 
 ### Revenue Projection (Conservative)
@@ -483,7 +483,7 @@ Providers can sell beauty products (creams, natural treatments, hair products) o
 - **Zero competition:** No beauty tech startup in Francophone West Africa
 - **Wave dominance:** Mobile money is mature. Wave has 20M+ accounts. 1% transfer fee = low friction
 - **Beauty culture capital:** Abidjan is West/Central Africa's fashion and beauty hub
-- **Francophone advantage:** Tokoss is built Francophone-first (matching founder DNA and existing architecture)
+- **Francophone advantage:** Karysm is built Francophone-first (matching founder DNA and existing architecture)
 - **Gateway to region:** Success in Abidjan opens Dakar, Douala, Kinshasa, Libreville
 - **Instagram beauty economy:** Thriving freelancer economy on Instagram already
 - **Population:** Abidjan metro ~5.5M, highly urbanized
@@ -514,15 +514,15 @@ Providers can sell beauty products (creams, natural treatments, hair products) o
 **Why:**
 - **M-Pesa universal** — easiest payment integration
 - **Strong tech ecosystem** — talent, investors, support
-- **Tausi App exists** — but only raised $150K, Tokoss can out-execute
+- **Tausi App exists** — but only raised $150K, Karysm can out-execute
 - **Population:** Nairobi ~5M metro
 
 ### Tier 3 — Expansion Markets (Months 24-36)
 
 | Market | Rationale |
 |--------|-----------|
-| **Cameroon (Douala/Yaoundé)** | Bilingual. Gateway to Central Africa. Already in Tokoss architecture. |
-| **DRC (Kinshasa)** | 17M+ in Kinshasa. Huge demand. Already in Tokoss architecture. |
+| **Cameroon (Douala/Yaoundé)** | Bilingual. Gateway to Central Africa. Already in Karysm architecture. |
+| **DRC (Kinshasa)** | 17M+ in Kinshasa. Huge demand. Already in Karysm architecture. |
 | **Ghana (Accra)** | Strong economy. MTN MoMo. English-speaking West Africa. |
 | **South Africa (Johannesburg)** | Most formalized market. Higher ARPU. But more competition. |
 
@@ -585,7 +585,7 @@ Providers can sell beauty products (creams, natural treatments, hair products) o
 | **Urban Company** | Indian home services | $2.8B valuation |
 | **StyleSeat** | US beauty freelancer marketplace | ~$250M valuation |
 
-Tokoss addresses a market with **similar dynamics to Urban Company (home services, emerging market)** but in a region with **no competitor** and with **mobile money as a stronger payment rail than India had in Urban Company's early days.**
+Karysm addresses a market with **similar dynamics to Urban Company (home services, emerging market)** but in a region with **no competitor** and with **mobile money as a stronger payment rail than India had in Urban Company's early days.**
 
 ## 6.2 Biggest Risks
 
@@ -608,7 +608,7 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 | **AI beauty preview for African hair** | Globally first. No AI can preview braids/locs/wigs on African faces. | 12-18 months |
 | **Visual booking (upload what you want)** | Transforms booking from "pick a service" to "show what you want." Instagram-native behavior. | 6-12 months |
 | **Financial services for providers** | Micro-loans, savings, insurance based on booking data. Huge revenue potential. | 18-24 months |
-| **B2B beauty product marketplace** | Providers buy supplies → Tokoss takes commission → vertical integration. | 12-18 months |
+| **B2B beauty product marketplace** | Providers buy supplies → Karysm takes commission → vertical integration. | 12-18 months |
 | **Training marketplace** | Beauty education is huge. Professionals want to learn new techniques. | 18-24 months |
 | **Cross-border expansion** | Same product works across Francophone/Anglophone Africa with localization. | 12-36 months |
 | **Data play** | Beauty trend data across Africa = valuable to L'Oreal, Unilever, local brands. | 24+ months |
@@ -667,15 +667,15 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 - **"Votre style, nos artistes"** (Your style, our artists)
 
 ### Positioning Statement
-> Tokoss is the first beauty marketplace built for Africa — where millions of talented beauty professionals meet clients who want to look their best. Unlike Instagram and WhatsApp, Tokoss lets you see portfolios, compare prices, book instantly, pay securely, and preview your look with AI — all in one app.
+> Karysm is the first beauty marketplace built for Africa — where millions of talented beauty professionals meet clients who want to look their best. Unlike Instagram and WhatsApp, Karysm lets you see portfolios, compare prices, book instantly, pay securely, and preview your look with AI — all in one app.
 
 ### Key Differentiators vs. Everything Else
 
-| Competitor | What Tokoss has that they don't |
+| Competitor | What Karysm has that they don't |
 |---|---|
 | **WhatsApp/Instagram** | Structured search, verified reviews, integrated payments, scheduling, AI skin analysis, e-commerce |
 | **Treatwell/Fresha** | Informal economy support, mobile money, home services, African hair/skin AI, Francophone markets, product e-commerce |
-| **Tausi App** | Francophone-first, AI skin/hair analysis for dark skin, product e-commerce (tokoss.bizz), integrated wallet (Privy), 4-layer ecosystem |
+| **Tausi App** | Francophone-first, AI skin/hair analysis for dark skin, product e-commerce (Karysm.bizz), integrated wallet (Privy), 4-layer ecosystem |
 | **L'Oréal/ModiFace AI** | Trained on dark skin (Monk Scale), afro hair analysis (4A-4C), connected to real African providers, mobile money payments |
 | **Any global competitor** | Proprietary dataset of African dark skin selfies, afro hair photos, local beauty pricing data — impossible to replicate without being on the ground |
 
@@ -708,7 +708,7 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 **Year 1:** Dominant beauty marketplace in Abidjan + Dakar. 5,000+ providers. Proven unit economics. AI skin analysis beta.
 
-**Year 2:** Expand to Lagos + Nairobi. 20,000+ providers. Launch tokoss.bizz e-commerce. AI skin analysis live. 50K+ selfie dataset. $5M+ ARR. Series A.
+**Year 2:** Expand to Lagos + Nairobi. 20,000+ providers. Launch Karysm.bizz e-commerce. AI skin analysis live. 50K+ selfie dataset. $5M+ ARR. Series A.
 
 **Year 3:** AI hair analysis (4A-4C) live. Product recommendations from AI. 50,000+ providers across 5 countries. Proprietary dataset = competitive moat. $15M+ ARR.
 
@@ -718,7 +718,7 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 **Exit potential:** Acquisition by global beauty/tech company (L'Oréal, Fresha, Google — who would pay premium for the dark skin AI dataset), African super-app ecosystem, or IPO.
 
-**The ultimate moat:** By Year 5, Tokoss will own the largest annotated dataset of dark skin types and afro hair in the world. This data is impossible to replicate without being on the ground in Africa with millions of real users. It's not just a marketplace — it's a **data company** that happens to do beauty.
+**The ultimate moat:** By Year 5, Karysm will own the largest annotated dataset of dark skin types and afro hair in the world. This data is impossible to replicate without being on the ground in Africa with millions of real users. It's not just a marketplace — it's a **data company** that happens to do beauty.
 
 ---
 
@@ -757,7 +757,7 @@ Tokoss addresses a market with **similar dynamics to Urban Company (home service
 
 ## The Pitch (1 paragraph)
 
-Tokoss is a **4-layer beauty ecosystem** for Africa: marketplace + AI skin/hair analysis + product e-commerce + integrated wallet. We target a $17B+ beauty market where 90% of transactions are informal (WhatsApp, Instagram, cash) and **zero digital platform exists in Francophone Africa**. Our core moat is the **first AI trained on dark skin (Monk Scale) and afro hair (4A-4C)** — technology that doesn't exist anywhere globally. Every selfie taken on Tokoss builds a proprietary dataset that becomes more valuable over time. The AI recommends services AND products sold by providers on their tokoss.bizz shops, creating a self-reinforcing flywheel: more users → better AI → better recommendations → more sales → more providers → more users.
+Karysm is a **4-layer beauty ecosystem** for Africa: marketplace + AI skin/hair analysis + product e-commerce + integrated wallet. We target a $17B+ beauty market where 90% of transactions are informal (WhatsApp, Instagram, cash) and **zero digital platform exists in Francophone Africa**. Our core moat is the **first AI trained on dark skin (Monk Scale) and afro hair (4A-4C)** — technology that doesn't exist anywhere globally. Every selfie taken on Karysm builds a proprietary dataset that becomes more valuable over time. The AI recommends services AND products sold by providers on their Karysm.bizz shops, creating a self-reinforcing flywheel: more users → better AI → better recommendations → more sales → more providers → more users.
 
 ## Why Now?
 
@@ -785,7 +785,7 @@ Layer 2: AI ANALYSIS (Phase 4)
   → Proprietary dataset = moat
 
 Layer 3: E-COMMERCE (Phase 3)
-  tokoss.bizz/slug = provider product shops
+  Karysm.bizz/slug = provider product shops
   AI recommends products based on skin analysis
   → Commission 15-20%
 
@@ -805,7 +805,7 @@ Layer 4: WALLET (Phase 2)
 | Flutterwave | Payments, Africa | $3B (2022) | Built payment infrastructure for African commerce |
 | Perfect Corp | AI beauty tech, Global | $1B+ | AI skin analysis + virtual try-on (but NOT trained on dark skin) |
 
-Tokoss combines:
+Karysm combines:
 - The **marketplace dynamics** of Urban Company
 - The **Francophone Africa beachhead** of Wave
 - The **AI beauty tech** of Perfect Corp (but for dark skin — a market they can't serve)
@@ -816,4 +816,4 @@ Tokoss combines:
 
 ---
 
-*This market study was compiled for Tokoss strategic planning and investor preparation. Data sourced from publicly available market research reports, industry publications, and startup databases. All web research conducted March 2026. Sources include Statista, Mordor Intelligence, Technavio, GSMA, DataReportal, Grand View Research, Polaris Market Research, and direct startup/company data. Updated March 2026 with AI differentiator strategy, e-commerce layer (tokoss.bizz), and Privy wallet ecosystem.*
+*This market study was compiled for Karysm strategic planning and investor preparation. Data sourced from publicly available market research reports, industry publications, and startup databases. All web research conducted March 2026. Sources include Statista, Mordor Intelligence, Technavio, GSMA, DataReportal, Grand View Research, Polaris Market Research, and direct startup/company data. Updated March 2026 with AI differentiator strategy, e-commerce layer (Karysm.bizz), and Privy wallet ecosystem.*

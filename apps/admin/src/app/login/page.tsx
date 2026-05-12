@@ -23,7 +23,7 @@ export default function LoginPage() {
 
       setAdminToken(res.token);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('tokoss_admin_user', JSON.stringify(res.admin));
+        localStorage.setItem('karysm_admin_user', JSON.stringify(res.admin));
       }
       router.push('/');
     } catch (err: any) {
@@ -37,7 +37,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg border border-black/[0.06] w-full max-w-sm p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-accent">Tokoss Admin</h1>
+          <h1 className="text-2xl font-bold text-accent">Karysm Admin</h1>
           <p className="text-sm text-gray-500 mt-1">Tableau de bord</p>
         </div>
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-black/[0.06] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm"
-              placeholder="admin@tokoss.com"
+              placeholder="admin@Karysm.com"
               required
             />
           </div>

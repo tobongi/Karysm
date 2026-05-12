@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '@tokoss/db';
+import { prisma } from '@karysm/db';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error';
 

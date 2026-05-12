@@ -1,7 +1,7 @@
-# Tokoss — Guide de test utilisatrices
+# Karysm — Guide de test utilisatrices
 
 ## Informations d'accès
-- **URL** : https://tokoss-kappa.vercel.app
+- **URL** : https://Karysm-kappa.vercel.app
 - **Créer un compte** : entrez votre numéro de téléphone (format +225... / +243... / +221...)
 - **Code OTP** : `1234` (pour toutes les testeuses)
 - **Durée estimée** : 15-20 minutes
@@ -188,7 +188,7 @@
 
 ### Lien à créer : forms.google.com
 
-**Titre** : Tokoss — Test utilisatrice
+**Titre** : Karysm — Test utilisatrice
 
 **Sections du formulaire :**
 

@@ -436,8 +436,8 @@ export default function SkinResultsScreen() {
                   .slice(0, 3)
                   .map(c => `${c.label} : ${c.value}%`)
                   .join('\n');
-                const message = `🌸 Mon analyse de peau Tokoss\n\nTeint Monk : ${data.monkTone ?? '-'}/10 — ${monkLabel}\nSous-ton : ${undertoneLabel}\nScore global : ${data.overallScore ?? '-'}/100\n\n${top3}\n\nDécouvre ton type de peau sur Tokoss ! 👉 https://tokoss.app`;
-                await Share.share({ message, title: 'Mon analyse de peau Tokoss' });
+                const message = `🌸 Mon analyse de peau Karysm\n\nTeint Monk : ${data.monkTone ?? '-'}/10 — ${monkLabel}\nSous-ton : ${undertoneLabel}\nScore global : ${data.overallScore ?? '-'}/100\n\n${top3}\n\nDécouvre ton type de peau sur Karysm ! 👉 https://karysm.com`;
+                await Share.share({ message, title: 'Mon analyse de peau Karysm' });
               } catch {}
             }}
           >

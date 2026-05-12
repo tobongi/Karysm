@@ -1,4 +1,4 @@
-# TOKOSS — Spécifications Techniques Complètes
+# Karysm — Spécifications Techniques Complètes
 ## Beauty Freelance Marketplace for Africa
 ### Version 1.0 | Mars 2026
 
@@ -30,12 +30,12 @@
 
 ## Positionnement
 
-Tokoss n'est PAS une app de salon, ni une app de booking classique.
+Karysm n'est PAS une app de salon, ni une app de booking classique.
 
-**Tokoss = Marketplace du travail beauté en Afrique**
+**Karysm = Marketplace du travail beauté en Afrique**
 
 ```
-Tokoss = Upwork + Instagram + Treatwell + Mobile Money + AI Beauty
+Karysm = Upwork + Instagram + Treatwell + Mobile Money + AI Beauty
 ```
 
 ## Deux modes de réservation
@@ -60,7 +60,7 @@ Tokoss = Upwork + Instagram + Treatwell + Mobile Money + AI Beauty
 ## Monorepo Structure
 
 ```
-tokoss/
+Karysm/
 ├── apps/
 │   ├── api/              # Express 5 + TypeScript — REST API
 │   ├── mobile/           # Expo 52 + expo-router 4 — App unique (client + provider)
@@ -848,7 +848,7 @@ interface MBiyoPayConfig {
   apiKey: string;
   secretKey: string;
   baseUrl: string;        // https://api.mbiyopay.com
-  callbackUrl: string;    // https://api.tokoss.com/api/payments/webhook
+  callbackUrl: string;    // https://api.Karysm.com/api/payments/webhook
 }
 
 interface InitiatePaymentParams {
@@ -959,7 +959,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 
 ```
 # Booking confirmé
-🎉 Votre RDV Tokoss est confirmé !
+🎉 Votre RDV Karysm est confirmé !
 📍 {service_name} avec {provider_name}
 📅 {date} à {time}
 📍 {location}
@@ -1188,7 +1188,7 @@ API /api/ai/match-style
 | **Position client** | Recherche "près de moi" | `expo-location` → lat/lng → API search |
 | **Carte providers** | Visualisation géographique | `react-native-maps` MapView + Markers |
 | **Location picker** | Choisir adresse pour RDV | Map tap → reverse geocoding → adresse |
-| **Distance calcul** | Affichage "2.3 km" | Haversine (déjà dans `@tokoss/shared`) |
+| **Distance calcul** | Affichage "2.3 km" | Haversine (déjà dans `@karysm/shared`) |
 | **Zones de service** | Rayon de déplacement du pro | Cercle sur la carte (mobileRadius) |
 | **Directions** | Itinéraire vers salon/client | Deep link Google Maps / Yango / InDrive |
 | **Geocoding** | Adresse → lat/lng | Google Geocoding API |
@@ -1215,7 +1215,7 @@ async function uploadImage(file: Buffer, folder: string): Promise<string> {
   const result = await cloudinary.uploader.upload(
     `data:image/jpeg;base64,${file.toString('base64')}`,
     {
-      folder: `tokoss/${folder}`,
+      folder: `Karysm/${folder}`,
       transformation: [
         { width: 1200, height: 1200, crop: 'limit' },
         { quality: 'auto:good' },
@@ -1231,12 +1231,12 @@ async function uploadImage(file: Buffer, folder: string): Promise<string> {
 
 | Dossier | Usage | Taille max | Transformations |
 |---------|-------|-----------|-----------------|
-| `tokoss/avatars/` | Photos profil | 500x500 | Crop circle, quality auto |
-| `tokoss/portfolios/` | Portfolio pro | 1200x1200 | Quality auto, webp |
-| `tokoss/requests/` | Photos demandes | 1200x1200 | Quality auto, webp |
-| `tokoss/messages/` | Photos chat | 1200x1200 | Quality auto, webp |
-| `tokoss/reviews/` | Photos avis | 1200x1200 | Quality auto, webp |
-| `tokoss/kyc/` | Documents vérification | Originale | Pas de compression |
+| `Karysm/avatars/` | Photos profil | 500x500 | Crop circle, quality auto |
+| `Karysm/portfolios/` | Portfolio pro | 1200x1200 | Quality auto, webp |
+| `Karysm/requests/` | Photos demandes | 1200x1200 | Quality auto, webp |
+| `Karysm/messages/` | Photos chat | 1200x1200 | Quality auto, webp |
+| `Karysm/reviews/` | Photos avis | 1200x1200 | Quality auto, webp |
+| `Karysm/kyc/` | Documents vérification | Originale | Pas de compression |
 
 ---
 
@@ -1296,8 +1296,8 @@ async function uploadImage(file: Buffer, folder: string): Promise<string> {
 | Env | API | DB | Mobile | Admin |
 |-----|-----|----|--------|-------|
 | **Dev** | localhost:3001 | Railway (dev) | Expo Go (localhost) | localhost:3002 |
-| **Staging** | api-staging.tokoss.com | Railway (staging) | Expo Preview Build | staging.tokoss.com |
-| **Production** | api.tokoss.com | Railway (prod) | App Store / Play Store | admin.tokoss.com |
+| **Staging** | api-staging.Karysm.com | Railway (staging) | Expo Preview Build | staging.Karysm.com |
+| **Production** | api.Karysm.com | Railway (prod) | App Store / Play Store | admin.Karysm.com |
 
 ## Services Cloud
 
@@ -1311,7 +1311,7 @@ async function uploadImage(file: Buffer, folder: string): Promise<string> {
 | **SMS** | Africa's Talking | OTP, notifications | ~$0.02/SMS |
 | **WhatsApp** | 360dialog / Meta | Notifications | ~$0.05/message |
 | **Push** | Expo (FCM/APNs) | Push notifications | Gratuit |
-| **Domain** | Namecheap | tokoss.com | $10/an |
+| **Domain** | Namecheap | Karysm.com | $10/an |
 | **SSL** | Let's Encrypt / Railway | HTTPS | Gratuit |
 | **Monitoring** | Sentry | Error tracking | Free tier |
 | **Total MVP** | — | — | **~$50-150/mois** |
@@ -1525,7 +1525,7 @@ DEMO_OTP=1234
 MBIYOPAY_API_KEY=...
 MBIYOPAY_SECRET_KEY=...
 MBIYOPAY_BASE_URL=https://api.mbiyopay.com
-MBIYOPAY_CALLBACK_URL=https://api.tokoss.com/api/payments/webhook
+MBIYOPAY_CALLBACK_URL=https://api.Karysm.com/api/payments/webhook
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=...
@@ -1535,7 +1535,7 @@ CLOUDINARY_API_SECRET=...
 # Africa's Talking (SMS)
 AT_API_KEY=...
 AT_USERNAME=...
-AT_SENDER_ID=Tokoss
+AT_SENDER_ID=Karysm
 
 # WhatsApp Business
 WHATSAPP_API_TOKEN=...
@@ -1578,5 +1578,5 @@ cd apps/admin && pnpm build   # Build admin (static export)
 
 ---
 
-*Spécification technique Tokoss v1.0 — Mars 2026*
+*Spécification technique Karysm v1.0 — Mars 2026*
 *Ce document est la source de vérité pour tout le développement de la plateforme.*

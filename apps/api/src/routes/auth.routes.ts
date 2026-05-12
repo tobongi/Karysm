@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { normalizePhone } from '@tokoss/shared';
+import { normalizePhone } from '@karysm/shared';
 import { ValidationError, NotFoundError } from '../lib/errors';
 import { generateToken, generateRefreshToken, authMiddleware } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';

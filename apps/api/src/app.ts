@@ -42,7 +42,7 @@ app.use(limiter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'tokoss-api', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'karysm-api', timestamp: new Date().toISOString() });
 });
 
 // Routes

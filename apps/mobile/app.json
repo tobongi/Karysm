@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "Tokoss",
-    "slug": "tokoss",
+    "name": "Karysm",
+    "slug": "karysm",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "tokoss",
+    "scheme": "karysm",
     "userInterfaceStyle": "light",
     "splash": {
       "backgroundColor": "#FAFAF8"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tokoss.app"
+      "bundleIdentifier": "com.karysm.app"
     },
     "android": {
-      "package": "com.tokoss.app",
+      "package": "com.karysm.app",
       "adaptiveIcon": {
         "backgroundColor": "#FAFAF8"
       }

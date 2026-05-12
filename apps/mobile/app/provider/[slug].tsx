@@ -236,8 +236,8 @@ export default function ProviderProfile() {
 
   const shareProfile = async () => {
     try {
-      const message = `Je te recommande ${provider.displayName} sur Tokoss ✨\n\n${provider.avgRating.toFixed(1)}⭐ (${provider.totalReviews} avis)\n📍 ${provider.city}\n\nRéserve ici 👉 https://tokoss.app/provider/${provider.slug}`;
-      await Share.share({ message, title: `${provider.displayName} sur Tokoss` });
+      const message = `Je te recommande ${provider.displayName} sur Karysm ✨\n\n${provider.avgRating.toFixed(1)}⭐ (${provider.totalReviews} avis)\n📍 ${provider.city}\n\nRéserve ici 👉 https://karysm.com/provider/${provider.slug}`;
+      await Share.share({ message, title: `${provider.displayName} sur Karysm` });
     } catch {}
   };
 
