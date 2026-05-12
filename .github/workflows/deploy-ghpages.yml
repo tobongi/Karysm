@@ -54,6 +54,20 @@ jobs:
           console.log('Patched OK');
           "
 
+      - name: Make unlisted (noindex + robots.txt)
+        working-directory: apps/mobile/dist
+        run: |
+          # Block all search engine crawlers
+          printf 'User-agent: *\nDisallow: /\n' > robots.txt
+
+          # Inject noindex into index.html
+          node -e "
+          const fs = require('fs');
+          let h = fs.readFileSync('index.html', 'utf8');
+          h = h.replace('<head>', '<head><meta name=\"robots\" content=\"noindex, nofollow, noarchive\">');
+          fs.writeFileSync('index.html', h);
+          "
+
       - name: GitHub Pages config
         working-directory: apps/mobile/dist
         run: |
