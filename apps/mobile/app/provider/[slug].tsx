@@ -424,50 +424,61 @@ export default function ProviderProfile() {
                 </View>
 
                 {/* Review list */}
-                {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => (
-                  <View key={review.id} style={styles.reviewCard}>
-                    <View style={styles.reviewHeader}>
-                      <View style={styles.reviewAvatar}>
-                        <Text style={styles.reviewAvatarText}>
-                          {review.client.name[0]?.toUpperCase()}
+                {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review) => {
+                  const hasPhoto = review.photos.length > 0;
+                  return (
+                    <View key={review.id} style={[styles.reviewCard, hasPhoto && styles.reviewCardDark]}>
+                      {hasPhoto && (
+                        <>
+                          <Image source={{ uri: review.photos[0] }} style={styles.reviewBgImage} resizeMode="cover" />
+                          <View style={styles.reviewGradient} />
+                        </>
+                      )}
+                      <View style={styles.reviewHeader}>
+                        <View style={[styles.reviewAvatar, hasPhoto && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                          <Text style={[styles.reviewAvatarText, hasPhoto && { color: colors.white }]}>
+                            {review.client.name[0]?.toUpperCase()}
+                          </Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.reviewName, hasPhoto && { color: colors.white }]}>{review.client.name}</Text>
+                          <Text style={[styles.reviewDate, hasPhoto && { color: 'rgba(255,255,255,0.6)' }]}>
+                            {new Date(review.createdAt).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </Text>
+                        </View>
+                        <Text style={[styles.reviewStars, hasPhoto && { color: '#FFD166' }]}>
+                          {'★'.repeat(review.rating)}
+                          {'☆'.repeat(5 - review.rating)}
                         </Text>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.reviewName}>{review.client.name}</Text>
-                        <Text style={styles.reviewDate}>
-                          {new Date(review.createdAt).toLocaleDateString('fr-FR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
+                      {review.comment && (
+                        <Text style={[styles.reviewComment, hasPhoto && styles.reviewCommentDark]}>
+                          {hasPhoto ? `"${review.comment}"` : review.comment}
                         </Text>
-                      </View>
-                      <Text style={styles.reviewStars}>
-                        {'★'.repeat(review.rating)}
-                        {'☆'.repeat(5 - review.rating)}
-                      </Text>
+                      )}
+                      {review.tags.length > 0 && (
+                        <View style={styles.reviewTags}>
+                          {review.tags.map((tag) => (
+                            <View key={tag} style={[styles.reviewTag, hasPhoto && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                              <Text style={[styles.reviewTagText, hasPhoto && { color: 'rgba(255,255,255,0.85)' }]}>{tag.replace('_', ' ')}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                      {review.photos.length > 1 && (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
+                          {review.photos.slice(1).map((url, i) => (
+                            <Image key={i} source={{ uri: url }} style={styles.reviewPhoto} />
+                          ))}
+                        </ScrollView>
+                      )}
                     </View>
-                    {review.comment && (
-                      <Text style={styles.reviewComment}>{review.comment}</Text>
-                    )}
-                    {review.tags.length > 0 && (
-                      <View style={styles.reviewTags}>
-                        {review.tags.map((tag) => (
-                          <View key={tag} style={styles.reviewTag}>
-                            <Text style={styles.reviewTagText}>{tag.replace('_', ' ')}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                    {review.photos.length > 0 && (
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
-                        {review.photos.map((url, i) => (
-                          <Image key={i} source={{ uri: url }} style={styles.reviewPhoto} />
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                ))}
+                  );
+                })}
 
                 {reviews.length > 3 && !showAllReviews && (
                   <Pressable style={styles.showAllButton} onPress={() => setShowAllReviews(true)}>
@@ -1040,10 +1051,43 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 16,
     marginBottom: 12,
+    overflow: 'hidden',
     ...Platform.select({
       web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
       default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
     }) as any,
+  },
+  reviewCardDark: {
+    backgroundColor: '#1A0E2E',
+    minHeight: 160,
+  },
+  reviewBgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%' as any,
+    height: '100%' as any,
+    opacity: 0.45,
+  },
+  reviewGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(26,14,46,0.78)',
+    ...(Platform.OS === 'web'
+      ? { background: 'linear-gradient(160deg, rgba(26,14,46,0.55) 0%, rgba(26,14,46,0.92) 100%)' } as any
+      : {}),
+  },
+  reviewCommentDark: {
+    color: colors.white,
+    fontFamily: 'PlayfairDisplay_400Regular',
+    fontStyle: 'italic',
+    fontSize: 15,
+    lineHeight: 22,
   },
   reviewHeader: {
     flexDirection: 'row',

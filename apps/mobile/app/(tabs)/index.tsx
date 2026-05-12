@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView } from 'react-native';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
@@ -79,6 +79,21 @@ const SERVICE_CATEGORIES = [
   { slug: 'spa', name: 'Spa' },
 ];
 
+const HERO_SLIDES = [
+  { image: PLACEHOLDER_IMAGES[0], label: 'NOUVEAU', title: 'Votre beauté,\nsublimée', sub: 'Trouvez les meilleures prestataires près de chez vous' },
+  { image: PLACEHOLDER_IMAGES[2], label: 'AI BEAUTÉ', title: 'Analysez\nvos cheveux', sub: 'Intelligence artificielle pour cheveux afro' },
+  { image: PLACEHOLDER_IMAGES[4], label: 'TENDANCE', title: 'Inspirez-vous\ndu lookbook', sub: 'Portfolio des meilleures prestataires' },
+];
+
+const CATEGORY_BG: Record<string, string> = {
+  coiffure:   'rgba(139,105,82,0.12)',
+  ongles:     'rgba(167,80,148,0.10)',
+  maquillage: 'rgba(91,33,182,0.10)',
+  soins:      'rgba(0,135,90,0.08)',
+  barber:     'rgba(40,50,80,0.08)',
+  spa:        'rgba(20,140,180,0.08)',
+};
+
 const SUBCATEGORIES: Record<string, Array<{ name: string; slug: string }>> = {
   coiffure: [
     { name: 'Tresses', slug: 'tresses' },
@@ -141,8 +156,38 @@ interface ProviderResult {
   user: { name: string; avatar?: string | null };
 }
 
+function CardGallery({ images, cardWidth }: { images: any[]; cardWidth: number }) {
+  const [idx, setIdx] = useState(0);
+  return (
+    <>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        nestedScrollEnabled
+        onMomentumScrollEnd={e =>
+          setIdx(Math.round(e.nativeEvent.contentOffset.x / cardWidth))
+        }
+        scrollEventThrottle={16}
+      >
+        {images.map((src, i) => (
+          <Image key={i} source={src} style={{ width: cardWidth, height: 180 }} resizeMode="cover" />
+        ))}
+      </ScrollView>
+      <View style={styles.galleryDots}>
+        {images.map((_, i) => (
+          <View key={i} style={[styles.galleryDot, i === idx && styles.galleryDotActive]} />
+        ))}
+      </View>
+    </>
+  );
+}
+
 export default function ExplorerTab() {
   const { user } = useAuth();
+  const { width: winWidth } = useWindowDimensions();
+  const cardImgWidth = Math.min(winWidth, 480) - 40;
+  const [heroIndex, setHeroIndex] = useState(0);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -161,6 +206,11 @@ export default function ExplorerTab() {
   const [filterMaxDistance, setFilterMaxDistance] = useState<number | null>(null);
   const [filterMinRating, setFilterMinRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('rating');
+
+  useEffect(() => {
+    const t = setInterval(() => setHeroIndex(i => (i + 1) % HERO_SLIDES.length), 3500);
+    return () => clearInterval(t);
+  }, []);
 
   // Debounce search input — only update API query after 500ms idle
   useEffect(() => {
@@ -261,18 +311,23 @@ export default function ExplorerTab() {
         </View>
       </View>
 
-      {/* Hero Banner */}
+      {/* Hero Banner — auto-scroll carousel */}
       <View style={styles.heroBanner}>
         <Image
-          source={PLACEHOLDER_IMAGES[0]}
+          source={HERO_SLIDES[heroIndex].image}
           style={styles.heroImage}
           resizeMode="cover"
         />
         <View style={styles.heroOverlay} />
         <View style={styles.heroContent}>
-          <Text style={styles.heroLabel}>NOUVEAU</Text>
-          <Text style={styles.heroTitle}>{'Votre beauté,\nsublimée'}</Text>
-          <Text style={styles.heroSubtitle}>Trouvez les meilleures prestataires près de chez vous</Text>
+          <Text style={styles.heroLabel}>{HERO_SLIDES[heroIndex].label}</Text>
+          <Text style={styles.heroTitle}>{HERO_SLIDES[heroIndex].title}</Text>
+          <Text style={styles.heroSubtitle}>{HERO_SLIDES[heroIndex].sub}</Text>
+        </View>
+        <View style={styles.heroDots}>
+          {HERO_SLIDES.map((_, i) => (
+            <View key={i} style={[styles.heroDot, i === heroIndex && styles.heroDotActive]} />
+          ))}
         </View>
       </View>
 
@@ -498,6 +553,7 @@ export default function ExplorerTab() {
                 label={cat.name}
                 icon={isActive ? CATEGORY_ICONS_ACTIVE[cat.slug] : CATEGORY_ICONS[cat.slug]}
                 isActive={isActive}
+                bgColor={CATEGORY_BG[cat.slug]}
                 onPress={() => {
                   setSelectedCategory(isActive ? null : cat.slug);
                   setSelectedSubcategory(null);
@@ -680,10 +736,9 @@ export default function ExplorerTab() {
                 <PressableScale style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
                   {/* Gallery */}
                   <View style={styles.cardGallery}>
-                    <Image
-                      source={PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length]}
-                      style={styles.galleryImage}
-                      resizeMode="cover"
+                    <CardGallery
+                      images={[PLACEHOLDER_IMAGES[index % 7], PLACEHOLDER_IMAGES[(index + 2) % 7]]}
+                      cardWidth={cardImgWidth}
                     />
                     {/* TOP PRO badge */}
                     {item.avgRating >= 4.5 && (
@@ -997,6 +1052,7 @@ const styles = StyleSheet.create({
   filterChipActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(139,105,82,0.25)' } as any : {}),
   },
   filterChipOutline: {
     borderColor: colors.primary,
@@ -1368,6 +1424,47 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
+  },
+
+  // Hero carousel dots
+  heroDots: {
+    position: 'absolute',
+    bottom: 12,
+    right: 16,
+    flexDirection: 'row',
+    gap: 5,
+  },
+  heroDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+  },
+  heroDotActive: {
+    width: 16,
+    backgroundColor: colors.white,
+  },
+
+  // Card gallery dots
+  galleryDots: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 4,
+    pointerEvents: 'none' as any,
+  },
+  galleryDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  galleryDotActive: {
+    width: 14,
+    backgroundColor: colors.white,
   },
 
   // Inspiration banner

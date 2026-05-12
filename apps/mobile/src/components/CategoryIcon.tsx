@@ -7,6 +7,7 @@ interface CategoryIconProps {
   icon: React.ReactNode;
   isActive?: boolean;
   onPress: () => void;
+  bgColor?: string;
 }
 
 export default function CategoryIcon({
@@ -14,6 +15,7 @@ export default function CategoryIcon({
   icon,
   isActive = false,
   onPress,
+  bgColor,
 }: CategoryIconProps) {
   return (
     <Pressable
@@ -27,6 +29,7 @@ export default function CategoryIcon({
         style={[
           styles.iconWrapper,
           isActive && styles.iconWrapperActive,
+          !isActive && bgColor ? { backgroundColor: bgColor } : null,
         ]}
       >
         {icon}
