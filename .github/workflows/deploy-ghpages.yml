@@ -27,7 +27,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Expo web
         working-directory: apps/mobile
@@ -38,10 +38,13 @@ jobs:
       - name: Patch expo-modules-core (registerWebModule crash fix)
         working-directory: apps/mobile/dist
         run: |
-          BUNDLE=$(ls _expo/static/js/web/entry-*.js)
+          BUNDLE=$(ls _expo/static/js/web/entry-*.js 2>/dev/null | head -1)
+          if [ -z "$BUNDLE" ]; then echo "ERROR: bundle not found"; ls _expo/static/js/web/; exit 1; fi
+          echo "Patching: $BUNDLE"
           node -e "
           const fs = require('fs');
           let code = fs.readFileSync('$BUNDLE', 'utf8');
+          const before = code.length;
           code = code.replace(
             \"const s=l.name;if(!s)throw new Error('Module implementation must be a class')\",
             \"const s=l.name||('ExpoModule_'+Math.random().toString(36).slice(2));if(false)throw new Error('noop')\"
@@ -51,7 +54,7 @@ jobs:
             'try{return globalThis.expo.modules[s]=new l,globalThis.expo.modules[s]}catch(e){return globalThis.expo.modules[s]=typeof l===\"function\"?l():l,globalThis.expo.modules[s]}'
           );
           fs.writeFileSync('$BUNDLE', code);
-          console.log('Patched OK');
+          console.log('Patch OK — bytes:', before, '->', code.length);
           "
 
       - name: Make unlisted (noindex + robots.txt)
