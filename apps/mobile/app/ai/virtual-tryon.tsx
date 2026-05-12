@@ -253,7 +253,7 @@ export default function VirtualTryOnScreen() {
     video.muted      = true;
     video.style.cssText =
       'position:absolute;top:0;left:0;width:100%;height:100%;' +
-      'object-fit:cover;transform:scaleX(-1);';
+      'object-fit:cover;transform:scaleX(-1);pointer-events:none;';
 
     const canvas = document.createElement('canvas');
     canvas.style.cssText =
