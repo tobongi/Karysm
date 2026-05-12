@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
   withTiming,
   withDelay,
+  withRepeat,
   FadeIn,
   FadeInDown,
   FadeInUp,
@@ -163,20 +164,12 @@ export function Shimmer({ width, height, borderRadius = 8, style }: ShimmerProps
   useEffect(() => {
     shimmerX.value = withDelay(
       Math.random() * 300,
-      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }, () => {
-        // Loop
-        shimmerX.value = -1;
-        shimmerX.value = withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) });
-      })
+      withRepeat(
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true
+      )
     );
-
-    // Simple loop using interval approach
-    const interval = setInterval(() => {
-      shimmerX.value = -1;
-      shimmerX.value = withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) });
-    }, 1500);
-
-    return () => clearInterval(interval);
   }, []);
 
   const animStyle = useAnimatedStyle(() => ({

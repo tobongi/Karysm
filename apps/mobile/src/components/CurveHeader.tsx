@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, LayoutChangeEvent } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../theme/colors';
@@ -21,12 +21,12 @@ export default function CurveHeader({ title, subtitle, height = 200, children }:
     if (measured > 0) setW(measured);
   }, []);
 
-  const d = [
+  const d = useMemo(() => [
     `M0,0`,
     `L0,${height}`,
     `C${w * 0.3},${height + CURVE_DIP} ${w * 0.7},${height - CURVE_DIP * 0.6} ${w},${height - 15}`,
     `L${w},0 Z`,
-  ].join(' ');
+  ].join(' '), [w, height]);
 
   return (
     <View style={[styles.container, { height: totalH }]} onLayout={onLayout}>

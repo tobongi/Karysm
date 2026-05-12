@@ -51,6 +51,8 @@ function AppContent() {
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
           headerBackTitle: '',
+          animation: 'slide_from_right',
+          animationDuration: 200,
           headerLeft: ({ canGoBack }) =>
             canGoBack ? (
               <Pressable onPress={() => router.back()} style={{ paddingRight: 16, paddingVertical: 8 }}>
@@ -59,39 +61,40 @@ function AppContent() {
             ) : null,
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/login" options={{ title: 'Connexion', headerShown: false }} />
-        <Stack.Screen name="auth/register" options={{ title: 'Inscription', headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="auth/login" options={{ title: 'Connexion', headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="auth/register" options={{ title: 'Inscription', headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="provider/[slug]" options={{ title: '' }} />
-        <Stack.Screen name="booking/[providerId]" options={{ title: 'Réserver' }} />
+        <Stack.Screen name="booking/[providerId]" options={{ title: 'Réserver', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="booking/detail/[id]" options={{ title: 'Réservation' }} />
         <Stack.Screen name="provider-register" options={{ title: 'Devenir prestataire' }} />
         <Stack.Screen name="provider-dashboard/services" options={{ title: 'Mes services' }} />
         <Stack.Screen name="provider-dashboard/availability" options={{ title: 'Disponibilités' }} />
         <Stack.Screen name="provider-dashboard/earnings" options={{ title: 'Mes revenus' }} />
-        <Stack.Screen name="request/create" options={{ title: 'Nouvelle demande' }} />
+        <Stack.Screen name="request/create" options={{ title: 'Nouvelle demande', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="request/[id]" options={{ title: 'Demande' }} />
         <Stack.Screen name="request/browse" options={{ title: 'Demandes ouvertes' }} />
-        <Stack.Screen name="booking/review/[bookingId]" options={{ title: 'Laisser un avis' }} />
+        <Stack.Screen name="booking/review/[bookingId]" options={{ title: 'Laisser un avis', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="favorites" options={{ title: 'Favoris' }} />
-        <Stack.Screen name="settings/edit-profile" options={{ headerShown: false }} />
+        <Stack.Screen name="settings/edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="kyc/index" options={{ title: 'Vérification KYC' }} />
         <Stack.Screen name="wallet/index" options={{ title: 'Portefeuille' }} />
-        <Stack.Screen name="ai/skin-capture" options={{ title: 'Analyse de peau' }} />
+        <Stack.Screen name="ai/skin-capture" options={{ title: 'Analyse de peau', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="ai/skin-results/[id]" options={{ title: 'Résultats peau' }} />
-        <Stack.Screen name="ai/hair-capture" options={{ title: 'Analyse cheveux' }} />
+        <Stack.Screen name="ai/hair-capture" options={{ title: 'Analyse cheveux', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="ai/hair-results/[id]" options={{ title: 'Résultats cheveux' }} />
-        <Stack.Screen name="permissions/location" options={{ headerShown: false }} />
-        <Stack.Screen name="permissions/notification" options={{ headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="permissions/location" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="permissions/notification" options={{ headerShown: false, animation: 'fade' }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="referral" options={{ title: 'Parrainage' }} />
         <Stack.Screen name="settings/index" options={{ title: 'Paramètres' }} />
         <Stack.Screen name="store/[providerId]" options={{ title: 'Boutique' }} />
         <Stack.Screen name="store/product/[id]" options={{ title: 'Produit' }} />
-        <Stack.Screen name="booking/completed" options={{ headerShown: false }} />
-        <Stack.Screen name="notifications" options={{ headerShown: false }} />
+        <Stack.Screen name="booking/completed" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
+        <Stack.Screen name="scan" options={{ title: 'Scanner un produit', animation: 'slide_from_bottom' }} />
       </Stack>
     </>
   );

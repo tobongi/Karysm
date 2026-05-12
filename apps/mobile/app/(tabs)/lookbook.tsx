@@ -19,7 +19,9 @@ import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 import { shadows } from '../../src/theme/shadows';
 import Skeleton from '../../src/components/Skeleton';
 import CurveHeader from '../../src/components/CurveHeader';
+import { PressableScale } from '../../src/components/animations';
 import { api } from '../../src/lib/api';
+import { imgUrl } from '../../src/lib/image';
 
 interface FeedProvider {
   id: string;
@@ -220,14 +222,14 @@ export default function LookbookTabScreen() {
 
       return (
         <View style={styles.cardWrapper}>
-          <Pressable
+          <PressableScale
             style={styles.card}
             onPress={() => router.push(`/provider/${item.provider.slug}` as any)}
           >
             {/* Image */}
             {item.imageUrl ? (
               <Image
-                source={{ uri: item.imageUrl }}
+                source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl }}
                 style={[styles.lookImage, { height: imageHeight }]}
                 resizeMode="cover"
               />
@@ -296,7 +298,7 @@ export default function LookbookTabScreen() {
             >
               <Text style={styles.wantButtonText}>Je veux ça</Text>
             </Pressable>
-          </Pressable>
+          </PressableScale>
         </View>
       );
     },
@@ -423,6 +425,10 @@ export default function LookbookTabScreen() {
           ListFooterComponent={renderFooter}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.3}
+          removeClippedSubviews
+          maxToRenderPerBatch={6}
+          windowSize={10}
+          initialNumToRender={6}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

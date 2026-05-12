@@ -276,6 +276,18 @@ export default function ExplorerTab() {
         </View>
       </View>
 
+      {/* Scanner strip */}
+      <PressableScale onPress={() => router.push('/scan' as any)}>
+        <View style={styles.scannerStrip}>
+          <Text style={styles.scannerStripIcon}>🔬</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scannerStripTitle}>Scanner un produit</Text>
+            <Text style={styles.scannerStripSub}>Ingrédients INCI · Open Beauty Facts</Text>
+          </View>
+          <Text style={styles.scannerStripArrow}>›</Text>
+        </View>
+      </PressableScale>
+
       {/* Mes Favorites — horizontal avatar scroll */}
       {recentlyViewed.length > 0 && (
         <>
@@ -644,6 +656,10 @@ export default function ExplorerTab() {
             contentContainerStyle={styles.list}
             ListHeaderComponent={listHeader}
             onScrollBeginDrag={() => setShowSuggestions(false)}
+            removeClippedSubviews
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            initialNumToRender={5}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProviders(); }} tintColor={colors.primary} />}
             ListEmptyComponent={
               loading ? (
@@ -889,6 +905,25 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 6,
   },
+
+  // Scanner strip
+  scannerStrip: {
+    marginHorizontal: screenPadding.horizontal,
+    marginBottom: spacing.md,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  scannerStripIcon: { fontSize: 22 },
+  scannerStripTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  scannerStripSub: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 1 },
+  scannerStripArrow: { fontSize: 20, color: colors.textMuted },
 
   // Search
   searchContainer: {
