@@ -200,6 +200,30 @@ export default function BeautyTab() {
           </Pressable>
         </Pressable>
 
+        {/* -- Virtual Mirror Card -- */}
+        <Pressable
+          style={styles.mirrorCard}
+          onPress={() => router.push('/ai/virtual-tryon' as any)}
+        >
+          <View style={styles.mirrorContent}>
+            <View style={styles.mirrorBadge}>
+              <Text style={styles.mirrorBadgeText}>NOUVEAU</Text>
+            </View>
+            <Text style={styles.mirrorTitle}>Miroir Virtuel</Text>
+            <Text style={styles.mirrorSubtitle}>
+              Essayez rouge à lèvres, blush et{'\n'}fard — en temps réel sur votre visage
+            </Text>
+            <View style={styles.mirrorCta}>
+              <Text style={styles.mirrorCtaText}>Essayer maintenant →</Text>
+            </View>
+          </View>
+          <View style={styles.mirrorEmojis}>
+            <Text style={styles.mirrorEmoji}>💄</Text>
+            <Text style={[styles.mirrorEmoji, { marginTop: 8 }]}>🌸</Text>
+            <Text style={[styles.mirrorEmoji, { marginTop: 8 }]}>✨</Text>
+          </View>
+        </Pressable>
+
         {/* -- History -- */}
         {(skinHistory.length > 1 || hairHistory.length > 1) && (
           <View style={styles.historySection}>
@@ -297,6 +321,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, paddingVertical: 12, borderRadius: 25, alignItems: 'center',
   },
   cardCtaText: { color: colors.white, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
+
+  // Virtual Mirror card
+  mirrorCard: {
+    borderRadius: 24, padding: 24, marginBottom: 20,
+    backgroundColor: '#1A0E2E',
+    flexDirection: 'row', alignItems: 'center',
+    overflow: 'hidden',
+    ...Platform.select({
+      web: { boxShadow: '0 8px 32px rgba(91,33,182,0.28)' },
+      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 6 },
+    }) as any,
+  },
+  mirrorContent: { flex: 1 },
+  mirrorBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(91,33,182,0.6)',
+    paddingHorizontal: 10, paddingVertical: 3,
+    borderRadius: 100, marginBottom: 10,
+  },
+  mirrorBadgeText: { color: '#E0CCFF', fontSize: 10, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1 },
+  mirrorTitle: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: '#FFFFFF', marginBottom: 8 },
+  mirrorSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.72)', lineHeight: 20, marginBottom: 16 },
+  mirrorCta: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#5B21B6',
+    paddingHorizontal: 16, paddingVertical: 9,
+    borderRadius: 25,
+  },
+  mirrorCtaText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Poppins_600SemiBold' },
+  mirrorEmojis: { paddingLeft: 12, alignItems: 'center' },
+  mirrorEmoji: { fontSize: 28 },
 
   // History
   historySection: { marginTop: 8 },

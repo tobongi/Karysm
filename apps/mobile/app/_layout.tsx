@@ -95,6 +95,7 @@ function AppContent() {
         <Stack.Screen name="booking/completed" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="scan" options={{ title: 'Scanner un produit', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="ai/virtual-tryon" options={{ title: 'Miroir Virtuel', animation: 'slide_from_bottom', headerShown: false }} />
       </Stack>
     </>
   );

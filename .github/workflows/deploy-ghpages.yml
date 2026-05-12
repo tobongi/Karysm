@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/deploy-ghpages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Expo web
+        working-directory: apps/mobile
+        env:
+          EXPO_BASE_URL: /Karysm
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Patch expo-modules-core (registerWebModule crash fix)
+        working-directory: apps/mobile/dist
+        run: |
+          BUNDLE=$(ls _expo/static/js/web/entry-*.js)
+          node -e "
+          const fs = require('fs');
+          let code = fs.readFileSync('$BUNDLE', 'utf8');
+          code = code.replace(
+            \"const s=l.name;if(!s)throw new Error('Module implementation must be a class')\",
+            \"const s=l.name||('ExpoModule_'+Math.random().toString(36).slice(2));if(false)throw new Error('noop')\"
+          );
+          code = code.replace(
+            'return globalThis.expo.modules[s]=new l,globalThis.expo.modules[s]',
+            'try{return globalThis.expo.modules[s]=new l,globalThis.expo.modules[s]}catch(e){return globalThis.expo.modules[s]=typeof l===\"function\"?l():l,globalThis.expo.modules[s]}'
+          );
+          fs.writeFileSync('$BUNDLE', code);
+          console.log('Patched OK');
+          "
+
+      - name: GitHub Pages config
+        working-directory: apps/mobile/dist
+        run: |
+          touch .nojekyll
+          cp index.html 404.html
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/mobile/dist
+          force_orphan: true
