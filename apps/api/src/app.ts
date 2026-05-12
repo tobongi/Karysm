@@ -27,12 +27,13 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGINS
+const allowedOrigins = [
+  ...(process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',')
-    : ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:8081'],
-  credentials: true,
-}));
+    : ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:8081']),
+  'https://tobongi.github.io', // GitHub Pages test deployment
+];
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '55mb' }));
 
