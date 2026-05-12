@@ -2,19 +2,16 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
-const PROD_API = 'https://Karysm-production.up.railway.app/api';
+const PROD_API = 'https://tokoss-production.up.railway.app/api';
 
-const DEV_API = Platform.select({
-  web: 'http://localhost:3001/api',
-  default: 'http://localhost:3001/api',
-});
-
-// In dev mode on web, use prod API (local port may conflict with other projects)
-// In dev mode on native, use local API
-// In production builds (expo export), always use prod API
-const API_URL = __DEV__
-  ? Platform.OS === 'web' ? PROD_API : DEV_API!
-  : PROD_API;
+// Web dev: use relative /api — Metro proxy in metro.config.js forwards to Railway (same-origin, no CORS)
+// Native dev: use local API at localhost:3001
+// Production: always absolute Railway URL
+const API_URL = (() => {
+  if (!__DEV__) return PROD_API;
+  if (Platform.OS === 'web') return '/api';
+  return Platform.OS === 'android' ? 'http://10.0.2.2:3001/api' : 'http://localhost:3001/api';
+})();
 
 let authToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;

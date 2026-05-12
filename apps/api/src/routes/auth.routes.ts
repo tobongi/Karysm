@@ -33,9 +33,13 @@ router.post('/otp/verify', validateBody(otpVerifySchema), asyncHandler(async (re
   const phone = normalizePhone(req.body.phone);
   const { otp } = req.body;
 
-  const stored = otpStore.get(phone);
-  if (!stored || stored.otp !== otp || stored.expiresAt < Date.now()) {
-    throw new ValidationError('Invalid or expired OTP');
+  // DEMO_OTP bypasses in-memory store — works across Railway instances without a prior send
+  const isDemoBypass = process.env.DEMO_OTP && otp === process.env.DEMO_OTP;
+  if (!isDemoBypass) {
+    const stored = otpStore.get(phone);
+    if (!stored || stored.otp !== otp || stored.expiresAt < Date.now()) {
+      throw new ValidationError('Invalid or expired OTP');
+    }
   }
 
   // Find or indicate new user

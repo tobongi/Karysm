@@ -139,8 +139,8 @@ Seed: `packages/db/prisma/seed.ts` (7 providers, 6 catégories, 14 services, 1 a
 | **Site vitrine** | https://karysm.com (projet Vercel: Karysm-website) |
 | **Webapp (PWA)** | https://app.karysm.com (projet Vercel: Karysm-kappa) |
 | **Webapp (alias)** | https://Karysm-kappa.vercel.app |
-| **API** | https://Karysm-production.up.railway.app |
-| **API Health** | https://Karysm-production.up.railway.app/api/health |
+| **API** | https://tokoss-production.up.railway.app |
+| **API Health** | https://tokoss-production.up.railway.app/api/health |
 | **GitHub** | https://github.com/tobongi/Karysm |
 | **Domaine** | karysm.com (Namecheap → Vercel NS) |
 | **Site vitrine source** | `C:\Users\glaib\Karysm-website\` |

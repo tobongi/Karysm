@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
+    "proxy": "node scripts/dev-proxy.js",
     "build": "turbo build",
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
