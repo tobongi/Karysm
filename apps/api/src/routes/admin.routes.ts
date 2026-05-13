@@ -210,4 +210,79 @@ router.post('/send-reminders', asyncHandler(async (_req: Request, res: Response)
   res.json({ success: true, remindersSent: count });
 }));
 
+// GET /api/admin/training-data/:type — export consented analyses as OpenAI fine-tuning JSONL
+// type = skin | hair
+router.get('/training-data/:type', asyncHandler(async (req: Request, res: Response) => {
+  const { type } = req.params;
+  if (type !== 'skin' && type !== 'hair') {
+    return res.status(400).json({ success: false, error: 'type must be skin or hair' });
+  }
+
+  const SKIN_PROMPT = `Tu es une experte dermatologue spécialisée dans les peaux mélanisées. Analyse cette photo de visage/peau et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour. Champs requis: monkTone (1-10), undertone (WARM/COOL/NEUTRAL), hydration, sebum, pores, wrinkles, spots, acne, hyperpigmentation, uniformity (tous 0-100), overallScore (0-100), recommendations (6 conseils FR avec emojis), reasoning (1-2 phrases).`;
+  const HAIR_PROMPT = `Tu es une experte trichologue spécialisée dans les cheveux afro-texturés. Analyse cette photo et réponds UNIQUEMENT avec un objet JSON valide. Champs requis: hairType (3C/4A/4B/4C), porosity (LOW/MEDIUM/HIGH), density (LOW/MEDIUM/HIGH), thickness (FINE/MEDIUM/COARSE), dryness, elasticity, shrinkage, overallScore (tous 0-100), scalpCondition (HEALTHY/DRY/OILY/DANDRUFF/IRRITATED), currentStyle (AFRO/BRAIDS/LOCS/TWISTS/STRAIGHT/WEAVE/WIG/OTHER), recommendations (6 conseils FR avec emojis), reasoning (1-2 phrases).`;
+
+  if (type === 'skin') {
+    const records = await prisma.skinAnalysis.findMany({
+      where: { consentDataset: true },
+      select: {
+        selfieUrl: true, monkTone: true, undertone: true, hydration: true,
+        sebum: true, pores: true, wrinkles: true, spots: true, acne: true,
+        hyperpigmentation: true, uniformity: true, overallScore: true,
+        recommendations: true, rawResponse: true,
+      },
+    });
+
+    const lines = records.map((r: typeof records[0]) => JSON.stringify({
+      messages: [
+        { role: 'user', content: [
+          { type: 'image_url', image_url: { url: r.selfieUrl } },
+          { type: 'text', text: SKIN_PROMPT },
+        ]},
+        { role: 'assistant', content: JSON.stringify({
+          monkTone: r.monkTone, undertone: r.undertone, hydration: r.hydration,
+          sebum: r.sebum, pores: r.pores, wrinkles: r.wrinkles, spots: r.spots,
+          acne: r.acne, hyperpigmentation: r.hyperpigmentation, uniformity: r.uniformity,
+          overallScore: r.overallScore, recommendations: r.recommendations,
+          reasoning: (r.rawResponse as any)?.reasoning || '',
+        })},
+      ],
+    }));
+
+    res.setHeader('Content-Type', 'application/x-ndjson');
+    res.setHeader('Content-Disposition', `attachment; filename="skin-training-${Date.now()}.jsonl"`);
+    return res.send(lines.join('\n'));
+  }
+
+  // hair
+  const records = await prisma.hairAnalysis.findMany({
+    where: { consentDataset: true },
+    select: {
+      photoUrl: true, hairType: true, porosity: true, density: true, thickness: true,
+      dryness: true, elasticity: true, shrinkage: true, scalpCondition: true,
+      currentStyle: true, overallScore: true, recommendations: true, rawResponse: true,
+    },
+  });
+
+  const lines = records.map((r: typeof records[0]) => JSON.stringify({
+    messages: [
+      { role: 'user', content: [
+        { type: 'image_url', image_url: { url: r.photoUrl } },
+        { type: 'text', text: HAIR_PROMPT },
+      ]},
+      { role: 'assistant', content: JSON.stringify({
+        hairType: r.hairType, porosity: r.porosity, density: r.density,
+        thickness: r.thickness, dryness: r.dryness, elasticity: r.elasticity,
+        shrinkage: r.shrinkage, scalpCondition: r.scalpCondition,
+        currentStyle: r.currentStyle, overallScore: r.overallScore,
+        recommendations: r.recommendations,
+        reasoning: (r.rawResponse as any)?.reasoning || '',
+      })},
+    ],
+  }));
+
+  res.setHeader('Content-Type', 'application/x-ndjson');
+  res.setHeader('Content-Disposition', `attachment; filename="hair-training-${Date.now()}.jsonl"`);
+  res.send(lines.join('\n'));
+}));
+
 export default router;

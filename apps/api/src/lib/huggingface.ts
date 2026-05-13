@@ -6,6 +6,10 @@ const hf = new HfInference(HF_TOKEN);
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
+// Fine-tuned model overrides — set after training completes, falls back to gpt-4o
+const SKIN_MODEL = process.env.OPENAI_FINETUNE_SKIN_MODEL || 'gpt-4o';
+const HAIR_MODEL = process.env.OPENAI_FINETUNE_HAIR_MODEL || 'gpt-4o';
+
 // ── Monk Scale colors (approximate RGB for each tone 1-10) ──
 const MONK_TONES: Array<{ tone: number; label: string; rgb: [number, number, number] }> = [
   { tone: 1, label: 'Très clair', rgb: [246, 237, 228] },
@@ -187,7 +191,7 @@ Si le visage n'est pas clairement visible, analyse la peau visible et fais de to
       ? hf.imageClassification({ model: 'dima806/skin_types_image_detection', data: imageBlob as any })
       : Promise.reject('no HF token'),
     openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: SKIN_MODEL,
       max_tokens: 900,
       messages: [{
         role: 'user',
@@ -332,7 +336,7 @@ Si les cheveux ne sont pas clairement visibles ou si la photo est floue, donne d
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: HAIR_MODEL,
       max_tokens: 800,
       messages: [
         {
@@ -346,7 +350,7 @@ Si les cheveux ne sont pas clairement visibles ou si la photo est floue, donne d
     });
 
     const content = response.choices[0]?.message?.content || '';
-    rawResponse = { model: 'gpt-4o', usage: response.usage };
+    rawResponse = { model: HAIR_MODEL, usage: response.usage };
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -370,7 +374,6 @@ Si les cheveux ne sont pas clairement visibles ou si la photo est floue, donne d
     console.error('GPT-4o hair analysis error:', err);
   }
 
-  // Fallback if OpenAI fails
   return {
     hairType: '4B',
     porosity: 'HIGH',
