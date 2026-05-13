@@ -12,8 +12,8 @@ import { showAlert } from '../../src/lib/alert';
 
 const TIPS = [
   { icon: '☀️', title: 'Lumière naturelle', desc: 'Éclairage uniforme, pas de flash' },
-  { icon: '💧', title: 'Cheveux secs', desc: 'Pas mouillés, pas de produit' },
-  { icon: '🙆‍♀️', title: 'Détachés', desc: 'Cheveux libres, naturels' },
+  { icon: '📐', title: 'Texture visible', desc: 'Libres ou racines/pointes exposées' },
+  { icon: '🔍', title: 'Photo proche', desc: 'Cadrez la texture, pas le visage' },
 ];
 
 export default function HairCaptureScreen() {

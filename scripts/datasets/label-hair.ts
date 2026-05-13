@@ -30,9 +30,18 @@ const CONFIG = '1.25';  // FairFace has two configs: 0.25 and 1.25 (use larger)
 const SPLIT = 'train';
 const IMG_BASE = `${HF_API}/assets/${DATASET}/--/${CONFIG}/${SPLIT}`;
 
-// Must match exactly what's in huggingface.ts analyzeHair()
+// Matches huggingface.ts analyzeHair() prompt with visual feature observation step.
+// Extra fields (hairVisible, confidence) are used for quality filtering during labeling
+// and stripped by toTrainingLine() before writing the JSONL.
 const HAIR_PROMPT = `Tu es une experte trichologue spécialisée dans les cheveux afro-texturés (types 3C à 4C).
 Analyse cette photo de cheveux et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
+
+Avant de classifier, observe ces indices visuels :
+• Forme du pattern : S-curve (ressort), Z-angle (zigzag), spirale serrée, coil, ou aucun pattern visible
+• Diamètre des boucles : très fin (<3mm), paille (~5mm), stylo (~7mm), ou plus large
+• Définition : boucles distinctes et visibles vs texture coton/floue/indéfinie
+• Surface : brillante/lisse (faible porosité) vs mate/terne/frisottis (haute porosité)
+• Style : cheveux libres (texture visible) vs style protecteur (tresses/locks/twists cachent la texture)
 
 Structure JSON requise :
 {
@@ -47,20 +56,21 @@ Structure JSON requise :
   "scalpCondition": "HEALTHY" | "DRY" | "OILY" | "DANDRUFF" | "IRRITATED",
   "currentStyle": "AFRO" | "BRAIDS" | "LOCS" | "TWISTS" | "STRAIGHT" | "WEAVE" | "WIG" | "OTHER",
   "overallScore": <0-100>,
-  "confidence": <0-100, ta confiance dans cette classification>,
+  "confidence": <0-100, ta confiance dans la classification hairType>,
   "recommendations": [<6 conseils personnalisés en français avec emojis>],
-  "reasoning": "<explication courte en 1-2 phrases>"
+  "reasoning": "<explication courte de tes observations visuelles et de la classification en 1-2 phrases>"
 }
 
 Critères de classification :
-- 3C : boucles définies, diamètre stylo, peu de shrinkage
-- 4A : boucles en S bien définies, diamètre paille, shrinkage 50-60%
-- 4B : boucles en Z ou coton, peu de définition, shrinkage 60-75%
+- 3C : boucles en S définies, diamètre stylo (~7mm), shrinkage <50%
+- 4A : boucles en S définies, diamètre paille (~5mm), shrinkage 50-60%
+- 4B : boucles en Z/zigzag, peu de définition, texture coton, shrinkage 60-75%
 - 4C : texture la plus serrée, quasiment pas de boucles définies, shrinkage 75-90%
 - OTHER : cheveux lisses, ondulés (types 1-3B), ou non-afro
 
 Porosité : LOW = brillant/lisse, MEDIUM = absorbance normale, HIGH = terne/frisottis/poreux
-Si les cheveux ne sont pas visibles (coiffure cachée, bonnet, etc.) mettre hairVisible: false.`;
+Si les cheveux ne sont pas visibles (coiffure cachée, bonnet, etc.) mettre hairVisible: false.
+Si style protecteur, classe hairType selon les racines ou pointes visibles.`;
 
 interface HFRow {
   row_idx: number;
@@ -101,6 +111,28 @@ async function labelImage(imageUrl: string): Promise<any | null> {
     const match = content.match(/\{[\s\S]*\}/);
     if (!match) return null;
     return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+}
+
+// Uses dima806/hair_type_image_detection (ViT, 92.8% accuracy) as a fast quality gate.
+// "Straight" or "Wavy" with >70% confidence on a Black-labeled image = not afro, skip.
+async function classifyHairTypeHF(imageUrl: string): Promise<{ label: string; score: number } | null> {
+  const token = process.env.HUGGINGFACE_API_TOKEN || '';
+  if (!token) return null;
+  try {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) return null;
+    const imgBuffer = await imgRes.arrayBuffer();
+    const res = await fetch('https://api-inference.huggingface.co/models/dima806/hair_type_image_detection', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'image/jpeg' },
+      body: imgBuffer,
+    });
+    if (!res.ok) return null;
+    const predictions = await res.json() as Array<{ label: string; score: number }>;
+    return Array.isArray(predictions) ? (predictions[0] || null) : null;
   } catch {
     return null;
   }
@@ -176,6 +208,7 @@ async function run() {
   let labeled = 0;
   let skipped = 0; // hair not visible or OTHER type
   let lowConf = 0;
+  let hfFiltered = 0; // HF model flagged as non-afro (straight/wavy)
 
   for (let i = offset; i < offset + limit; i += BATCH) {
     const batchSize = Math.min(BATCH, offset + limit - i);
@@ -196,8 +229,21 @@ async function run() {
       const imageUrl = getImageUrl(row.row_idx);
       if (existingUrls.has(imageUrl)) return;
 
-      const label = await labelImage(imageUrl);
+      // Run HF broad classifier + GPT-4o in parallel (mirrors production analyzeHair())
+      const [hfPred, label] = await Promise.all([
+        classifyHairTypeHF(imageUrl),
+        labelImage(imageUrl),
+      ]);
+
       if (!label) return;
+
+      // HF quality gate: skip if ViT model says straight/wavy with high confidence
+      // These are non-afro images that slipped into the Black FairFace subset
+      const hfTopLabel = (hfPred?.label || '').toLowerCase();
+      if (hfPred && hfPred.score > 0.70 && (hfTopLabel === 'straight' || hfTopLabel === 'wavy')) {
+        hfFiltered++;
+        return;
+      }
 
       // Skip: hair not visible
       if (label.hairVisible === false) { skipped++; return; }
@@ -213,7 +259,7 @@ async function run() {
     }));
 
     const pct = Math.round(((i + batchSize - offset) / limit) * 100);
-    console.log(`   [${pct}%] scanned:${scanned} black:${blackRows} ✅labeled:${labeled} ⏭skipped:${skipped} 🎯lowconf:${lowConf}`);
+    console.log(`   [${pct}%] scanned:${scanned} black:${blackRows} ✅labeled:${labeled} ⏭skipped:${skipped} 🎯lowconf:${lowConf} 🤖hffiltered:${hfFiltered}`);
 
     await new Promise(r => setTimeout(r, 300));
   }
@@ -224,6 +270,7 @@ async function run() {
   console.log(`   Labeled    : ${labeled} high-quality examples`);
   console.log(`   Skipped    : ${skipped} (hidden/non-afro hair)`);
   console.log(`   Low conf   : ${lowConf} (below ${minConfidence}% threshold)`);
+  console.log(`   HF filtered: ${hfFiltered} (ViT said straight/wavy — not afro)`);
   console.log(`\n   Feed to fine-tuner:`);
   console.log(`   npx tsx scripts/finetune.ts --type hair --file ${outputFile}`);
 
