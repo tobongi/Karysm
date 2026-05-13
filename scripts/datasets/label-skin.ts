@@ -30,7 +30,10 @@ const SCIN_DATASET = 'google/scin';
 const SCIN_SPLIT = 'train';
 const SCIN_IMG_BASE = `${HF_API}/assets/${SCIN_DATASET}/--/default/${SCIN_SPLIT}`;
 
-// Must match exactly what's in huggingface.ts analyzeSkin()
+// Must match exactly what's in huggingface.ts analyzeSkin() SKIN_PROMPT.
+// Hex anchors from official Monk Scale (Ellis et al. 2023).
+// Anti-bias note: STW 2026 (42 313 images) shows AI under-classifies tones 7-10 —
+// when uncertain between two dark tones, choose the darker option.
 const SKIN_PROMPT = `Tu es une experte dermatologue spécialisée dans les peaux mélanisées.
 Analyse cette photo de visage/peau et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
 
@@ -51,13 +54,22 @@ Structure JSON requise :
   "reasoning": "<explication courte de ton analyse en 1-2 phrases>"
 }
 
-Échelle Monk Skin Tone :
-1-2 = très clair (peau très pâle, rosée)
-3-4 = clair à moyen (beige, olive clair)
-5-6 = moyen à foncé (caramel, brun clair)
-7-8 = foncé (brun, brun foncé, peau africaine)
-9-10 = très foncé (ébène profond)
+Échelle Monk Skin Tone — ancres hexadécimales officielles (Google 2023) :
+MST 1  #f6ede4 — très clair, peau pâle rosée, quasiment pas de mélanine
+MST 2  #f3e7db — clair, peau ivoire-beige
+MST 3  #f7ead0 — clair doré, beige chaud
+MST 4  #eadaba — beige doré, olive clair
+MST 5  #d7bd96 — caramel clair, méditerranéen/métis clair
+MST 6  #a07850 — brun caramel, métis foncé, peau miel-acajou
+MST 7  #825c43 — brun, peau africaine claire à moyenne
+MST 8  #604134 — brun foncé, peau africaine moyenne à foncée
+MST 9  #3a312a — ébène clair, peau très foncée
+MST 10 #292420 — ébène profond, concentration maximale en mélanine
 
+⚠️ Biais connu à corriger : les modèles IA sous-classifient systématiquement les tons 7-10.
+En cas de doute entre deux tons pour une peau foncée, choisis le plus foncé des deux.
+
+Undertone : WARM=tons chauds (doré/cuivré), COOL=tons froids (rosé/violacé), NEUTRAL=équilibre.
 Si le visage n'est pas clairement visible, analyse la peau visible.`;
 
 async function fetchScinRows(offset: number, limit: number): Promise<any[]> {

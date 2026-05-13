@@ -14,18 +14,20 @@ const HAIR_MODEL = process.env.OPENAI_FINETUNE_HAIR_MODEL || 'gpt-4o';
 // Same author as skin_types_image_detection — runs in parallel with GPT-4o as a broad-category signal
 const HAIR_TYPE_HF_MODEL = 'dima806/hair_type_image_detection';
 
-// ── Monk Scale colors (approximate RGB for each tone 1-10) ──
-const MONK_TONES: Array<{ tone: number; label: string; rgb: [number, number, number] }> = [
-  { tone: 1, label: 'Très clair', rgb: [246, 237, 228] },
-  { tone: 2, label: 'Clair', rgb: [238, 218, 196] },
-  { tone: 3, label: 'Clair moyen', rgb: [217, 188, 157] },
-  { tone: 4, label: 'Moyen', rgb: [196, 165, 132] },
-  { tone: 5, label: 'Moyen foncé', rgb: [175, 137, 104] },
-  { tone: 6, label: 'Foncé clair', rgb: [150, 112, 80] },
-  { tone: 7, label: 'Foncé', rgb: [120, 85, 58] },
-  { tone: 8, label: 'Foncé profond', rgb: [90, 60, 40] },
-  { tone: 9, label: 'Très foncé', rgb: [60, 40, 25] },
-  { tone: 10, label: 'Ébène', rgb: [40, 25, 15] },
+// ── Monk Skin Tone Scale — official hex codes (Google, 2023) ──
+// Source: Ellis et al. "Monk Skin Tone Scale" (2023) + Wikipedia Monk Skin Tone Scale
+// 40% of the scale (tones 7-10) covers the dark end — designed for global diversity
+const MONK_TONES: Array<{ tone: number; label: string; hex: string; rgb: [number, number, number] }> = [
+  { tone: 1,  label: 'Très clair',      hex: '#f6ede4', rgb: [246, 237, 228] },
+  { tone: 2,  label: 'Clair',           hex: '#f3e7db', rgb: [243, 231, 219] },
+  { tone: 3,  label: 'Clair doré',      hex: '#f7ead0', rgb: [247, 234, 208] },
+  { tone: 4,  label: 'Beige doré',      hex: '#eadaba', rgb: [234, 218, 186] },
+  { tone: 5,  label: 'Caramel',         hex: '#d7bd96', rgb: [215, 189, 150] },
+  { tone: 6,  label: 'Brun caramel',    hex: '#a07850', rgb: [160, 120, 80]  },
+  { tone: 7,  label: 'Brun',            hex: '#825c43', rgb: [130, 92, 67]   },
+  { tone: 8,  label: 'Brun foncé',      hex: '#604134', rgb: [96, 65, 52]    },
+  { tone: 9,  label: 'Ébène clair',     hex: '#3a312a', rgb: [58, 49, 42]    },
+  { tone: 10, label: 'Ébène profond',   hex: '#292420', rgb: [41, 36, 32]    },
 ];
 
 // ── RGB to LAB conversion ──
@@ -59,20 +61,20 @@ function computeITA(L: number, b: number): number {
   return (Math.atan2(L - 50, b) * 180) / Math.PI;
 }
 
-// ── Classify Monk tone from LAB values ──
-function classifyMonkTone(L: number): number {
-  // Map L* (lightness) to Monk tone
-  // L* range: ~20 (very dark) to ~90 (very light)
-  if (L >= 80) return 1;
-  if (L >= 72) return 2;
-  if (L >= 65) return 3;
-  if (L >= 58) return 4;
-  if (L >= 52) return 5;
-  if (L >= 45) return 6;
-  if (L >= 38) return 7;
-  if (L >= 30) return 8;
-  if (L >= 22) return 9;
-  return 10;
+// ── Nearest-neighbor Monk tone from LAB values (LAB Euclidean distance) ──
+// More accurate than L*-only thresholds: tones 1-4 are nearly identical in L* (~91-95)
+// but differ in a* (redness) and b* (yellowness).
+function classifyMonkTone(L: number, a: number, b: number): number {
+  let bestTone = 7;
+  let bestDist = Infinity;
+  for (const mt of MONK_TONES) {
+    const mtLab = rgbToLab(...mt.rgb);
+    const dist = Math.sqrt(
+      (L - mtLab.L) ** 2 + (a - mtLab.a) ** 2 + (b - mtLab.b) ** 2
+    );
+    if (dist < bestDist) { bestDist = dist; bestTone = mt.tone; }
+  }
+  return bestTone;
 }
 
 // ── Determine undertone from LAB ──
@@ -157,6 +159,11 @@ export interface SkinAnalysisResult {
 }
 
 export async function analyzeSkin(imageUrl: string): Promise<SkinAnalysisResult> {
+  // Hex anchors from official Monk Scale (Ellis et al. 2023, Google).
+  // Anti-bias note (STW 2026, arxiv 2603.02475): ML models trained on
+  // majority-light-skin corpora systematically under-classify tones 7-10 —
+  // assigning MST 5-6 to subjects who are actually 7-8, etc. Counter this
+  // by anchoring on the actual hex and biasing toward the darker option when uncertain.
   const SKIN_PROMPT = `Tu es une experte dermatologue spécialisée dans les peaux mélanisées.
 Analyse cette photo de visage/peau et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
 
@@ -177,12 +184,27 @@ Structure JSON requise :
   "reasoning": "<explication courte de ton analyse en 1-2 phrases>"
 }
 
-Échelle Monk Skin Tone :
-1-2 = très clair (peau très pâle, rosée, peu de mélanine)
-3-4 = clair à moyen (beige, olive clair, méditerranéen)
-5-6 = moyen à foncé (caramel, brun clair, métis)
-7-8 = foncé (brun, brun foncé, peau africaine)
-9-10 = très foncé (ébène profond, très haute concentration en mélanine)
+Échelle Monk Skin Tone — ancres hexadécimales officielles (Google 2023) :
+MST 1  #f6ede4 — très clair, peau pâle rosée, quasiment pas de mélanine
+MST 2  #f3e7db — clair, peau ivoire-beige
+MST 3  #f7ead0 — clair doré, beige chaud
+MST 4  #eadaba — beige doré, olive clair
+MST 5  #d7bd96 — caramel clair, méditerranéen/métis clair
+MST 6  #a07850 — brun caramel, métis foncé, peau miel-acajou
+MST 7  #825c43 — brun, peau africaine claire à moyenne
+MST 8  #604134 — brun foncé, peau africaine moyenne à foncée
+MST 9  #3a312a — ébène clair, peau très foncée
+MST 10 #292420 — ébène profond, concentration maximale en mélanine
+
+⚠️ Biais connu à corriger : les modèles IA entraînés sur des corpus à majorité de peaux claires
+sous-classifient systématiquement les tons 7-10 (STW dataset, 2026, 42 313 images annotées).
+En cas de doute entre deux tons pour une peau foncée, choisis le plus foncé des deux.
+Compare mentalement avec les ancres hex ci-dessus avant de choisir.
+
+Undertone :
+- WARM : tons chauds (peach, doré, olive, cuivré — canaux rouges/jaunes dominants)
+- COOL : tons froids (rosé, violacé, bleuté — canaux bleus dominants)
+- NEUTRAL : équilibre chaud/froid
 
 Si le visage n'est pas clairement visible, analyse la peau visible et fais de ton mieux.`;
 
