@@ -217,11 +217,136 @@ async function main() {
   }
 
   // === Test client user ===
-  await prisma.user.upsert({
+  const testClientUser = await prisma.user.upsert({
     where: { phone: '+243812340000' },
     update: {},
     create: { phone: '+243812340000', name: 'Client Test', role: 'CLIENT', isVerified: true },
   });
+
+  // === Portfolio Items (Lookbook) ===
+  const allProviders = await prisma.provider.findMany({ include: { services: true } });
+
+  const portfolioCount = await prisma.portfolioItem.count();
+  const seededPortfolioItems: { id: string }[] = [];
+
+  if (portfolioCount === 0) {
+    const portfolioData = [
+      { providerIdx: 0, caption: 'Tresses collées avec perles dorées ✨', serviceTag: 'coiffure', imageUrl: 'https://picsum.photos/seed/kry-braid1/400/500' },
+      { providerIdx: 0, caption: 'Tissage lisse brillant — effet naturel', serviceTag: 'coiffure', imageUrl: 'https://picsum.photos/seed/kry-weave1/400/500' },
+      { providerIdx: 1, caption: 'Gel UV effet marbre rose', serviceTag: 'ongles', imageUrl: 'https://picsum.photos/seed/kry-nails1/400/500' },
+      { providerIdx: 1, caption: 'Extension ongles stiletto noir mat + strass', serviceTag: 'ongles', imageUrl: 'https://picsum.photos/seed/kry-nails2/400/500' },
+      { providerIdx: 2, caption: 'Fade dégradé + barbe sculptée', serviceTag: 'barber', imageUrl: 'https://picsum.photos/seed/kry-barber1/400/500' },
+      { providerIdx: 2, caption: 'Coupe homme classique dégradé bas', serviceTag: 'barber', imageUrl: 'https://picsum.photos/seed/kry-barber2/400/500' },
+      { providerIdx: 3, caption: 'Maquillage mariée — teint lumineux Monk 7', serviceTag: 'maquillage', imageUrl: 'https://picsum.photos/seed/kry-makeup1/400/500' },
+      { providerIdx: 3, caption: 'Maquillage smoky eye doré', serviceTag: 'maquillage', imageUrl: 'https://picsum.photos/seed/kry-makeup2/400/500' },
+      { providerIdx: 4, caption: 'Soin visage hydratant — peau éclatante', serviceTag: 'soins', imageUrl: 'https://picsum.photos/seed/kry-soins1/400/500' },
+      { providerIdx: 4, caption: 'Massage relaxant aux huiles naturelles', serviceTag: 'soins', imageUrl: 'https://picsum.photos/seed/kry-massage1/400/500' },
+      { providerIdx: 5, caption: 'Box braids mi-longueur couleur caramel 🤎', serviceTag: 'coiffure', imageUrl: 'https://picsum.photos/seed/kry-braid2/400/500' },
+      { providerIdx: 5, caption: 'Nail art géométrique tendance 2026', serviceTag: 'ongles', imageUrl: 'https://picsum.photos/seed/kry-nails3/400/500' },
+      { providerIdx: 6, caption: 'Cornrows avec fils dorés — style Fulani', serviceTag: 'coiffure', imageUrl: 'https://picsum.photos/seed/kry-cornrows1/400/500' },
+      { providerIdx: 6, caption: 'Maquillage naturel teint unifié', serviceTag: 'maquillage', imageUrl: 'https://picsum.photos/seed/kry-makeup3/400/500' },
+    ];
+
+    for (let i = 0; i < portfolioData.length; i++) {
+      const pd = portfolioData[i];
+      const provider = allProviders[pd.providerIdx % allProviders.length];
+      const item = await prisma.portfolioItem.create({
+        data: {
+          providerId: provider.id,
+          imageUrl: pd.imageUrl,
+          caption: pd.caption,
+          serviceTag: pd.serviceTag,
+          sortOrder: i,
+        },
+      });
+      seededPortfolioItems.push({ id: item.id });
+    }
+    console.log(`  ✅ ${seededPortfolioItems.length} portfolio items (lookbook) created`);
+  } else {
+    const existing = await prisma.portfolioItem.findMany({ take: 14, select: { id: true } });
+    seededPortfolioItems.push(...existing);
+    console.log(`  ✅ Portfolio items already exist (${portfolioCount})`);
+  }
+
+  // === Saved Looks for test client (first 3 items) ===
+  if (seededPortfolioItems.length >= 3) {
+    for (const item of seededPortfolioItems.slice(0, 3)) {
+      await prisma.savedLook.upsert({
+        where: { userId_portfolioItemId: { userId: testClientUser.id, portfolioItemId: item.id } },
+        update: {},
+        create: { userId: testClientUser.id, portfolioItemId: item.id },
+      });
+    }
+    console.log('  ✅ 3 saved looks for test client');
+  }
+
+  // === Bookings for test client ===
+  const bookingCount = await prisma.booking.count();
+  if (bookingCount === 0 && allProviders.length >= 2) {
+    const p1 = allProviders[0];
+    const p2 = allProviders[1];
+    const svc1 = p1.services[0];
+    const svc2 = p2.services[0];
+
+    if (svc1 && svc2) {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      const nextWeek = new Date(now);
+      nextWeek.setDate(now.getDate() + 7);
+      const twoWeeksAgo = new Date(now);
+      twoWeeksAgo.setDate(now.getDate() - 14);
+
+      await prisma.booking.create({
+        data: {
+          ref: 'KRY-SEED-001',
+          clientId: testClientUser.id,
+          providerId: p1.id,
+          serviceId: svc1.id,
+          date: tomorrow,
+          startTime: '10:00',
+          endTime: '11:30',
+          agreedPrice: svc1.priceMin,
+          currency: p1.currency,
+          status: 'CONFIRMED',
+        },
+      });
+
+      await prisma.booking.create({
+        data: {
+          ref: 'KRY-SEED-002',
+          clientId: testClientUser.id,
+          providerId: p2.id,
+          serviceId: svc2.id,
+          date: twoWeeksAgo,
+          startTime: '14:00',
+          endTime: '15:00',
+          agreedPrice: svc2.priceMin,
+          currency: p2.currency,
+          status: 'COMPLETED',
+        },
+      });
+
+      await prisma.booking.create({
+        data: {
+          ref: 'KRY-SEED-003',
+          clientId: testClientUser.id,
+          providerId: p1.id,
+          serviceId: svc1.id,
+          date: nextWeek,
+          startTime: '09:00',
+          endTime: '10:30',
+          agreedPrice: svc1.priceMin,
+          currency: p1.currency,
+          status: 'REQUESTED',
+        },
+      });
+
+      console.log('  ✅ 3 bookings created for test client (CONFIRMED, COMPLETED, REQUESTED)');
+    }
+  } else if (bookingCount > 0) {
+    console.log(`  ✅ Bookings already exist (${bookingCount})`);
+  }
 
   console.log('\n✅ Seed completed!');
   console.log(`  ${categories.length} categories`);

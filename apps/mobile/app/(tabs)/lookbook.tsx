@@ -223,7 +223,6 @@ export default function LookbookTabScreen() {
     ({ item, index }: { item: FeedItem; index: number }) => {
       const imageHeight = index % 3 === 0 ? 240 : 180;
       const isSaved = savedIds.has(item.id);
-      const isMock = item.id.startsWith('m');
 
       return (
         <View style={styles.cardWrapper}>
@@ -238,16 +237,12 @@ export default function LookbookTabScreen() {
                 style={[styles.lookImage, { height: imageHeight }]}
                 resizeMode="cover"
               />
-            ) : isMock ? (
+            ) : (
               <Image
                 source={LOOKBOOK_IMAGES[index % 8]}
                 style={[styles.lookImage, { height: imageHeight }]}
                 resizeMode="cover"
               />
-            ) : (
-              <View style={[styles.lookImage, styles.lookPlaceholder, { height: imageHeight }]}>
-                <Text style={styles.placeholderEmoji}>📸</Text>
-              </View>
             )}
 
             {/* Save button overlay */}
