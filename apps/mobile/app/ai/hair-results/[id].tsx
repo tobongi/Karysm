@@ -238,12 +238,18 @@ export default function HairResultsScreen() {
           {data.dryness != null && (
             <MetricBar label="Sécheresse" value={data.dryness} icon="🏜️" invert />
           )}
-          {data.elasticity != null && (
-            <MetricBar label="Élasticité" value={data.elasticity} icon="🔄" />
-          )}
-          {data.shrinkage != null && (
-            <MetricBar label="Shrinkage" value={data.shrinkage} icon="📏" neutral />
-          )}
+          {/* Elasticity and shrinkage are unmeasurable on locs — show N/A even for old DB records */}
+          <MetricBar
+            label="Élasticité"
+            value={isLocStyle(data.currentStyle) ? null : data.elasticity}
+            icon="🔄"
+          />
+          <MetricBar
+            label="Shrinkage"
+            value={isLocStyle(data.currentStyle) ? null : data.shrinkage}
+            icon="📏"
+            neutral
+          />
         </View>
 
         {/* Current style */}
