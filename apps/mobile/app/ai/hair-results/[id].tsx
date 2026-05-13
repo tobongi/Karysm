@@ -59,6 +59,9 @@ const STYLE_LABELS: Record<string, string> = {
   OTHER:       'Autre',
 };
 
+const LOC_STYLES = new Set(['LOCS', 'FAUX_LOCS']);
+const isLocStyle = (style: string | null | undefined) => style != null && LOC_STYLES.has(style);
+
 const HAIR_PROVIDERS = [
   { id: '1', slug: 'braids-queen', name: 'Braids Queen', specialty: 'Tresses protectrices 4A-4C', rating: '4.9' },
   { id: '2', slug: 'natural-hair-studio', name: 'Natural Hair Studio', specialty: 'Soins cheveux naturels crépus', rating: '4.8' },
@@ -67,6 +70,18 @@ const HAIR_PROVIDERS = [
 
 function getHairTips(analysis: any): Array<{icon: string, title: string, tip: string}> {
   const tips: Array<{icon: string, title: string, tip: string}> = [];
+
+  if (isLocStyle(analysis.currentStyle)) {
+    tips.push({ icon: '💧', title: 'Hydratation des locs', tip: 'Spray eau + aloe vera 3-4x/semaine. Les locs assèchent plus vite — les cuticules sont compressées et l\'humidité s\'échappe.' });
+    if (analysis.porosity === 'HIGH') {
+      tips.push({ icon: '🌿', title: 'Porosité élevée', tip: 'Tes locs absorbent vite mais perdent l\'hydratation. Scelle avec une huile légère (argan, jojoba) juste après avoir humidifié.' });
+    } else {
+      tips.push({ icon: '✂️', title: 'Retwist régulier', tip: 'Un retwist pro tous les 4-6 semaines maintient les locs nettes, prévient la fusion entre locs et favorise la croissance.' });
+    }
+    tips.push({ icon: '🌙', title: 'Protection nocturne', tip: 'Bonnet en satin obligatoire — il prévient la casse, le frisottis et l\'assèchement causé par les fibres des draps.' });
+    return tips;
+  }
+
   if (analysis.porosity === 'HIGH') tips.push({ icon: '💧', title: 'Porosité élevée', tip: 'Tes cheveux absorbent vite mais perdent l\'hydratation. Scelle avec une huile lourde (ricin, olive) après chaque hydratation.' });
   if (analysis.porosity === 'LOW') tips.push({ icon: '🔒', title: 'Porosité faible', tip: 'L\'eau a du mal à pénétrer tes cheveux. Utilise un bonnet chauffant ou de la vapeur pour ouvrir les cuticules.' });
   if (analysis.dryness != null && analysis.dryness > 50) tips.push({ icon: '🏜️', title: 'Sécheresse', tip: 'Hydrate avec la méthode LOC (Liquid-Oil-Cream). Dors avec un bonnet en satin pour préserver l\'hydratation.' });
@@ -141,11 +156,21 @@ export default function HairResultsScreen() {
         {/* Hair type badge */}
         {data.hairType && (
           <View style={styles.typeCard}>
-            <Text style={styles.typeEmoji}>💇🏿‍♀️</Text>
+            <Text style={styles.typeEmoji}>{isLocStyle(data.currentStyle) ? '🔒' : '💇🏿‍♀️'}</Text>
             <View style={{ flex: 1 }}>
-              <Text style={styles.typeLabel}>Type {data.hairType}</Text>
-              {hairInfo && <Text style={styles.typeName}>{hairInfo.label}</Text>}
-              {hairInfo && <Text style={styles.typeDesc}>{hairInfo.desc}</Text>}
+              {isLocStyle(data.currentStyle) ? (
+                <>
+                  <Text style={styles.typeLabel}>{STYLE_LABELS[data.currentStyle!] || data.currentStyle}</Text>
+                  <Text style={styles.typeName}>Type estimé : {data.hairType}</Text>
+                  <Text style={styles.typeDesc}>D'après racines et pointes visibles — estimation</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.typeLabel}>Type {data.hairType}</Text>
+                  {hairInfo && <Text style={styles.typeName}>{hairInfo.label}</Text>}
+                  {hairInfo && <Text style={styles.typeDesc}>{hairInfo.desc}</Text>}
+                </>
+              )}
             </View>
           </View>
         )}
@@ -158,6 +183,20 @@ export default function HairResultsScreen() {
               <Text style={styles.scoreBigLabel}>/100</Text>
             </View>
             <Text style={styles.scoreTitle}>Score de santé capillaire</Text>
+          </View>
+        )}
+
+        {/* Locs information banner */}
+        {isLocStyle(data.currentStyle) && (
+          <View style={styles.locsBanner}>
+            <Text style={styles.locsBannerIcon}>💡</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.locsBannerTitle}>Style protecteur détecté</Text>
+              <Text style={styles.locsBannerText}>
+                Le shrinkage et l'élasticité ne sont pas mesurables sur des locs — la texture est verrouillée.
+                Seules la porosité, densité et état du cuir chevelu peuvent être estimés à partir des racines visibles.
+              </Text>
+            </View>
           </View>
         )}
 
@@ -299,7 +338,17 @@ export default function HairResultsScreen() {
   );
 }
 
-function MetricBar({ label, value, icon, invert, neutral }: { label: string; value: number; icon: string; invert?: boolean; neutral?: boolean }) {
+function MetricBar({ label, value, icon, invert, neutral }: { label: string; value: number | null; icon: string; invert?: boolean; neutral?: boolean }) {
+  if (value === null) {
+    return (
+      <View style={styles.metricRow}>
+        <Text style={styles.metricIcon}>{icon}</Text>
+        <Text style={styles.metricLabel}>{label}</Text>
+        <Text style={styles.metricNa}>N/A — locs</Text>
+      </View>
+    );
+  }
+
   let barColor: string = colors.success;
   if (neutral) {
     barColor = colors.primary;
@@ -364,6 +413,16 @@ const styles = StyleSheet.create({
   charLabel: { fontSize: 11, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 1, marginBottom: 4 },
   charValue: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.accent },
 
+  // Locs banner
+  locsBanner: {
+    flexDirection: 'row', gap: 12, padding: 14, borderRadius: 16,
+    backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FCD34D',
+    marginBottom: 24,
+  },
+  locsBannerIcon: { fontSize: 20 },
+  locsBannerTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: '#92400E', marginBottom: 4 },
+  locsBannerText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: '#78350F', lineHeight: 18 },
+
   // Metrics
   metricsSection: { marginBottom: 24 },
   metricRow: {
@@ -378,6 +437,7 @@ const styles = StyleSheet.create({
   },
   metricBarFill: { height: '100%', borderRadius: 3 },
   metricValue: { width: 40, fontSize: 13, fontFamily: 'Poppins_700Bold', textAlign: 'right' },
+  metricNa: { flex: 1, fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, fontStyle: 'italic' },
 
   // Style
   styleRow: {

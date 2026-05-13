@@ -333,8 +333,9 @@ export interface HairAnalysisResult {
   density: string;
   thickness: string;
   dryness: number;
-  elasticity: number;
-  shrinkage: number;
+  // null when currentStyle is LOCS/FAUX_LOCS — physically unmeasurable from a photo
+  elasticity: number | null;
+  shrinkage: number | null;
   scalpCondition: string;
   currentStyle: string;
   overallScore: number;
@@ -485,9 +486,15 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
   const VALID_STYLES = ['AFRO', 'WASH_N_GO', 'TWA', 'BOX_BRAIDS', 'BRAIDS', 'CORNROWS', 'LOCS', 'FAUX_LOCS', 'TWISTS', 'TWIST_OUT', 'FLAT_TWIST', 'BANTU_KNOTS', 'STRAIGHT', 'WEAVE', 'WIG', 'PROTECTIVE', 'OTHER'];
   if (!VALID_STYLES.includes(currentStyle)) currentStyle = 'AFRO';
 
-  const recommendations = Array.isArray(gpt.recommendations) && gpt.recommendations.length > 0
-    ? gpt.recommendations.slice(0, 6)
-    : DEFAULT_HAIR_RECS;
+  // Locs/faux-locs: elasticity and shrinkage are physically unmeasurable from a photo.
+  // The hair is permanently locked — strand mechanics and recoil can't be assessed visually.
+  const isLocs = currentStyle === 'LOCS' || currentStyle === 'FAUX_LOCS';
+
+  const recommendations = isLocs
+    ? LOCS_HAIR_RECS
+    : (Array.isArray(gpt.recommendations) && gpt.recommendations.length > 0
+        ? gpt.recommendations.slice(0, 6)
+        : DEFAULT_HAIR_RECS);
 
   return {
     hairType,
@@ -495,8 +502,8 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
     density: gpt.density || 'MEDIUM',
     thickness: gpt.thickness || 'MEDIUM',
     dryness: Number(gpt.dryness) || 55,
-    elasticity: Number(gpt.elasticity) || 60,
-    shrinkage: Number(gpt.shrinkage) || 70,
+    elasticity: isLocs ? null : (Number(gpt.elasticity) || 60),
+    shrinkage: isLocs ? null : (Number(gpt.shrinkage) || 70),
     scalpCondition: gpt.scalpCondition || 'HEALTHY',
     currentStyle,
     overallScore: Number(gpt.overallScore) || 68,
@@ -507,6 +514,7 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
       confidence: gpt.confidence,
       hf: hfPredictions.slice(0, 3),
       hfBroadType: hfMapped.broadType,
+      locsDetected: isLocs,
     },
   };
 }
@@ -518,4 +526,13 @@ const DEFAULT_HAIR_RECS = [
   '✂️ Couper les pointes sèches tous les 3 mois',
   '🚿 Co-wash entre les shampoings pour préserver l\'hydratation',
   '🌿 Éviter les produits contenant des sulfates et silicones',
+];
+
+const LOCS_HAIR_RECS = [
+  '💧 Hydrater tes locs avec un spray eau + aloe vera 3-4x/semaine — les locs ont soif',
+  '🌿 Nourrir les pointes avec un loc butter ou beurre de karité pur (sans cire ni petroleum)',
+  '🌙 Protéger tes locs la nuit avec un bonnet en satin ou taie d\'oreiller en soie',
+  '🧴 Deep conditioning mensuel : applique sur locs humides, bonnet chauffant 30 min, rincer',
+  '✂️ Retwist avec une loc specialist tous les 4-6 semaines pour garder les locs nettes',
+  '🚿 Laver avec un shampoing résidu-free spécial locs — sans cire, silicone ni parabène',
 ];
