@@ -108,6 +108,8 @@ export default function LookbookTabScreen() {
 
   const fetchFeed = useCallback(
     async (pageNum = 1, append = false) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8_000);
       try {
         if (!append) setLoading(true);
         else setLoadingMore(true);
@@ -125,12 +127,15 @@ export default function LookbookTabScreen() {
         } else {
           setItems(newItems);
         }
+        // No more pages if we got fewer than a full page
         setHasMore(newItems.length === 20);
         setPage(pageNum);
       } catch {
-        // If API returns 404 (endpoint not deployed yet), show empty state
+        // API failed/timed out — stop pagination, fall back to mock on initial load
+        setHasMore(false);
         if (!append) setItems([]);
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
         setLoadingMore(false);
       }

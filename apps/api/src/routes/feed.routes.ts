@@ -71,7 +71,7 @@ router.get('/', asyncHandler(async (req, res) => {
 // GET /api/feed/saved — Get user's saved looks (auth required)
 // NOTE: This route must be registered BEFORE /:id/save to avoid "saved" matching as an :id
 router.get('/saved', authMiddleware, asyncHandler(async (req, res) => {
-  const userId = (req as any).user.id;
+  const userId = (req as any).user.userId;
 
   const saved = await prisma.savedLook.findMany({
     where: { userId },
@@ -115,7 +115,7 @@ router.get('/saved', authMiddleware, asyncHandler(async (req, res) => {
 
 // POST /api/feed/:id/save — Toggle save a portfolio item (auth required)
 router.post('/:id/save', authMiddleware, asyncHandler(async (req, res) => {
-  const userId = (req as any).user.id;
+  const userId = (req as any).user.userId;
   const portfolioItemId = req.params.id;
 
   // Check if already saved
