@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import OpenAI from 'openai';
 import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error';
@@ -158,6 +159,43 @@ router.get('/hair-analysis/:id', authMiddleware, asyncHandler(async (req: Reques
   }
 
   res.json({ success: true, data: analysis });
+}));
+
+// POST /api/ai/makeup-advisor — GPT-4o mini vision: personalized makeup advice
+router.post('/makeup-advisor', asyncHandler(async (req: Request, res: Response) => {
+  const { image, category, productName, color, finish } = req.body;
+  if (!image || typeof image !== 'string') {
+    throw new ValidationError('image (base64 JPEG) is required');
+  }
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(503).json({ success: false, error: 'AI advisor not configured' });
+  }
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const catLabel = category === 'levres' ? 'lèvres' : category === 'joues' ? 'joues' : 'yeux';
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 180,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: { url: `data:image/jpeg;base64,${image}`, detail: 'low' },
+          },
+          {
+            type: 'text',
+            text: `Tu es une experte en maquillage pour peaux africaines et métissées. Regarde ce selfie et donne un conseil en 2-3 phrases max (en français) sur le maquillage ${catLabel} "${productName}" (couleur ${color}, finition ${finish}) actuellement appliqué. Dis si la teinte convient au teint visible, ce qu'on pourrait améliorer, et un tip pro. Sois positive et directe.`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const advice = response.choices[0]?.message?.content ?? 'Conseil non disponible.';
+  res.json({ success: true, data: { advice } });
 }));
 
 export default router;

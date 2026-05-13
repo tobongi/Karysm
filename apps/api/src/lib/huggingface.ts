@@ -31,7 +31,7 @@ const MONK_TONES: Array<{ tone: number; label: string; hex: string; rgb: [number
 ];
 
 // ── RGB to LAB conversion ──
-function rgbToLab(r: number, g: number, b: number): { L: number; a: number; b: number } {
+export function rgbToLab(r: number, g: number, b: number): { L: number; a: number; b: number } {
   // Normalize RGB to 0-1
   let rn = r / 255, gn = g / 255, bn = b / 255;
 
@@ -57,14 +57,14 @@ function rgbToLab(r: number, g: number, b: number): { L: number; a: number; b: n
 }
 
 // ── ITA (Individual Typology Angle) ──
-function computeITA(L: number, b: number): number {
+export function computeITA(L: number, b: number): number {
   return (Math.atan2(L - 50, b) * 180) / Math.PI;
 }
 
 // ── Nearest-neighbor Monk tone from LAB values (LAB Euclidean distance) ──
 // More accurate than L*-only thresholds: tones 1-4 are nearly identical in L* (~91-95)
 // but differ in a* (redness) and b* (yellowness).
-function classifyMonkTone(L: number, a: number, b: number): number {
+export function classifyMonkTone(L: number, a: number, b: number): number {
   let bestTone = 7;
   let bestDist = Infinity;
   for (const mt of MONK_TONES) {
@@ -88,7 +88,7 @@ function classifyUndertone(a: number, b: number): string {
 }
 
 // ── Melanin index from ITA ──
-function computeMelaninIndex(ita: number): number {
+export function computeMelaninIndex(ita: number): number {
   // ITA > 55° = very light, ITA < -30° = very dark
   // Map to 0-100 (100 = max melanin)
   return Math.max(0, Math.min(100, Math.round((55 - ita) * (100 / 85))));
