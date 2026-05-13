@@ -1,7 +1,10 @@
 import { HfInference } from '@huggingface/inference';
+import OpenAI from 'openai';
 
 const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN || '';
 const hf = new HfInference(HF_TOKEN);
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
 
 // ── Monk Scale colors (approximate RGB for each tone 1-10) ──
 const MONK_TONES: Array<{ tone: number; label: string; rgb: [number, number, number] }> = [
@@ -146,75 +149,119 @@ export interface SkinAnalysisResult {
 }
 
 export async function analyzeSkin(imageUrl: string): Promise<SkinAnalysisResult> {
-  const startTime = Date.now();
+  const SKIN_PROMPT = `Tu es une experte dermatologue spécialisée dans les peaux mélanisées.
+Analyse cette photo de visage/peau et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
 
-  // Fetch image and get average skin color
+Structure JSON requise :
+{
+  "monkTone": <1-10, échelle Monk Skin Tone Scale>,
+  "undertone": "WARM" | "COOL" | "NEUTRAL",
+  "hydration": <0-100, 0=très sèche, 100=bien hydratée>,
+  "sebum": <0-100, 0=très sèche, 100=très grasse/luisante>,
+  "pores": <0-100, 0=pores invisibles, 100=pores très dilatés>,
+  "wrinkles": <0-100, 0=aucune ride, 100=rides très marquées>,
+  "spots": <0-100, 0=teint parfaitement uniforme, 100=nombreuses taches>,
+  "acne": <0-100, 0=aucune imperfection, 100=acné sévère>,
+  "hyperpigmentation": <0-100, 0=aucune, 100=hyperpigmentation sévère>,
+  "uniformity": <0-100, 0=teint très irrégulier, 100=teint parfaitement uniforme>,
+  "overallScore": <0-100, santé globale de la peau>,
+  "recommendations": [<exactement 6 conseils personnalisés en français avec emojis, basés sur ce que tu observes réellement sur cette peau spécifique>],
+  "reasoning": "<explication courte de ton analyse en 1-2 phrases>"
+}
+
+Échelle Monk Skin Tone :
+1-2 = très clair (peau très pâle, rosée, peu de mélanine)
+3-4 = clair à moyen (beige, olive clair, méditerranéen)
+5-6 = moyen à foncé (caramel, brun clair, métis)
+7-8 = foncé (brun, brun foncé, peau africaine)
+9-10 = très foncé (ébène profond, très haute concentration en mélanine)
+
+Si le visage n'est pas clairement visible, analyse la peau visible et fais de ton mieux.`;
+
+  // Fetch image once, run HuggingFace + GPT-4o in parallel
   const imageResponse = await fetch(imageUrl);
   const imageBlob = new Blob([await imageResponse.arrayBuffer()]);
 
-  let hfResult: any = null;
-  let skinConditions = { hydration: 65, sebum: 40, pores: 35, wrinkles: 20, spots: 30, acne: 15, hyperpigmentation: 25, uniformity: 70 };
+  const [hfResult, gptResult] = await Promise.allSettled([
+    HF_TOKEN
+      ? hf.imageClassification({ model: 'dima806/skin_types_image_detection', data: imageBlob as any })
+      : Promise.reject('no HF token'),
+    openai.chat.completions.create({
+      model: 'gpt-4o',
+      max_tokens: 900,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
+          { type: 'text', text: SKIN_PROMPT },
+        ],
+      }],
+    }),
+  ]);
 
-  // Try HuggingFace for skin type classification
-  if (HF_TOKEN) {
-    try {
-      // Skin type classification
-      const classificationResult = await hf.imageClassification({
-        model: 'dima806/skin_types_image_detection',
-        data: imageBlob as any,
-      });
-      hfResult = classificationResult;
-
-      // Map HF skin type results to conditions
-      if (Array.isArray(classificationResult)) {
-        for (const result of classificationResult) {
-          const label = result.label?.toLowerCase() || '';
-          const score = result.score || 0;
-          if (label.includes('oily')) skinConditions.sebum = Math.round(score * 100);
-          if (label.includes('dry')) skinConditions.hydration = Math.round((1 - score) * 100);
-          if (label.includes('acne') || label.includes('pimple')) skinConditions.acne = Math.round(score * 100);
-          if (label.includes('normal')) {
-            skinConditions.hydration = Math.max(skinConditions.hydration, 70);
-            skinConditions.uniformity = Math.max(skinConditions.uniformity, 75);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('HuggingFace skin classification error:', err);
+  // Parse GPT-4o
+  let gpt: any = {};
+  if (gptResult.status === 'fulfilled') {
+    const content = gptResult.value.choices[0]?.message?.content || '';
+    const match = content.match(/\{[\s\S]*\}/);
+    if (match) {
+      try { gpt = JSON.parse(match[0]); } catch {}
     }
+  } else {
+    console.error('GPT-4o skin analysis error:', gptResult.reason);
   }
 
-  // Compute LAB from average face color
-  // For MVP: use a representative skin tone based on image analysis
-  // In production: extract actual pixel data from face region
-  const avgR = 140, avgG = 100, avgB = 75; // Placeholder — will be replaced by actual pixel analysis
-  const lab = rgbToLab(avgR, avgG, avgB);
-  const ita = computeITA(lab.L, lab.b);
-  const monkTone = classifyMonkTone(lab.L);
-  const undertone = classifyUndertone(lab.a, lab.b);
-  const melanin = computeMelaninIndex(ita);
+  // Parse HuggingFace oily/dry/acne signal
+  const hfSkinType: any[] = hfResult.status === 'fulfilled' && Array.isArray(hfResult.value)
+    ? hfResult.value
+    : [];
+  if (hfResult.status === 'rejected') console.error('HuggingFace skin error:', hfResult.reason);
 
-  // Calculate overall score
-  const overallScore = Math.round(
-    (skinConditions.hydration * 0.2 +
-     (100 - skinConditions.sebum) * 0.1 +
-     (100 - skinConditions.pores) * 0.1 +
-     (100 - skinConditions.wrinkles) * 0.1 +
-     (100 - skinConditions.spots) * 0.1 +
-     (100 - skinConditions.acne) * 0.15 +
-     (100 - skinConditions.hyperpigmentation) * 0.1 +
-     skinConditions.uniformity * 0.15)
+  // GPT-4o is primary; blend HF signal for oily/dry/acne where it adds signal
+  let sebum = Number(gpt.sebum) || 40;
+  let hydration = Number(gpt.hydration) || 65;
+  let acne = Number(gpt.acne) || 15;
+  for (const r of hfSkinType) {
+    const label = (r.label || '').toLowerCase();
+    const score = r.score || 0;
+    if (label.includes('oily')) sebum = Math.round((sebum + score * 100) / 2);
+    if (label.includes('dry')) hydration = Math.round((hydration + (1 - score) * 100) / 2);
+    if (label.includes('acne') || label.includes('pimple')) acne = Math.round((acne + score * 100) / 2);
+  }
+
+  const skinConditions = {
+    hydration,
+    sebum,
+    pores: Number(gpt.pores) || 35,
+    wrinkles: Number(gpt.wrinkles) || 20,
+    spots: Number(gpt.spots) || 30,
+    acne,
+    hyperpigmentation: Number(gpt.hyperpigmentation) || 25,
+    uniformity: Number(gpt.uniformity) || 70,
+  };
+
+  // GPT-4o Monk estimate → look up canonical RGB → proper LAB/ITA/melanin
+  const monkTone: number = Math.max(1, Math.min(10, Math.round(Number(gpt.monkTone)) || 7));
+  const [mr, mg, mb] = MONK_TONES[monkTone - 1].rgb;
+  const lab = rgbToLab(mr, mg, mb);
+  const ita = computeITA(lab.L, lab.b);
+  const melanin = computeMelaninIndex(ita);
+  const undertone: string = gpt.undertone || classifyUndertone(lab.a, lab.b);
+
+  const overallScore = Number(gpt.overallScore) || Math.round(
+    hydration * 0.2 +
+    (100 - sebum) * 0.1 +
+    (100 - skinConditions.pores) * 0.1 +
+    (100 - skinConditions.wrinkles) * 0.1 +
+    (100 - skinConditions.spots) * 0.1 +
+    (100 - acne) * 0.15 +
+    (100 - skinConditions.hyperpigmentation) * 0.1 +
+    skinConditions.uniformity * 0.15
   );
 
-  const recommendations = generateRecommendations({
-    monkTone,
-    hydration: skinConditions.hydration,
-    sebum: skinConditions.sebum,
-    acne: skinConditions.acne,
-    hyperpigmentation: skinConditions.hyperpigmentation,
-    spots: skinConditions.spots,
-    uniformity: skinConditions.uniformity,
-  });
+  const recommendations = Array.isArray(gpt.recommendations) && gpt.recommendations.length > 0
+    ? gpt.recommendations.slice(0, 6)
+    : generateRecommendations({ monkTone, ...skinConditions });
 
   return {
     monkTone,
@@ -227,7 +274,12 @@ export async function analyzeSkin(imageUrl: string): Promise<SkinAnalysisResult>
     ...skinConditions,
     overallScore,
     recommendations,
-    rawResponse: hfResult,
+    rawResponse: {
+      model: 'gpt-4o',
+      usage: gptResult.status === 'fulfilled' ? gptResult.value.usage : null,
+      hf: hfSkinType,
+      reasoning: gpt.reasoning,
+    },
   };
 }
 
@@ -248,28 +300,79 @@ export interface HairAnalysisResult {
 }
 
 export async function analyzeHair(imageUrl: string): Promise<HairAnalysisResult> {
-  const imageResponse = await fetch(imageUrl);
-  const imageBlob = new Blob([await imageResponse.arrayBuffer()]);
+  const HAIR_PROMPT = `Tu es une experte trichologue spécialisée dans les cheveux afro-texturés (types 3C à 4C).
+Analyse cette photo de cheveux et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
 
-  let hfResult: any = null;
+Structure JSON requise :
+{
+  "hairType": "3C" | "4A" | "4B" | "4C",
+  "porosity": "LOW" | "MEDIUM" | "HIGH",
+  "density": "LOW" | "MEDIUM" | "HIGH",
+  "thickness": "FINE" | "MEDIUM" | "COARSE",
+  "dryness": <0-100, 0=très hydraté, 100=très sec>,
+  "elasticity": <0-100, 0=cassant, 100=très élastique>,
+  "shrinkage": <0-100, pourcentage de rétrécissement estimé>,
+  "scalpCondition": "HEALTHY" | "DRY" | "OILY" | "DANDRUFF" | "IRRITATED",
+  "currentStyle": "AFRO" | "BRAIDS" | "LOCS" | "TWISTS" | "STRAIGHT" | "WEAVE" | "WIG" | "OTHER",
+  "overallScore": <0-100>,
+  "recommendations": [<6 conseils personnalisés en français avec emojis, basés sur ce que tu observes>],
+  "reasoning": "<explication courte de ton analyse en 1-2 phrases>"
+}
 
-  // Try HuggingFace for hair classification
-  if (HF_TOKEN) {
-    try {
-      const result = await hf.imageClassification({
-        model: 'google/vit-base-patch16-224',
-        data: imageBlob as any,
-      });
-      hfResult = result;
-    } catch (err) {
-      console.error('HuggingFace hair classification error:', err);
+Critères de classification :
+- 3C : boucles définies, diamètre stylo, peu de shrinkage
+- 4A : boucles en S bien définies, diamètre paille, shrinkage 50-60%
+- 4B : boucles en Z ou coton, peu de définition, shrinkage 60-75%
+- 4C : texture la plus serrée, quasiment pas de boucles définies, shrinkage 75-90%
+
+Porosité : LOW = brillant/lisse, MEDIUM = absorbance normale, HIGH = terne/frisottis/poreux
+Si les cheveux ne sont pas clairement visibles ou si la photo est floue, donne des valeurs par défaut raisonnables pour cheveux 4B.`;
+
+  let rawResponse: any = null;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      max_tokens: 800,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
+            { type: 'text', text: HAIR_PROMPT },
+          ],
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    rawResponse = { model: 'gpt-4o', usage: response.usage };
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        hairType: parsed.hairType || '4B',
+        porosity: parsed.porosity || 'HIGH',
+        density: parsed.density || 'MEDIUM',
+        thickness: parsed.thickness || 'MEDIUM',
+        dryness: Number(parsed.dryness) || 55,
+        elasticity: Number(parsed.elasticity) || 60,
+        shrinkage: Number(parsed.shrinkage) || 70,
+        scalpCondition: parsed.scalpCondition || 'HEALTHY',
+        currentStyle: parsed.currentStyle || 'AFRO',
+        overallScore: Number(parsed.overallScore) || 68,
+        recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations.slice(0, 6) : DEFAULT_HAIR_RECS,
+        rawResponse: { ...rawResponse, reasoning: parsed.reasoning },
+      };
     }
+  } catch (err) {
+    console.error('GPT-4o hair analysis error:', err);
   }
 
-  // MVP: baseline analysis with reasonable defaults for afro hair
-  // Will be improved with custom model trained on proprietary dataset
-  const analysis: HairAnalysisResult = {
-    hairType: '4B', // Default for African hair — to be refined by ML
+  // Fallback if OpenAI fails
+  return {
+    hairType: '4B',
     porosity: 'HIGH',
     density: 'MEDIUM',
     thickness: 'MEDIUM',
@@ -279,16 +382,16 @@ export async function analyzeHair(imageUrl: string): Promise<HairAnalysisResult>
     scalpCondition: 'HEALTHY',
     currentStyle: 'AFRO',
     overallScore: 68,
-    recommendations: [
-      '💧 Hydrater avec la méthode LOC (Liquid, Oil, Cream)',
-      '🧴 Deep conditioning hebdomadaire au beurre de karité',
-      '🌙 Protéger les cheveux la nuit avec un bonnet en satin',
-      '✂️ Couper les pointes sèches tous les 3 mois',
-      '🚿 Co-wash entre les shampoings pour préserver l\'hydratation',
-      '🌿 Éviter les produits contenant des sulfates et silicones',
-    ],
-    rawResponse: hfResult,
+    recommendations: DEFAULT_HAIR_RECS,
+    rawResponse,
   };
-
-  return analysis;
 }
+
+const DEFAULT_HAIR_RECS = [
+  '💧 Hydrater avec la méthode LOC (Liquid, Oil, Cream)',
+  '🧴 Deep conditioning hebdomadaire au beurre de karité',
+  '🌙 Protéger les cheveux la nuit avec un bonnet en satin',
+  '✂️ Couper les pointes sèches tous les 3 mois',
+  '🚿 Co-wash entre les shampoings pour préserver l\'hydratation',
+  '🌿 Éviter les produits contenant des sulfates et silicones',
+];
