@@ -31,15 +31,32 @@ const THICKNESS_INFO: Record<string, string> = {
 };
 
 const SCALP_INFO: Record<string, { label: string; icon: string }> = {
-  HEALTHY: { label: 'Sain', icon: '✅' },
-  DRY: { label: 'Sec', icon: '🏜️' },
-  OILY: { label: 'Gras', icon: '💧' },
-  FLAKY: { label: 'Pellicules', icon: '❄️' },
+  HEALTHY:  { label: 'Sain',       icon: '✅' },
+  DRY:      { label: 'Sec',        icon: '🏜️' },
+  OILY:     { label: 'Gras',       icon: '💧' },
+  DANDRUFF: { label: 'Pellicules', icon: '❄️' },
+  FLAKY:    { label: 'Pellicules', icon: '❄️' }, // legacy alias
+  IRRITATED:{ label: 'Irrité',     icon: '🔴' },
 };
 
 const STYLE_LABELS: Record<string, string> = {
-  AFRO: 'Afro', BRAIDS: 'Tresses', CORNROWS: 'Cornrows', LOCS: 'Locks',
-  TWA: 'TWA', BANTU_KNOTS: 'Bantu Knots', TWIST_OUT: 'Twist-out',
+  AFRO:        'Afro naturel',
+  WASH_N_GO:   'Wash & Go',
+  TWA:         'TWA',
+  BOX_BRAIDS:  'Box Braids',
+  BRAIDS:      'Tresses',
+  CORNROWS:    'Cornrows',
+  LOCS:        'Locks',
+  FAUX_LOCS:   'Faux Locks',
+  TWISTS:      'Twists',
+  TWIST_OUT:   'Twist-out',
+  FLAT_TWIST:  'Flat Twist',
+  BANTU_KNOTS: 'Bantu Knots',
+  STRAIGHT:    'Lissé',
+  WEAVE:       'Extension',
+  WIG:         'Perruque',
+  PROTECTIVE:  'Style protecteur',
+  OTHER:       'Autre',
 };
 
 const HAIR_PROVIDERS = [

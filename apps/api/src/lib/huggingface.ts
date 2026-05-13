@@ -321,8 +321,8 @@ export interface HairAnalysisResult {
 }
 
 export async function analyzeHair(imageUrl: string): Promise<HairAnalysisResult> {
-  // Roboflow-inspired: observe visual features first (curl shape, diameter, definition,
-  // porosity surface cues, protective style detection), then classify.
+  // Roboflow-inspired visual feature extraction + clinical trichoscopy calibration
+  // from Mendeley CC BY 4.0 study on African descent women (El Kadi, 2025).
   const HAIR_PROMPT = `Tu es une experte trichologue spécialisée dans les cheveux afro-texturés (types 3C à 4C).
 Analyse cette photo de cheveux et réponds UNIQUEMENT avec un objet JSON valide, sans markdown ni texte autour.
 
@@ -343,21 +343,53 @@ Structure JSON requise :
   "elasticity": <0-100, 0=cassant, 100=très élastique>,
   "shrinkage": <0-100, pourcentage de rétrécissement estimé>,
   "scalpCondition": "HEALTHY" | "DRY" | "OILY" | "DANDRUFF" | "IRRITATED",
-  "currentStyle": "AFRO" | "BRAIDS" | "LOCS" | "TWISTS" | "STRAIGHT" | "WEAVE" | "WIG" | "OTHER",
+  "currentStyle": "AFRO" | "WASH_N_GO" | "TWA" | "BOX_BRAIDS" | "BRAIDS" | "CORNROWS" | "LOCS" | "FAUX_LOCS" | "TWISTS" | "TWIST_OUT" | "FLAT_TWIST" | "BANTU_KNOTS" | "STRAIGHT" | "WEAVE" | "WIG" | "PROTECTIVE" | "OTHER",
   "overallScore": <0-100>,
   "confidence": <0-100, ta confiance dans la classification hairType>,
   "recommendations": [<6 conseils personnalisés en français avec emojis, basés sur ce que tu observes réellement>],
   "reasoning": "<explication courte de tes observations visuelles et de la classification en 1-2 phrases>"
 }
 
-Critères de classification :
+Critères de classification hairType :
 - 3C : boucles en S définies, diamètre stylo (~7mm), shrinkage <50%
 - 4A : boucles en S définies, diamètre paille (~5mm), shrinkage 50-60%
 - 4B : boucles en Z/zigzag, peu de définition, texture coton, shrinkage 60-75%
 - 4C : texture la plus serrée, quasiment pas de boucles définies, shrinkage 75-90%
 - OTHER : cheveux lisses, ondulés (types 1-3B), ou non-afro
 
-Porosité : LOW = brillant/lisse, MEDIUM = absorbance normale, HIGH = terne/frisottis/poreux
+Calibration clinique (trichoscopie, normes femmes d'ascendance africaine) :
+- thickness FINE : diamètre capillaire <70µm — cheveux fins, translucides en lumière, cassants
+- thickness MEDIUM : 70-100µm — densité normale, résistance correcte
+- thickness COARSE : >100µm — cheveux robustes, brillants, visiblement épais
+- density LOW : <15 follicules/cm² — cuir chevelu visible entre les mèches
+- density MEDIUM : 15-25 follicules/cm² — densité normale
+- density HIGH : >25 follicules/cm² — masse compacte, cuir chevelu non visible
+- scalpCondition HEALTHY : cuir chevelu clair, sans signes pathologiques
+- scalpCondition DRY : squames fines, aspect terne, desquamation sèche
+- scalpCondition DANDRUFF : squames épaisses visibles, pellicules, séborrhée
+- scalpCondition OILY : cuir chevelu luisant, séborrhéique, collant
+- scalpCondition IRRITATED : rougeurs, inflammation, prurit apparent
+
+Coiffures (currentStyle) :
+- AFRO : cheveux naturels non coiffés en volume
+- WASH_N_GO : boucles définies avec produits, cheveux libres
+- TWA : Teenie Weenie Afro, cheveux très courts naturels
+- BOX_BRAIDS : tresses individuelles carrées volumineuses
+- BRAIDS : tresses en général (si impossible de distinguer)
+- CORNROWS : tresses plates collées au crâne
+- LOCS : locks/dreadlocks matures
+- FAUX_LOCS : faux locks (extension)
+- TWISTS : vanille twists, chunky twists, cheveux libres torsadés
+- TWIST_OUT : défrisage de twists, boucles définies par twist-out
+- FLAT_TWIST : twists plats collés au crâne
+- BANTU_KNOTS : petits chignons/nœuds disposés sur la tête
+- STRAIGHT : cheveux lissés (défrisage, lissage thermique)
+- WEAVE : extension cousue/collée
+- WIG : perruque
+- PROTECTIVE : style protecteur non identifié avec précision
+- OTHER : style non catégorisé
+
+Porosité : LOW = brillant/lisse/water beads off, MEDIUM = absorbance normale, HIGH = terne/frisottis/absorbe vite
 Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe hairType selon ce que tu observes aux racines ou aux pointes visibles.`;
 
   // Fetch image blob once — shared between HF and GPT-4o
@@ -428,7 +460,7 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
   // Validate enum values
   const VALID_HAIR_TYPES = ['3C', '4A', '4B', '4C', 'OTHER'];
   if (!VALID_HAIR_TYPES.includes(hairType)) hairType = '4B';
-  const VALID_STYLES = ['AFRO', 'BRAIDS', 'LOCS', 'TWISTS', 'STRAIGHT', 'WEAVE', 'WIG', 'OTHER'];
+  const VALID_STYLES = ['AFRO', 'WASH_N_GO', 'TWA', 'BOX_BRAIDS', 'BRAIDS', 'CORNROWS', 'LOCS', 'FAUX_LOCS', 'TWISTS', 'TWIST_OUT', 'FLAT_TWIST', 'BANTU_KNOTS', 'STRAIGHT', 'WEAVE', 'WIG', 'PROTECTIVE', 'OTHER'];
   if (!VALID_STYLES.includes(currentStyle)) currentStyle = 'AFRO';
 
   const recommendations = Array.isArray(gpt.recommendations) && gpt.recommendations.length > 0

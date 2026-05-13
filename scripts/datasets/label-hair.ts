@@ -54,19 +54,33 @@ Structure JSON requise :
   "elasticity": <0-100, 0=cassant, 100=très élastique>,
   "shrinkage": <0-100, pourcentage de rétrécissement estimé>,
   "scalpCondition": "HEALTHY" | "DRY" | "OILY" | "DANDRUFF" | "IRRITATED",
-  "currentStyle": "AFRO" | "BRAIDS" | "LOCS" | "TWISTS" | "STRAIGHT" | "WEAVE" | "WIG" | "OTHER",
+  "currentStyle": "AFRO" | "WASH_N_GO" | "TWA" | "BOX_BRAIDS" | "BRAIDS" | "CORNROWS" | "LOCS" | "FAUX_LOCS" | "TWISTS" | "TWIST_OUT" | "FLAT_TWIST" | "BANTU_KNOTS" | "STRAIGHT" | "WEAVE" | "WIG" | "PROTECTIVE" | "OTHER",
   "overallScore": <0-100>,
   "confidence": <0-100, ta confiance dans la classification hairType>,
   "recommendations": [<6 conseils personnalisés en français avec emojis>],
   "reasoning": "<explication courte de tes observations visuelles et de la classification en 1-2 phrases>"
 }
 
-Critères de classification :
+Critères de classification hairType :
 - 3C : boucles en S définies, diamètre stylo (~7mm), shrinkage <50%
 - 4A : boucles en S définies, diamètre paille (~5mm), shrinkage 50-60%
 - 4B : boucles en Z/zigzag, peu de définition, texture coton, shrinkage 60-75%
 - 4C : texture la plus serrée, quasiment pas de boucles définies, shrinkage 75-90%
 - OTHER : cheveux lisses, ondulés (types 1-3B), ou non-afro
+
+Calibration clinique (trichoscopie, normes femmes d'ascendance africaine) :
+- thickness FINE : diamètre capillaire <70µm — cheveux fins, translucides en lumière, cassants
+- thickness MEDIUM : 70-100µm — densité normale
+- thickness COARSE : >100µm — cheveux robustes, brillants, visiblement épais
+- density LOW : <15 follicules/cm² — cuir chevelu visible entre les mèches
+- density MEDIUM : 15-25 follicules/cm² — densité normale
+- density HIGH : >25 follicules/cm² — masse compacte, cuir chevelu non visible
+
+Coiffures (currentStyle) : AFRO=afro naturel, WASH_N_GO=boucles définies avec produits, TWA=teenie weenie afro,
+BOX_BRAIDS=tresses box carrées, BRAIDS=tresses générales, CORNROWS=tresses plates au crâne,
+LOCS=locks matures, FAUX_LOCS=faux locks extension, TWISTS=twists libres, TWIST_OUT=défrisage de twists,
+FLAT_TWIST=twists plats, BANTU_KNOTS=nœuds/chignons, STRAIGHT=lissé/défrisé, WEAVE=extension cousue,
+WIG=perruque, PROTECTIVE=style protecteur non identifié, OTHER=autre
 
 Porosité : LOW = brillant/lisse, MEDIUM = absorbance normale, HIGH = terne/frisottis/poreux
 Si les cheveux ne sont pas visibles (coiffure cachée, bonnet, etc.) mettre hairVisible: false.
