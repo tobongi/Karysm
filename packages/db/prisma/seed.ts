@@ -219,7 +219,7 @@ async function main() {
   // === Test client user ===
   const testClientUser = await prisma.user.upsert({
     where: { phone: '+243812340000' },
-    update: {},
+    update: { role: 'CLIENT', name: 'Client Test', isVerified: true },
     create: { phone: '+243812340000', name: 'Client Test', role: 'CLIENT', isVerified: true },
   });
 
@@ -280,9 +280,8 @@ async function main() {
     console.log('  ✅ 3 saved looks for test client');
   }
 
-  // === Bookings for test client ===
-  const bookingCount = await prisma.booking.count();
-  if (bookingCount === 0 && allProviders.length >= 2) {
+  // === Bookings for test client (upsert by ref — always ensures test data exists) ===
+  if (allProviders.length >= 2) {
     const p1 = allProviders[0];
     const p2 = allProviders[1];
     const svc1 = p1.services[0];
@@ -297,55 +296,41 @@ async function main() {
       const twoWeeksAgo = new Date(now);
       twoWeeksAgo.setDate(now.getDate() - 14);
 
-      await prisma.booking.create({
-        data: {
-          ref: 'KRY-SEED-001',
-          clientId: testClientUser.id,
-          providerId: p1.id,
-          serviceId: svc1.id,
-          date: tomorrow,
-          startTime: '10:00',
-          endTime: '11:30',
-          agreedPrice: svc1.priceMin,
-          currency: p1.currency,
-          status: 'CONFIRMED',
-        },
+      const bookingBase1 = {
+        clientId: testClientUser.id,
+        providerId: p1.id,
+        serviceId: svc1.id,
+        agreedPrice: svc1.priceMin,
+        currency: p1.currency,
+      };
+      const bookingBase2 = {
+        clientId: testClientUser.id,
+        providerId: p2.id,
+        serviceId: svc2.id,
+        agreedPrice: svc2.priceMin,
+        currency: p2.currency,
+      };
+
+      await prisma.booking.upsert({
+        where: { ref: 'KRY-SEED-001' },
+        update: { date: tomorrow, status: 'CONFIRMED' },
+        create: { ...bookingBase1, ref: 'KRY-SEED-001', date: tomorrow, startTime: '10:00', endTime: '11:30', status: 'CONFIRMED' },
       });
 
-      await prisma.booking.create({
-        data: {
-          ref: 'KRY-SEED-002',
-          clientId: testClientUser.id,
-          providerId: p2.id,
-          serviceId: svc2.id,
-          date: twoWeeksAgo,
-          startTime: '14:00',
-          endTime: '15:00',
-          agreedPrice: svc2.priceMin,
-          currency: p2.currency,
-          status: 'COMPLETED',
-        },
+      await prisma.booking.upsert({
+        where: { ref: 'KRY-SEED-002' },
+        update: { date: twoWeeksAgo, status: 'COMPLETED' },
+        create: { ...bookingBase2, ref: 'KRY-SEED-002', date: twoWeeksAgo, startTime: '14:00', endTime: '15:00', status: 'COMPLETED' },
       });
 
-      await prisma.booking.create({
-        data: {
-          ref: 'KRY-SEED-003',
-          clientId: testClientUser.id,
-          providerId: p1.id,
-          serviceId: svc1.id,
-          date: nextWeek,
-          startTime: '09:00',
-          endTime: '10:30',
-          agreedPrice: svc1.priceMin,
-          currency: p1.currency,
-          status: 'REQUESTED',
-        },
+      await prisma.booking.upsert({
+        where: { ref: 'KRY-SEED-003' },
+        update: { date: nextWeek, status: 'REQUESTED' },
+        create: { ...bookingBase1, ref: 'KRY-SEED-003', date: nextWeek, startTime: '09:00', endTime: '10:30', status: 'REQUESTED' },
       });
 
-      console.log('  ✅ 3 bookings created for test client (CONFIRMED, COMPLETED, REQUESTED)');
+      console.log('  ✅ 3 bookings for test client (CONFIRMED, COMPLETED, REQUESTED)');
     }
-  } else if (bookingCount > 0) {
-    console.log(`  ✅ Bookings already exist (${bookingCount})`);
   }
 
   console.log('\n✅ Seed completed!');
