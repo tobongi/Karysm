@@ -313,6 +313,25 @@ Si le visage n'est pas clairement visible, analyse la peau visible et fais de to
   };
 }
 
+// ── Shrinkage calibration — GPT sees the expanded afro and under-estimates ──
+// Clamp to scientifically documented ranges per hair type (trichoscopy studies)
+const SHRINKAGE_RANGES: Record<string, [number, number]> = {
+  '4C': [75, 90],
+  '4B': [60, 75],
+  '4A': [50, 65],
+  '3C': [35, 50],
+};
+
+function calibrateShrinkage(gptValue: number | undefined, hairType: string): number {
+  const range = SHRINKAGE_RANGES[hairType];
+  if (!range) return Math.max(0, Math.min(45, Number(gptValue) || 30));
+  const [min, max] = range;
+  const mid = Math.round((min + max) / 2);
+  const v = Number(gptValue);
+  if (!v || isNaN(v)) return mid;
+  return Math.max(min, Math.min(max, v));
+}
+
 // ── HF hair label → Karysm domain mapping ──
 function mapHfHairLabel(label: string, score: number): { broadType: string; suggestedHairTypes: string[] } {
   if (score < 0.35) return { broadType: 'UNKNOWN', suggestedHairTypes: [] };
@@ -363,8 +382,7 @@ Structure JSON requise :
   "density": "LOW" | "MEDIUM" | "HIGH",
   "thickness": "FINE" | "MEDIUM" | "COARSE",
   "dryness": <0-100, 0=très hydraté, 100=très sec>,
-  "elasticity": <0-100, 0=cassant, 100=très élastique>,
-  "shrinkage": <0-100, pourcentage de rétrécissement estimé>,
+  "shrinkage": <estimation visuelle OBLIGATOIRE — calibrée par type: 4C=75-90, 4B=60-75, 4A=50-65, 3C=35-50, OTHER=0-30; si style protecteur (locs/tresses/perruque) répondre 0>,
   "scalpCondition": "HEALTHY" | "DRY" | "OILY" | "DANDRUFF" | "IRRITATED",
   "currentStyle": "AFRO" | "WASH_N_GO" | "TWA" | "BOX_BRAIDS" | "BRAIDS" | "CORNROWS" | "LOCS" | "FAUX_LOCS" | "TWISTS" | "TWIST_OUT" | "FLAT_TWIST" | "BANTU_KNOTS" | "STRAIGHT" | "WEAVE" | "WIG" | "PROTECTIVE" | "OTHER",
   "overallScore": <0-100>,
@@ -502,8 +520,8 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
     density: gpt.density || 'MEDIUM',
     thickness: gpt.thickness || 'MEDIUM',
     dryness: Number(gpt.dryness) || 55,
-    elasticity: isLocs ? null : (Number(gpt.elasticity) || 60),
-    shrinkage: isLocs ? null : (Number(gpt.shrinkage) || 70),
+    elasticity: null, // Physically unmeasurable from a photo — requires wet strand stretch test
+    shrinkage: isLocs ? null : calibrateShrinkage(Number(gpt.shrinkage) || undefined, hairType),
     scalpCondition: gpt.scalpCondition || 'HEALTHY',
     currentStyle,
     overallScore: Number(gpt.overallScore) || 68,

@@ -145,6 +145,16 @@ export default function HairResultsScreen() {
   const hairInfo = data.hairType ? HAIR_TYPE_INFO[data.hairType] : null;
   const recommendations = Array.isArray(data.recommendations) ? data.recommendations : [];
 
+  // Display-layer shrinkage calibration — corrects old DB records that under-estimated shrinkage
+  // (GPT sees the expanded afro and guesses low; these ranges come from trichoscopy studies)
+  const SHRINKAGE_RANGES: Record<string, [number, number]> = { '4C': [75, 90], '4B': [60, 75], '4A': [50, 65], '3C': [35, 50] };
+  const displayShrinkage = (() => {
+    if (isLocStyle(data.currentStyle) || data.shrinkage == null) return null;
+    const range = data.hairType ? SHRINKAGE_RANGES[data.hairType] : null;
+    if (!range) return data.shrinkage;
+    return Math.max(range[0], Math.min(range[1], data.shrinkage));
+  })();
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -193,8 +203,8 @@ export default function HairResultsScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.locsBannerTitle}>Style protecteur détecté</Text>
               <Text style={styles.locsBannerText}>
-                Le shrinkage et l'élasticité ne sont pas mesurables sur des locs — la texture est verrouillée.
-                Seules la porosité, densité et état du cuir chevelu peuvent être estimés à partir des racines visibles.
+                Le shrinkage n'est pas estimable sur des locs — la texture est verrouillée.
+                Porosité et densité sont estimées depuis les racines visibles.
               </Text>
             </View>
           </View>
@@ -238,17 +248,19 @@ export default function HairResultsScreen() {
           {data.dryness != null && (
             <MetricBar label="Sécheresse" value={data.dryness} icon="🏜️" invert />
           )}
-          {/* Elasticity and shrinkage are unmeasurable on locs — show N/A even for old DB records */}
+          {/* Elasticity: never measurable from a photo — requires physical wet strand stretch test */}
           <MetricBar
             label="Élasticité"
-            value={isLocStyle(data.currentStyle) ? null : data.elasticity}
+            value={null}
             icon="🔄"
+            naText="Test physique requis"
           />
           <MetricBar
             label="Shrinkage"
-            value={isLocStyle(data.currentStyle) ? null : data.shrinkage}
+            value={displayShrinkage}
             icon="📏"
             neutral
+            naText="Non mesurable — locs"
           />
         </View>
 
@@ -344,13 +356,13 @@ export default function HairResultsScreen() {
   );
 }
 
-function MetricBar({ label, value, icon, invert, neutral }: { label: string; value: number | null; icon: string; invert?: boolean; neutral?: boolean }) {
+function MetricBar({ label, value, icon, invert, neutral, naText }: { label: string; value: number | null; icon: string; invert?: boolean; neutral?: boolean; naText?: string }) {
   if (value === null) {
     return (
       <View style={styles.metricRow}>
         <Text style={styles.metricIcon}>{icon}</Text>
         <Text style={styles.metricLabel}>{label}</Text>
-        <Text style={styles.metricNa}>N/A — locs</Text>
+        <Text style={styles.metricNa}>{naText ?? 'Non mesurable'}</Text>
       </View>
     );
   }
