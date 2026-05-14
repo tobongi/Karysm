@@ -695,7 +695,7 @@ export default function ServicesScreen() {
             <Path d={svgPath} fill={colors.headerDark} />
           </Svg>
           <View style={styles.headerContent}>
-            <PressableScale onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+            <PressableScale onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')} style={styles.backBtn} hitSlop={12}>
               <IconArrowLeft size={20} color={colors.white} />
             </PressableScale>
             <View style={{ flex: 1 }}>
