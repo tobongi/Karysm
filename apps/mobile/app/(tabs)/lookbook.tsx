@@ -282,19 +282,26 @@ export default function LookbookTabScreen() {
                 </Text>
               </View>
 
-              <View style={{ width: '100%' }}>
-                <Pressable
-                  style={styles.wantButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    router.push(
-                      `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
-                    );
-                  }}
-                >
-                  <Text style={styles.wantButtonText}>Je veux ça</Text>
-                </Pressable>
-              </View>
+              <Pressable
+                style={{
+                  backgroundColor: colors.accent,
+                  borderRadius: 10,
+                  paddingVertical: 7,
+                  alignItems: 'center',
+                  width: '100%',
+                  position: 'relative',
+                  bottom: undefined,
+                  right: undefined,
+                }}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push(
+                    `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
+                  );
+                }}
+              >
+                <Text style={styles.wantButtonText}>Je veux ça</Text>
+              </Pressable>
             </View>
           </PressableScale>
         </View>

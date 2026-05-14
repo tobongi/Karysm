@@ -250,24 +250,26 @@ export default function LookbookScreen() {
                 <Text style={styles.lookProviderName} numberOfLines={1}>
                   {item.provider.displayName}
                 </Text>
-                {item.provider.instagramHandle && (
-                  <Text style={styles.lookSocial}>📷</Text>
-                )}
               </View>
+              <Pressable
+                style={{
+                  backgroundColor: colors.accent,
+                  borderRadius: 10,
+                  paddingVertical: 7,
+                  alignItems: 'center',
+                  width: '100%',
+                  marginTop: 6,
+                }}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push(
+                    `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
+                  );
+                }}
+              >
+                <Text style={styles.wantButtonText}>Je veux ça</Text>
+              </Pressable>
             </View>
-
-            {/* "Je veux ça" mini button */}
-            <Pressable
-              style={styles.wantButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                router.push(
-                  `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
-                );
-              }}
-            >
-              <Text style={styles.wantButtonText}>Je veux ça</Text>
-            </Pressable>
           </PressableScale>
         </FadeInStagger>
       );
@@ -637,15 +639,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // "Je veux ça" button
+  // "Je veux ça" button (now inline in lookInfo, style applied via inline object)
   wantButton: {
-    position: 'absolute',
-    bottom: 50,
-    right: 8,
     backgroundColor: colors.accent,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: 10,
+    paddingVertical: 7,
+    alignItems: 'center',
+    marginTop: 6,
   },
   wantButtonText: {
     fontSize: 9,
