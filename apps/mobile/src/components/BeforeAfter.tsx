@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { colors } from '../theme/colors';
+import { IconArrowRight } from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
 
 interface BeforeAfterProps {
   beforeImage: string | null;
@@ -27,7 +28,7 @@ export default function BeforeAfter({ beforeImage, afterImage, serviceName, onPr
         </View>
 
         <View style={styles.arrow}>
-          <Text style={styles.arrowText}>{'\u2192'}</Text>
+          <IconArrowRight size={20} color={colors.textSecondary} />
         </View>
 
         <View style={styles.imageWrapper}>
@@ -114,10 +115,6 @@ const styles = StyleSheet.create({
   },
   arrow: {
     paddingHorizontal: 4,
-  },
-  arrowText: {
-    fontSize: 18,
-    color: colors.textMuted,
   },
   serviceName: {
     fontSize: 12,

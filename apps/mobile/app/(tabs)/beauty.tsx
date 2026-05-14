@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
 } from 'react-native';
+import { IconChevronRight } from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
@@ -254,7 +255,7 @@ export default function BeautyTab() {
             <Text style={styles.journalTitle}>Journal capillaire</Text>
             <Text style={styles.journalSubtitle}>Suivez votre parcours cheveux mois par mois</Text>
           </View>
-          <Text style={styles.journalArrow}>{'\u203A'}</Text>
+          <IconChevronRight size={20} color={colors.textMuted} />
         </Pressable>
 
         {/* -- Learn Section -- */}
@@ -386,7 +387,6 @@ const styles = StyleSheet.create({
   },
   journalTitle: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
   journalSubtitle: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', marginTop: 2 },
-  journalArrow: { fontSize: 22, color: colors.textMuted },
 
   // Learn section
   learnSectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginTop: 28, marginBottom: 12 },

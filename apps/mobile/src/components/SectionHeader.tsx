@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { colors } from '../theme/colors';
+import { IconChevronRight } from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
 
 interface SectionHeaderProps {
   title: string;
@@ -27,13 +28,12 @@ function SectionHeader({ title, onSeeAll, seeAllText = 'Voir tout' }: SectionHea
       </Text>
       {onSeeAll && (
         <Pressable onPress={onSeeAll} hitSlop={8}>
-          <Text style={{
-            fontFamily: 'Poppins_500Medium',
-            fontSize: 13,
-            color: colors.primary,
-          }}>
-            {seeAllText} {'\u203A'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <Text style={{ fontFamily: 'Poppins_500Medium', fontSize: 13, color: colors.primary }}>
+              {seeAllText}
+            </Text>
+            <IconChevronRight size={14} color={colors.primary} />
+          </View>
         </Pressable>
       )}
     </View>
