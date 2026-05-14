@@ -26,6 +26,12 @@ import IconSortAscending from '@tabler/icons-react-native/dist/esm/icons/IconSor
 import IconSortDescending from '@tabler/icons-react-native/dist/esm/icons/IconSortDescending.mjs';
 import IconCalendarEvent from '@tabler/icons-react-native/dist/esm/icons/IconCalendarEvent.mjs';
 import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconCash from '@tabler/icons-react-native/dist/esm/icons/IconCash.mjs';
+import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import IconPlus from '@tabler/icons-react-native/dist/esm/icons/IconPlus.mjs';
+import IconRosetteDiscountCheck from '@tabler/icons-react-native/dist/esm/icons/IconRosetteDiscountCheck.mjs';
+import IconTrendingUp from '@tabler/icons-react-native/dist/esm/icons/IconTrendingUp.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
@@ -239,8 +245,348 @@ function HeroBanner({ slides, currentIndex }: { slides: typeof HERO_SLIDES; curr
   );
 }
 
+// ─── Provider interfaces ────────────────────────────────────────────────────
+
+interface ProviderBooking {
+  id: string;
+  ref: string;
+  date: string;
+  startTime: string;
+  status: string;
+  agreedPrice: number;
+  currency: string;
+  service: { name: string };
+  client: { name: string; avatar?: string | null };
+}
+
+interface ProviderWallet {
+  availableBalance: number;
+  pendingBalance: number;
+  currency: string;
+}
+
+interface OpenRequest {
+  id: string;
+  title: string;
+  budgetMin: number;
+  budgetMax: number;
+  currency: string;
+  city: string;
+  proposalCount: number;
+  createdAt: string;
+  client?: { name: string; avatar?: string | null };
+}
+
+// ─── ProviderHome ────────────────────────────────────────────────────────────
+
+function ProviderHome({ user }: { user: any }) {
+  const [wallet, setWallet] = useState<ProviderWallet | null>(null);
+  const [bookings, setBookings] = useState<ProviderBooking[]>([]);
+  const [requests, setRequests] = useState<OpenRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const firstName = user?.name?.split(' ')[0];
+  const greeting = getGreeting();
+
+  const load = useCallback(async () => {
+    try {
+      const [wRes, bRes, rRes] = await Promise.allSettled([
+        api('/wallet') as Promise<any>,
+        api('/bookings/mine?role=provider&status=upcoming&pageSize=3') as Promise<any>,
+        api('/requests/browse?pageSize=4') as Promise<any>,
+      ]);
+      if (wRes.status === 'fulfilled') setWallet(wRes.value?.data ?? null);
+      if (bRes.status === 'fulfilled') setBookings(bRes.value?.data?.items ?? []);
+      if (rRes.status === 'fulfilled') setRequests(rRes.value?.data?.items ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const fmtAmount = (n: number, currency: string) =>
+    `${n.toLocaleString('fr-FR')} ${currency === 'CDF' ? 'FC' : 'FCFA'}`;
+
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+    REQUESTED:  { label: 'Demande',   color: colors.warning },
+    CONFIRMED:  { label: 'Confirmé',  color: colors.primary },
+    DEPOSIT_PAID: { label: 'Acompte', color: colors.success },
+    IN_PROGRESS: { label: 'En cours', color: colors.accent },
+    COMPLETED:  { label: 'Terminé',   color: colors.textMuted },
+  };
+
+  return (
+    <SafeAreaView style={pStyles.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={pStyles.scroll}>
+
+        {/* ── Header ── */}
+        <View style={pStyles.header}>
+          <View style={pStyles.headerTop}>
+            <View>
+              <Text style={pStyles.greeting}>{greeting}</Text>
+              <Text style={pStyles.name}>{firstName || 'Prestataire'}</Text>
+            </View>
+            <Pressable onPress={() => router.push('/notifications' as any)} style={pStyles.bellBtn}>
+              <IconBell size={22} color={colors.white} strokeWidth={1.8} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Wallet card ── */}
+        <Pressable style={pStyles.walletCard} onPress={() => router.push('/wallet/index' as any)}>
+          <View style={pStyles.walletRow}>
+            <View>
+              <Text style={pStyles.walletLabel}>Solde disponible</Text>
+              {loading ? (
+                <View style={pStyles.walletSkeleton} />
+              ) : (
+                <Text style={pStyles.walletAmount}>
+                  {wallet ? fmtAmount(wallet.availableBalance, wallet.currency) : '—'}
+                </Text>
+              )}
+            </View>
+            <View style={pStyles.walletIconCircle}>
+              <IconCash size={26} color={colors.accent} strokeWidth={1.6} />
+            </View>
+          </View>
+          {wallet && wallet.pendingBalance > 0 && (
+            <View style={pStyles.walletPending}>
+              <Text style={pStyles.walletPendingText}>
+                {fmtAmount(wallet.pendingBalance, wallet.currency)} en attente de validation
+              </Text>
+            </View>
+          )}
+        </Pressable>
+
+        {/* ── Quick actions ── */}
+        <View style={pStyles.actionsRow}>
+          {[
+            { label: 'Services', icon: <IconPlus size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/services' },
+            { label: 'Disponibilités', icon: <IconCalendarEvent size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/availability' },
+            { label: 'Revenus', icon: <IconTrendingUp size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/earnings' },
+            { label: 'Demandes', icon: <IconClipboardList size={22} color={colors.accent} strokeWidth={1.8} />, route: '/request/browse' },
+          ].map(a => (
+            <PressableScale key={a.label} style={pStyles.actionBtn} onPress={() => router.push(a.route as any)}>
+              <View style={pStyles.actionIcon}>{a.icon}</View>
+              <Text style={pStyles.actionLabel}>{a.label}</Text>
+            </PressableScale>
+          ))}
+        </View>
+
+        {/* ── Upcoming bookings ── */}
+        <View style={pStyles.section}>
+          <View style={pStyles.sectionRow}>
+            <Text style={pStyles.sectionTitle}>Rendez-vous à venir</Text>
+            <Pressable onPress={() => router.push('/(tabs)/bookings' as any)}>
+              <Text style={pStyles.sectionLink}>Voir tout</Text>
+            </Pressable>
+          </View>
+
+          {loading ? (
+            [0, 1].map(i => <View key={i} style={pStyles.bookingSkeleton} />)
+          ) : bookings.length === 0 ? (
+            <View style={pStyles.emptyCard}>
+              <IconCalendarEvent size={32} color={colors.textMuted} strokeWidth={1.4} />
+              <Text style={pStyles.emptyText}>Aucun rendez-vous à venir</Text>
+            </View>
+          ) : (
+            <FadeInStagger>
+              {bookings.map(b => {
+                const st = STATUS_LABEL[b.status] ?? { label: b.status, color: colors.textMuted };
+                return (
+                  <PressableScale key={b.id} style={pStyles.bookingCard} onPress={() => router.push(`/booking/detail/${b.id}` as any)}>
+                    <View style={pStyles.bookingLeft}>
+                      <View style={pStyles.bookingAvatar}>
+                        {b.client.avatar ? (
+                          <Image source={{ uri: b.client.avatar }} style={pStyles.bookingAvatarImg} />
+                        ) : (
+                          <Text style={pStyles.bookingAvatarInit}>{b.client.name[0]?.toUpperCase()}</Text>
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={pStyles.bookingClient} numberOfLines={1}>{b.client.name}</Text>
+                        <Text style={pStyles.bookingService} numberOfLines={1}>{b.service.name}</Text>
+                        <Text style={pStyles.bookingDate}>{fmtDate(b.date)} · {b.startTime.slice(0, 5)}</Text>
+                      </View>
+                    </View>
+                    <View style={pStyles.bookingRight}>
+                      <Text style={pStyles.bookingPrice}>{fmtAmount(b.agreedPrice, b.currency)}</Text>
+                      <View style={[pStyles.statusPill, { backgroundColor: `${st.color}18` }]}>
+                        <Text style={[pStyles.statusPillText, { color: st.color }]}>{st.label}</Text>
+                      </View>
+                    </View>
+                  </PressableScale>
+                );
+              })}
+            </FadeInStagger>
+          )}
+        </View>
+
+        {/* ── Open requests ── */}
+        <View style={pStyles.section}>
+          <View style={pStyles.sectionRow}>
+            <Text style={pStyles.sectionTitle}>Demandes ouvertes</Text>
+            <Pressable onPress={() => router.push('/request/browse' as any)}>
+              <Text style={pStyles.sectionLink}>Voir tout</Text>
+            </Pressable>
+          </View>
+
+          {loading ? (
+            [0, 1].map(i => <View key={i} style={pStyles.requestSkeleton} />)
+          ) : requests.length === 0 ? (
+            <View style={pStyles.emptyCard}>
+              <IconClipboardList size={32} color={colors.textMuted} strokeWidth={1.4} />
+              <Text style={pStyles.emptyText}>Aucune demande ouverte pour l'instant</Text>
+            </View>
+          ) : (
+            <FadeInStagger>
+              {requests.map(r => (
+                <PressableScale key={r.id} style={pStyles.requestCard} onPress={() => router.push(`/request/${r.id}` as any)}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={pStyles.requestTitle} numberOfLines={1}>{r.title}</Text>
+                    <View style={pStyles.requestMeta}>
+                      <IconMapPin size={12} color={colors.textMuted} strokeWidth={1.8} />
+                      <Text style={pStyles.requestMetaText}>{r.city}</Text>
+                      <Text style={pStyles.requestMetaDot}>·</Text>
+                      <Text style={pStyles.requestMetaText}>
+                        {fmtAmount(r.budgetMin, r.currency)}
+                        {r.budgetMax > r.budgetMin ? ` – ${fmtAmount(r.budgetMax, r.currency)}` : ''}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={pStyles.requestRight}>
+                    <View style={pStyles.proposalBadge}>
+                      <Text style={pStyles.proposalCount}>{r.proposalCount}</Text>
+                      <Text style={pStyles.proposalLabel}>offres</Text>
+                    </View>
+                    <IconChevronRight size={16} color={colors.textMuted} strokeWidth={2} />
+                  </View>
+                </PressableScale>
+              ))}
+            </FadeInStagger>
+          )}
+        </View>
+
+        {/* ── KYC nudge ── */}
+        {user && !user.idVerified && (
+          <PressableScale style={pStyles.kycNudge} onPress={() => router.push('/kyc/index' as any)}>
+            <IconRosetteDiscountCheck size={24} color={colors.warning} strokeWidth={1.6} />
+            <View style={{ flex: 1 }}>
+              <Text style={pStyles.kycNudgeTitle}>Obtenez le badge vérifié</Text>
+              <Text style={pStyles.kycNudgeSub}>Soumettez vos documents pour rassurer vos clientes</Text>
+            </View>
+            <IconChevronRight size={16} color={colors.warning} strokeWidth={2} />
+          </PressableScale>
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const pStyles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingBottom: 24 },
+
+  header: {
+    backgroundColor: colors.headerDark,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginBottom: 16,
+  },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  greeting: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.65)', marginBottom: 2 },
+  name: { fontSize: 26, fontFamily: 'PlayfairDisplay_700Bold', color: colors.white },
+  bellBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },
+
+  walletCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.10)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 16, elevation: 3 },
+    }) as any,
+  },
+  walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  walletLabel: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 6 },
+  walletAmount: { fontSize: 26, fontFamily: 'Poppins_700Bold', color: colors.accent, letterSpacing: -0.5 },
+  walletSkeleton: { height: 30, width: 160, borderRadius: 8, backgroundColor: colors.n300, marginBottom: 4 },
+  walletIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(91,33,182,0.10)', justifyContent: 'center', alignItems: 'center' },
+  walletPending: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderLight },
+  walletPendingText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.warning },
+
+  actionsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 24 },
+  actionBtn: { flex: 1, backgroundColor: colors.card, borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  actionIcon: { marginBottom: 6 },
+  actionLabel: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
+
+  section: { marginHorizontal: 20, marginBottom: 24 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  sectionLink: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.primary },
+
+  bookingCard: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: colors.card, borderRadius: 16, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  bookingLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  bookingAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  bookingAvatarImg: { width: 44, height: 44 },
+  bookingAvatarInit: { fontSize: 18, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
+  bookingClient: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 2 },
+  bookingService: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 2 },
+  bookingDate: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  bookingRight: { alignItems: 'flex-end', gap: 6 },
+  bookingPrice: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.text },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  statusPillText: { fontSize: 10, fontFamily: 'Poppins_600SemiBold' },
+  bookingSkeleton: { height: 72, borderRadius: 16, backgroundColor: colors.n300, marginBottom: 10 },
+
+  requestCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.card, borderRadius: 16, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  requestTitle: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 6 },
+  requestMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  requestMetaText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  requestMetaDot: { fontSize: 12, color: colors.textMuted },
+  requestRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proposalBadge: { alignItems: 'center', backgroundColor: colors.primaryGhost, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  proposalCount: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  proposalLabel: { fontSize: 9, fontFamily: 'Poppins_400Regular', color: colors.primary },
+  requestSkeleton: { height: 64, borderRadius: 16, backgroundColor: colors.n300, marginBottom: 10 },
+
+  emptyCard: { backgroundColor: colors.card, borderRadius: 16, padding: 28, alignItems: 'center', borderWidth: 1, borderColor: colors.border, gap: 10 },
+  emptyText: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center' },
+
+  kycNudge: {
+    marginHorizontal: 20, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(230,138,0,0.08)', borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(230,138,0,0.20)',
+  },
+  kycNudgeTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.warning, marginBottom: 2 },
+  kycNudgeSub: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
+});
+
+// ─── ExplorerTab (client home) ────────────────────────────────────────────────
+
 export default function ExplorerTab() {
-  const { user } = useAuth();
+  const { user, isProvider } = useAuth();
   const { width: winWidth } = useWindowDimensions();
   const cardImgWidth = Math.min(winWidth, 480) - 40;
   const [heroIndex, setHeroIndex] = useState(0);
@@ -336,6 +682,8 @@ export default function ExplorerTab() {
   const activeFilterCount = [filterIsMobile, filterMaxPrice, filterMaxDistance, filterMinRating, sortBy !== 'rating'].filter(Boolean).length;
   const greeting = getGreeting();
   const firstName = user?.name?.split(' ')[0];
+
+  if (isProvider) return <ProviderHome user={user} />;
 
   const listHeader = (
     <>
