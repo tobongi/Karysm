@@ -57,6 +57,46 @@ const CATEGORY_FILTERS = [
   { key: 'spa', label: 'Spa' },
 ];
 
+const MOCK_IMAGES: Record<string, any> = {
+  m1: require('../../assets/images/lookbook/look_tresses.webp'),
+  m2: require('../../assets/images/lookbook/look_ongles.webp'),
+  m3: require('../../assets/images/lookbook/look_braids.webp'),
+  m4: require('../../assets/images/lookbook/look_fade.webp'),
+  m5: require('../../assets/images/lookbook/look_mariee.webp'),
+  m6: require('../../assets/images/lookbook/look_stiletto.webp'),
+  m7: require('../../assets/images/lookbook/look_soins.webp'),
+  m8: require('../../assets/images/lookbook/look_hair_care.webp'),
+  m9: require('../../assets/images/lookbook/look_cornrows.webp'),
+  m10: require('../../assets/images/lookbook/look_spa.webp'),
+  m11: require('../../assets/images/lookbook/look_locs.webp'),
+  m12: require('../../assets/images/lookbook/look_cut_crease.webp'),
+  m13: require('../../assets/images/lookbook/look_pedicure.webp'),
+  m14: require('../../assets/images/lookbook/look_hot_stone.webp'),
+  m15: require('../../assets/images/lookbook/look_lace_wig.webp'),
+};
+
+const _p = (id: string, slug: string, name: string, city: string, rating: number): FeedProvider => ({
+  id, slug, displayName: name, city, avgRating: rating, avatar: null, instagramHandle: null, tiktokHandle: null,
+});
+
+const MOCK_FEED: FeedItem[] = [
+  { id: 'm1',  imageUrl: null, caption: 'Tresses collées avec perles dorées',       serviceTag: 'coiffure',   savedCount: 24, createdAt: '2026-04-01T10:00:00Z', provider: _p('p1', 'amina-beauty',     'Amina Beauty',      'Kinshasa',   4.8) },
+  { id: 'm2',  imageUrl: null, caption: 'Gel UV effet marbre rose',                  serviceTag: 'ongles',     savedCount: 18, createdAt: '2026-04-02T10:00:00Z', provider: _p('p2', 'nails-by-grace',   'Nails by Grace',    'Kinshasa',   4.9) },
+  { id: 'm3',  imageUrl: null, caption: 'Box braids caramel mi-dos',                 serviceTag: 'coiffure',   savedCount: 31, createdAt: '2026-04-03T10:00:00Z', provider: _p('p3', 'marie-kabila',     'Marie Kabila',      'Kinshasa',   4.6) },
+  { id: 'm4',  imageUrl: null, caption: 'Dégradé américain + line-up net',           serviceTag: 'barber',     savedCount: 12, createdAt: '2026-04-04T10:00:00Z', provider: _p('p4', 'grace-mutombo',    'Grace Mutombo',     'Kinshasa',   4.9) },
+  { id: 'm5',  imageUrl: null, caption: 'Mariée Naomie — tresses couronne',          serviceTag: 'coiffure',   savedCount: 42, createdAt: '2026-04-05T10:00:00Z', provider: _p('p5', 'amina-beauty',     'Amina Beauty',      'Kinshasa',   4.8) },
+  { id: 'm6',  imageUrl: null, caption: 'Stiletto strass crystal',                   serviceTag: 'ongles',     savedCount: 27, createdAt: '2026-04-06T10:00:00Z', provider: _p('p6', 'nadia-obame',      'Nadia Obame',       'Libreville', 4.5) },
+  { id: 'm7',  imageUrl: null, caption: 'Soin visage hydratant & éclat',             serviceTag: 'soins',      savedCount: 9,  createdAt: '2026-04-07T10:00:00Z', provider: _p('p7', 'esther-tshisekedi','Esther Tshisekedi', 'Kinshasa',   4.0) },
+  { id: 'm8',  imageUrl: null, caption: 'Soin cheveux karité profond',               serviceTag: 'soins',      savedCount: 14, createdAt: '2026-04-08T10:00:00Z', provider: _p('p8', 'marie-kabila',     'Marie Kabila',      'Kinshasa',   4.6) },
+  { id: 'm9',  imageUrl: null, caption: 'Cornrows Fulani avec perles',               serviceTag: 'coiffure',   savedCount: 36, createdAt: '2026-04-09T10:00:00Z', provider: _p('p9', 'aissatou-njoya',   'Aissatou Njoya',    'Douala',     4.9) },
+  { id: 'm10', imageUrl: null, caption: 'Rituel spa — hammam & gommage miel',        serviceTag: 'spa',        savedCount: 7,  createdAt: '2026-04-10T10:00:00Z', provider: _p('p10','esther-tshisekedi','Esther Tshisekedi', 'Kinshasa',   4.0) },
+  { id: 'm11', imageUrl: null, caption: 'Locs starter — racines propres',            serviceTag: 'coiffure',   savedCount: 21, createdAt: '2026-04-11T10:00:00Z', provider: _p('p11','amina-beauty',     'Amina Beauty',      'Kinshasa',   4.8) },
+  { id: 'm12', imageUrl: null, caption: 'Cut crease smoky violet & gold',            serviceTag: 'maquillage', savedCount: 33, createdAt: '2026-04-12T10:00:00Z', provider: _p('p12','nadia-obame',      'Nadia Obame',       'Libreville', 4.5) },
+  { id: 'm13', imageUrl: null, caption: 'Pédicure semi-permanent corail',            serviceTag: 'ongles',     savedCount: 15, createdAt: '2026-04-13T10:00:00Z', provider: _p('p13','nails-by-grace',   'Nails by Grace',    'Kinshasa',   4.9) },
+  { id: 'm14', imageUrl: null, caption: 'Massage pierres chaudes dos complet',       serviceTag: 'spa',        savedCount: 11, createdAt: '2026-04-14T10:00:00Z', provider: _p('p14','esther-tshisekedi','Esther Tshisekedi', 'Kinshasa',   4.0) },
+  { id: 'm15', imageUrl: null, caption: 'Lace wig HD naturel — pose invisible',      serviceTag: 'coiffure',   savedCount: 19, createdAt: '2026-04-15T10:00:00Z', provider: _p('p15','aissatou-njoya',   'Aissatou Njoya',    'Douala',     4.9) },
+];
+
 function LookCardSkeleton({ index }: { index: number }) {
   const h = index % 3 === 0 ? 240 : 180;
   return (
@@ -115,7 +155,7 @@ export default function LookbookTabScreen() {
       } catch {
         // API failed/timed out — stop pagination, fall back to mock on initial load
         setHasMore(false);
-        if (!append) setItems([]);
+        if (!append) setItems(category ? MOCK_FEED.filter(i => i.serviceTag === category) : MOCK_FEED);
       } finally {
         clearTimeout(timeout);
         setLoading(false);
@@ -225,7 +265,7 @@ export default function LookbookTabScreen() {
           >
             {/* Full-card image */}
             <Image
-              source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl || '' }}
+              source={MOCK_IMAGES[item.id] ?? { uri: imgUrl(item.imageUrl, 400) || item.imageUrl || '' }}
               style={[styles.lookImage, { height: imageHeight }]}
               resizeMode="cover"
             />
