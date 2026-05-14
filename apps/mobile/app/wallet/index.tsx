@@ -177,7 +177,7 @@ export default function WalletScreen() {
           const initial = item.client?.name?.charAt(0).toUpperCase() ?? '?';
 
           return (
-            <FadeInStagger index={index}>
+            <FadeInStagger index={index} style={{ width: '100%' }}>
               <View style={styles.txRow}>
                 <View style={styles.avatar}>
                   {item.client?.avatar ? (

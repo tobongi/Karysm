@@ -199,7 +199,7 @@ export default function ProfileTab() {
         ) : (
           <View style={styles.kpiRow}>
             {kpiData.map((kpi, idx) => (
-              <FadeInStagger key={idx} index={idx} delay={30}>
+              <FadeInStagger key={idx} index={idx} delay={30} style={{ flex: 1 }}>
                 <View style={styles.kpiCard}>
                   <Text style={styles.kpiValue}>{kpi.value}</Text>
                   <Text style={styles.kpiLabel}>{kpi.label}</Text>
@@ -216,16 +216,16 @@ export default function ProfileTab() {
         <View style={styles.menuCard}>
           {isProvider ? (
             <>
-              <FadeInStagger index={0}><MenuItem icon={<IconScissors size={20} color={colors.primary} />} label="Mes services" onPress={() => router.push('/provider-dashboard/services')} /></FadeInStagger>
-              <FadeInStagger index={1}><MenuItem icon={<IconCalendar size={20} color={colors.primary} />} label="Disponibilités" onPress={() => router.push('/provider-dashboard/availability')} /></FadeInStagger>
-              <FadeInStagger index={2}><MenuItem icon={<IconCash size={20} color={colors.primary} />} label="Mes revenus" onPress={() => router.push('/provider-dashboard/earnings')} /></FadeInStagger>
-              <FadeInStagger index={3}><MenuItem icon={<IconClipboardList size={20} color={colors.primary} />} label="Demandes ouvertes" onPress={() => router.push('/request/browse' as any)} /></FadeInStagger>
+              <FadeInStagger index={0} style={{ width: '100%' }}><MenuItem icon={<IconScissors size={20} color={colors.primary} />} label="Mes services" onPress={() => router.push('/provider-dashboard/services')} /></FadeInStagger>
+              <FadeInStagger index={1} style={{ width: '100%' }}><MenuItem icon={<IconCalendar size={20} color={colors.primary} />} label="Disponibilités" onPress={() => router.push('/provider-dashboard/availability')} /></FadeInStagger>
+              <FadeInStagger index={2} style={{ width: '100%' }}><MenuItem icon={<IconCash size={20} color={colors.primary} />} label="Mes revenus" onPress={() => router.push('/provider-dashboard/earnings')} /></FadeInStagger>
+              <FadeInStagger index={3} style={{ width: '100%' }}><MenuItem icon={<IconClipboardList size={20} color={colors.primary} />} label="Demandes ouvertes" onPress={() => router.push('/request/browse' as any)} /></FadeInStagger>
             </>
           ) : (
             <>
-              <FadeInStagger index={0}><MenuItem icon={<IconCalendar size={20} color={colors.primary} />} label="Mes réservations" onPress={() => router.push('/(tabs)/bookings')} /></FadeInStagger>
-              <FadeInStagger index={1}><MenuItem icon={<IconHeart size={20} color={colors.primary} />} label="Favoris" onPress={() => router.push('/favorites' as any)} /></FadeInStagger>
-              <FadeInStagger index={2}><MenuItem icon={<IconBriefcase size={20} color={colors.primary} />} label="Looks sauvés" onPress={() => router.push('/(tabs)/lookbook' as any)} /></FadeInStagger>
+              <FadeInStagger index={0} style={{ width: '100%' }}><MenuItem icon={<IconCalendar size={20} color={colors.primary} />} label="Mes réservations" onPress={() => router.push('/(tabs)/bookings')} /></FadeInStagger>
+              <FadeInStagger index={1} style={{ width: '100%' }}><MenuItem icon={<IconHeart size={20} color={colors.primary} />} label="Favoris" onPress={() => router.push('/favorites' as any)} /></FadeInStagger>
+              <FadeInStagger index={2} style={{ width: '100%' }}><MenuItem icon={<IconBriefcase size={20} color={colors.primary} />} label="Looks sauvés" onPress={() => router.push('/(tabs)/lookbook' as any)} /></FadeInStagger>
             </>
           )}
         </View>
@@ -235,12 +235,12 @@ export default function ProfileTab() {
       <View style={styles.menuSection}>
         <Text style={styles.sectionLabel}>COMPTE</Text>
         <View style={styles.menuCard}>
-          <FadeInStagger index={4}><MenuItem icon={<IconUser size={20} color={colors.primary} />} label="Mon profil" onPress={() => router.push('/settings/edit-profile' as any)} /></FadeInStagger>
+          <FadeInStagger index={4} style={{ width: '100%' }}><MenuItem icon={<IconUser size={20} color={colors.primary} />} label="Mon profil" onPress={() => router.push('/settings/edit-profile' as any)} /></FadeInStagger>
 
           {isProvider ? (
             <>
-              <FadeInStagger index={5}><MenuItem icon={<IconCreditCard size={20} color={colors.primary} />} label="Portefeuille" onPress={() => router.push('/wallet' as any)} /></FadeInStagger>
-              <FadeInStagger index={6}>
+              <FadeInStagger index={5} style={{ width: '100%' }}><MenuItem icon={<IconCreditCard size={20} color={colors.primary} />} label="Portefeuille" onPress={() => router.push('/wallet' as any)} /></FadeInStagger>
+              <FadeInStagger index={6} style={{ width: '100%' }}>
                 <MenuItem
                   icon={<IconId size={20} color={colors.primary} />}
                   label="Vérification identité"
@@ -248,10 +248,10 @@ export default function ProfileTab() {
                   onPress={() => router.push('/kyc' as any)}
                 />
               </FadeInStagger>
-              <FadeInStagger index={7}><MenuItem icon={<IconHeart size={20} color={colors.primary} />} label="Favoris" onPress={() => router.push('/favorites' as any)} /></FadeInStagger>
+              <FadeInStagger index={7} style={{ width: '100%' }}><MenuItem icon={<IconHeart size={20} color={colors.primary} />} label="Favoris" onPress={() => router.push('/favorites' as any)} /></FadeInStagger>
             </>
           ) : (
-            <FadeInStagger index={5}>
+            <FadeInStagger index={5} style={{ width: '100%' }}>
               <MenuItem
                 icon={<IconBriefcase size={20} color={colors.accent} />}
                 label="Devenir prestataire"
@@ -267,13 +267,13 @@ export default function ProfileTab() {
       <View style={styles.menuSection}>
         <Text style={styles.sectionLabel}>AIDE</Text>
         <View style={styles.menuCard}>
-          <FadeInStagger index={8}><MenuItem icon={<IconSettings size={20} color={colors.primary} />} label="Paramètres" onPress={() => router.push('/settings' as any)} /></FadeInStagger>
-          <FadeInStagger index={9}><MenuItem icon={<IconGift size={20} color={colors.primary} />} label="Inviter des amies" onPress={() => router.push('/referral' as any)} /></FadeInStagger>
+          <FadeInStagger index={8} style={{ width: '100%' }}><MenuItem icon={<IconSettings size={20} color={colors.primary} />} label="Paramètres" onPress={() => router.push('/settings' as any)} /></FadeInStagger>
+          <FadeInStagger index={9} style={{ width: '100%' }}><MenuItem icon={<IconGift size={20} color={colors.primary} />} label="Inviter des amies" onPress={() => router.push('/referral' as any)} /></FadeInStagger>
         </View>
       </View>
 
       {/* Logout */}
-      <FadeInStagger index={10}>
+      <FadeInStagger index={10} style={{ width: '100%' }}>
         <PressableScale style={styles.logoutItem} onPress={() => { logout(); router.replace('/auth/login'); }}>
           <View style={[styles.iconCircle, styles.logoutIconCircle]}>
             <IconLogout size={20} color={colors.error} />
@@ -473,6 +473,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'column',
   },
 
   // Menu item
