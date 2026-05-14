@@ -13,6 +13,7 @@ import { pickAndUploadImage } from '../../src/lib/upload';
 import { IconX } from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import { IconPhoto } from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
 import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import { IconCircleCheck } from '@tabler/icons-react-native/dist/esm/icons/IconCircleCheck.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville', 'Abidjan', 'Dakar'];
 
@@ -28,15 +29,6 @@ interface Category {
   slug: string;
   icon?: string;
 }
-
-const CATEGORY_ICONS: Record<string, string> = {
-  'Coiffure': '\uD83D\uDC87\u200D\u2640\uFE0F',
-  'Ongles': '\uD83D\uDC85',
-  'Maquillage': '\uD83D\uDC84',
-  'Soins': '\uD83D\uDC86\u200D\u2640\uFE0F',
-  'Barber': '\u2702\uFE0F',
-  'Spa': '\uD83E\uDDD6\u200D\u2640\uFE0F',
-};
 
 export default function CreateRequestScreen() {
   const { user } = useAuth();
@@ -186,7 +178,6 @@ export default function CreateRequestScreen() {
                 style={[styles.categoryChip, categoryId === cat.id && styles.categoryChipActive]}
                 onPress={() => setCategoryId(cat.id)}
               >
-                <Text style={styles.categoryIcon}>{CATEGORY_ICONS[cat.name] || '\u2728'}</Text>
                 <Text style={[styles.categoryText, categoryId === cat.id && styles.categoryTextActive]}>
                   {cat.name}
                 </Text>
@@ -353,7 +344,7 @@ export default function CreateRequestScreen() {
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalEmoji}>{'\u2705'}</Text>
+            <IconCircleCheck size={48} color={colors.success} style={{ marginBottom: 12 }} />
             <Text style={styles.modalTitle}>Demande publiée !</Text>
             <Text style={styles.modalText}>
               Les prestataires de votre ville vont pouvoir vous envoyer des propositions.
@@ -424,7 +415,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost,
     borderColor: colors.primary,
   },
-  categoryIcon: { fontSize: 16, marginRight: 6 },
   categoryText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
   categoryTextActive: { color: colors.primary, fontFamily: 'Poppins_700Bold' },
   photoButton: {
@@ -560,7 +550,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     alignItems: 'center',
   },
-  modalEmoji: { fontSize: 48, marginBottom: 12 },
   modalTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 8 },
   modalText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
   modalBtn: {
