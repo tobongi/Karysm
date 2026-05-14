@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { colors } from '../theme/colors';
-import { IconChevronRight } from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
 
 interface SectionHeaderProps {
   title: string;

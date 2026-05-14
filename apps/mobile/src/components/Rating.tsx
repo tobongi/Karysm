@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
-import { IconStar } from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 
 type RatingSize = 'sm' | 'md';
 

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { colors, radius, fonts, shadows } from '../theme';
 import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
-import { IconX } from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 
 interface SearchBarProps {
   value: string;

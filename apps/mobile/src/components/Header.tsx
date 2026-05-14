@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
-import { IconChevronLeft } from '@tabler/icons-react-native/dist/esm/icons/IconChevronLeft.mjs';
+import IconChevronLeft from '@tabler/icons-react-native/dist/esm/icons/IconChevronLeft.mjs';
 
 interface HeaderProps {
   title: string;

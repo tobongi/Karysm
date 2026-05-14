@@ -5,7 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import IconBrush from '@tabler/icons-react-native/dist/esm/icons/IconBrush.mjs';
-import IconHandGrab from '@tabler/icons-react-native/dist/esm/icons/IconHandGrab.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
 import IconRazor from '@tabler/icons-react-native/dist/esm/icons/IconRazor.mjs';
 import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
 import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
@@ -14,8 +14,8 @@ import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs
 import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import IconMap from '@tabler/icons-react-native/dist/esm/icons/IconMap.mjs';
 import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
-import { IconHeart } from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
-import { IconStar } from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
 import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
 import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
@@ -57,7 +57,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.terracotta} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.terracotta} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.terracotta} strokeWidth={1.5} />,
-  soins: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  soins: <IconLeaf size={28} color={colors.terracotta} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.terracotta} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.terracotta} strokeWidth={1.5} />,
 };
@@ -66,7 +66,7 @@ const CATEGORY_ICONS_ACTIVE: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.white} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.white} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.white} strokeWidth={1.5} />,
-  soins: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
+  soins: <IconLeaf size={28} color={colors.white} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.white} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.white} strokeWidth={1.5} />,
 };
@@ -295,7 +295,7 @@ export default function ExplorerTab() {
         <View style={styles.headerRight}>
           <Pressable
             style={styles.bellButton}
-            onPress={() => router.push('/(tabs)/messages' as any)}
+            onPress={() => router.push('/notifications' as any)}
           >
             <IconBell size={22} color={colors.text} strokeWidth={1.8} />
           </Pressable>
@@ -331,18 +331,6 @@ export default function ExplorerTab() {
           ))}
         </View>
       </View>
-
-      {/* Scanner strip */}
-      <PressableScale onPress={() => router.push('/scan' as any)}>
-        <View style={styles.scannerStrip}>
-          <Text style={styles.scannerStripIcon}>🔬</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.scannerStripTitle}>Scanner un produit</Text>
-            <Text style={styles.scannerStripSub}>Ingrédients INCI · Open Beauty Facts</Text>
-          </View>
-          <Text style={styles.scannerStripArrow}>›</Text>
-        </View>
-      </PressableScale>
 
       {/* Mes Favorites — horizontal avatar scroll */}
       {recentlyViewed.length > 0 && (
@@ -964,25 +952,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 6,
   },
-
-  // Scanner strip
-  scannerStrip: {
-    marginHorizontal: screenPadding.horizontal,
-    marginBottom: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  scannerStripIcon: { fontSize: 22 },
-  scannerStripTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
-  scannerStripSub: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 1 },
-  scannerStripArrow: { fontSize: 20, color: colors.textMuted },
 
   // Search
   searchContainer: {

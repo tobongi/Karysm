@@ -8,10 +8,10 @@ import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
-import { IconCurrencyDollar } from '@tabler/icons-react-native/dist/esm/icons/IconCurrencyDollar.mjs';
-import { IconMapPin } from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
-import { IconCalendar } from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
-import { IconClipboardList } from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
+import IconCurrencyDollar from '@tabler/icons-react-native/dist/esm/icons/IconCurrencyDollar.mjs';
+import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
+import IconCalendar from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
+import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville'];
 

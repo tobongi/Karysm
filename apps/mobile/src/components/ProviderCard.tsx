@@ -8,8 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { colors, spacing, radius, shadows, fonts } from '../theme';
-import { IconStar } from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
-import { IconHeart } from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 
 interface ProviderCardProps {
   name: string;

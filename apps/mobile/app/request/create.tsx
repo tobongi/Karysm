@@ -10,10 +10,10 @@ import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
 import { pickAndUploadImage } from '../../src/lib/upload';
-import { IconX } from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
-import { IconPhoto } from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
-import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
-import { IconCircleCheck } from '@tabler/icons-react-native/dist/esm/icons/IconCircleCheck.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconCircleCheck from '@tabler/icons-react-native/dist/esm/icons/IconCircleCheck.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville', 'Abidjan', 'Dakar'];
 

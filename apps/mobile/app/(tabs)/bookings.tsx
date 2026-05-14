@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, SectionList, StyleSheet, RefreshControl, Platform } from 'react-native';
+import { View, Text, Pressable, SectionList, StyleSheet, RefreshControl, Platform, Image } from 'react-native';
+import IconClock from '@tabler/icons-react-native/dist/esm/icons/IconClock.mjs';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
@@ -178,7 +179,11 @@ export default function BookingsTab() {
                   onPress={() => router.push(`/booking/detail/${item.id}`)}
                 >
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{initial}</Text>
+                    {item.provider?.user?.avatar ? (
+                      <Image source={{ uri: item.provider.user.avatar }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarText}>{initial}</Text>
+                    )}
                   </View>
                   <View style={styles.rowContent}>
                     <View style={styles.rowTop}>
@@ -189,7 +194,10 @@ export default function BookingsTab() {
                     </View>
                     <Text style={styles.serviceName} numberOfLines={1}>{item.service?.name}</Text>
                     <View style={styles.rowBottom}>
-                      <Text style={styles.timeText}>🕐 {item.startTime}</Text>
+                      <View style={styles.timeRow}>
+                        <IconClock size={13} color={colors.textMuted} strokeWidth={1.8} />
+                        <Text style={styles.timeText}>{item.startTime}</Text>
+                      </View>
                       <Text style={styles.priceText}>{formatPrice(item.agreedPrice, item.currency)}</Text>
                     </View>
                   </View>
@@ -269,6 +277,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_700Bold',
     color: colors.white,
   },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
   rowContent: {
     flex: 1,
   },
@@ -304,6 +317,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   timeText: {
     fontSize: 13,

@@ -19,7 +19,7 @@ import { api } from '../src/lib/api';
 import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
 import { pickAndUploadAvatar } from '../src/lib/upload';
-import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 
 const CITIES = [
   { name: 'Kinshasa', country: 'RDC', currency: 'CDF' },

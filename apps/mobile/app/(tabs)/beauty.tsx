@@ -9,12 +9,17 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import { IconChevronRight } from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
-import { IconDroplet } from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
-import { IconSun } from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
-import { IconLeaf } from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
-import { IconBottle } from '@tabler/icons-react-native/dist/esm/icons/IconBottle.mjs';
-import { IconBook } from '@tabler/icons-react-native/dist/esm/icons/IconBook.mjs';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import IconArrowRight from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
+import IconBottle from '@tabler/icons-react-native/dist/esm/icons/IconBottle.mjs';
+import IconBook from '@tabler/icons-react-native/dist/esm/icons/IconBook.mjs';
+import IconPalette from '@tabler/icons-react-native/dist/esm/icons/IconPalette.mjs';
+import IconFlower from '@tabler/icons-react-native/dist/esm/icons/IconFlower.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import React from 'react';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
@@ -125,7 +130,7 @@ export default function BeautyTab() {
           onPress={() => lastSkin ? router.push(`/ai/skin-results/${lastSkin.id}`) : router.push('/ai/skin-capture')}
         >
           <View style={styles.cardHeader}>
-            <Text style={styles.cardEmoji}>🧴</Text>
+            <View style={styles.cardIconWrap}><IconDroplet size={26} color={colors.primary} /></View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>Analyse de peau</Text>
               <Text style={styles.cardDescription}>
@@ -151,7 +156,7 @@ export default function BeautyTab() {
               {lastSkin.undertone && (
                 <View style={styles.undertoneBadge}>
                   <Text style={styles.undertoneText}>
-                    {lastSkin.undertone === 'WARM' ? '🌅 Chaud' : lastSkin.undertone === 'COOL' ? '❄️ Froid' : '⚖️ Neutre'}
+                    {lastSkin.undertone === 'WARM' ? 'Chaud' : lastSkin.undertone === 'COOL' ? 'Froid' : 'Neutre'}
                   </Text>
                 </View>
               )}
@@ -174,7 +179,7 @@ export default function BeautyTab() {
           onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
         >
           <View style={styles.cardHeader}>
-            <Text style={styles.cardEmoji}>💇🏿‍♀️</Text>
+            <View style={styles.cardIconWrap}><IconScissors size={26} color={colors.primary} /></View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>Analyse cheveux</Text>
               <Text style={styles.cardDescription}>
@@ -221,13 +226,14 @@ export default function BeautyTab() {
               Essayez rouge à lèvres, blush et{'\n'}fard — en temps réel sur votre visage
             </Text>
             <View style={styles.mirrorCta}>
-              <Text style={styles.mirrorCtaText}>Essayer maintenant →</Text>
+              <Text style={styles.mirrorCtaText}>Essayer maintenant</Text>
+              <IconArrowRight size={14} color={colors.white} />
             </View>
           </View>
-          <View style={styles.mirrorEmojis}>
-            <Text style={styles.mirrorEmoji}>💄</Text>
-            <Text style={[styles.mirrorEmoji, { marginTop: 8 }]}>🌸</Text>
-            <Text style={[styles.mirrorEmoji, { marginTop: 8 }]}>✨</Text>
+          <View style={styles.mirrorIcons}>
+            <IconPalette size={28} color={colors.accent} />
+            <IconFlower size={28} color={colors.primary} style={{ marginTop: 8 }} />
+            <IconSparkles size={28} color={colors.accent} style={{ marginTop: 8 }} />
           </View>
         </Pressable>
 
@@ -237,14 +243,14 @@ export default function BeautyTab() {
             <Text style={styles.sectionTitle}>Historique</Text>
             {skinHistory.slice(1).map((s) => (
               <Pressable key={s.id} style={styles.historyRow} onPress={() => router.push(`/ai/skin-results/${s.id}`)}>
-                <Text style={styles.historyIcon}>🧴</Text>
+                <View style={styles.historyIconWrap}><IconDroplet size={18} color={colors.primary} /></View>
                 <Text style={styles.historyLabel}>Peau — Score {s.overallScore || '—'}</Text>
                 <Text style={styles.historyDate}>{formatDate(s.createdAt)}</Text>
               </Pressable>
             ))}
             {hairHistory.slice(1).map((h) => (
               <Pressable key={h.id} style={styles.historyRow} onPress={() => router.push(`/ai/hair-results/${h.id}`)}>
-                <Text style={styles.historyIcon}>💇🏿‍♀️</Text>
+                <View style={styles.historyIconWrap}><IconScissors size={18} color={colors.primary} /></View>
                 <Text style={styles.historyLabel}>Cheveux — {h.hairType || 'Score ' + (h.overallScore || '—')}</Text>
                 <Text style={styles.historyDate}>{formatDate(h.createdAt)}</Text>
               </Pressable>
@@ -298,7 +304,7 @@ const styles = StyleSheet.create({
     }) as any,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  cardEmoji: { fontSize: 32, marginRight: 14 },
+  cardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   cardTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent },
   cardDescription: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   scoreCircle: {
@@ -332,33 +338,37 @@ const styles = StyleSheet.create({
   // Virtual Mirror card
   mirrorCard: {
     borderRadius: 24, padding: 24, marginBottom: 20,
-    backgroundColor: '#1A0E2E',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
     flexDirection: 'row', alignItems: 'center',
     overflow: 'hidden',
     ...Platform.select({
-      web: { boxShadow: '0 8px 32px rgba(91,33,182,0.28)' },
-      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 6 },
+      web: { boxShadow: '0 4px 20px rgba(91,33,182,0.10)' },
+      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 20, elevation: 4 },
     }) as any,
   },
   mirrorContent: { flex: 1 },
   mirrorBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(91,33,182,0.6)',
+    backgroundColor: colors.accent,
     paddingHorizontal: 10, paddingVertical: 3,
     borderRadius: 100, marginBottom: 10,
   },
-  mirrorBadgeText: { color: '#E0CCFF', fontSize: 10, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1 },
-  mirrorTitle: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: '#FFFFFF', marginBottom: 8 },
-  mirrorSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.72)', lineHeight: 20, marginBottom: 16 },
+  mirrorBadgeText: { color: colors.white, fontSize: 10, fontFamily: 'Poppins_600SemiBold', letterSpacing: 1 },
+  mirrorTitle: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.text, marginBottom: 8 },
+  mirrorSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 16 },
   mirrorCta: {
     alignSelf: 'flex-start',
-    backgroundColor: '#5B21B6',
+    backgroundColor: colors.accent,
     paddingHorizontal: 16, paddingVertical: 9,
     borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  mirrorCtaText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Poppins_600SemiBold' },
-  mirrorEmojis: { paddingLeft: 12, alignItems: 'center' },
-  mirrorEmoji: { fontSize: 28 },
+  mirrorCtaText: { color: colors.white, fontSize: 13, fontFamily: 'Poppins_600SemiBold' },
+  mirrorIcons: { paddingLeft: 12, alignItems: 'center' },
 
   // History
   historySection: { marginTop: 8 },
@@ -372,7 +382,7 @@ const styles = StyleSheet.create({
       default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
     }) as any,
   },
-  historyIcon: { fontSize: 18, marginRight: 12 },
+  historyIconWrap: { marginRight: 12, width: 24, alignItems: 'center' },
   historyLabel: { flex: 1, fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
   historyDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
 

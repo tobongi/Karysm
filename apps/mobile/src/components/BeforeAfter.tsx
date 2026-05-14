@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { colors } from '../theme/colors';
-import { IconArrowRight } from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
+import IconArrowRight from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
 
 interface BeforeAfterProps {
   beforeImage: string | null;
