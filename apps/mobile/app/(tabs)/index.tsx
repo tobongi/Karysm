@@ -397,7 +397,7 @@ function ProviderHome({ user }: { user: any }) {
               {bookings.map((b, idx) => {
                 const st = STATUS_LABEL[b.status] ?? { label: b.status, color: colors.textMuted };
                 return (
-                  <FadeInStagger key={b.id} index={idx}>
+                  <FadeInStagger key={b.id} index={idx} style={{ width: '100%' }}>
                     <PressableScale style={pStyles.bookingCard} onPress={() => router.push(`/booking/detail/${b.id}` as any)}>
                       <View style={pStyles.bookingLeft}>
                         <View style={pStyles.bookingAvatar}>
@@ -446,7 +446,7 @@ function ProviderHome({ user }: { user: any }) {
           ) : (
             <View>
               {requests.map((r, idx) => (
-                <FadeInStagger key={r.id} index={idx}>
+                <FadeInStagger key={r.id} index={idx} style={{ width: '100%' }}>
                   <PressableScale style={pStyles.requestCard} onPress={() => router.push(`/request/${r.id}` as any)}>
                     <View style={{ flex: 1 }}>
                       <Text style={pStyles.requestTitle} numberOfLines={1}>{r.title}</Text>
@@ -1079,7 +1079,7 @@ export default function ExplorerTab() {
               )
             }
             renderItem={({ item, index }) => (
-              <FadeInStagger index={index}>
+              <FadeInStagger index={index} style={{ width: '100%' }}>
                 <PressableScale style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
                   {/* Gallery */}
                   <View style={styles.cardGallery}>
