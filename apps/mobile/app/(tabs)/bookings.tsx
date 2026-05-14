@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, Pressable, SectionList, StyleSheet, RefreshControl, Image } from 'react-native';
+import { View, Text, Pressable, SectionList, FlatList, StyleSheet, RefreshControl, Image, TextInput } from 'react-native';
 import IconClock from '@tabler/icons-react-native/dist/esm/icons/IconClock.mjs';
-import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
 import IconLock from '@tabler/icons-react-native/dist/esm/icons/IconLock.mjs';
 import IconCalendarOff from '@tabler/icons-react-native/dist/esm/icons/IconCalendarOff.mjs';
+import IconUsersGroup from '@tabler/icons-react-native/dist/esm/icons/IconUsersGroup.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
@@ -34,7 +36,22 @@ interface BookingItem {
   currency: string;
   service: { name: string };
   provider: { displayName: string; user: { name: string; avatar?: string | null } };
-  client: { name: string; avatar?: string | null };
+  client: { id?: string; name: string; avatar?: string | null; phone?: string | null };
+}
+
+interface ClientAccount {
+  id: string;
+  name: string;
+  avatar?: string | null;
+  phone?: string | null;
+  totalBookings: number;
+  completed: number;
+  upcoming: number;
+  totalSpent: number;
+  currency: string;
+  lastBookingDate: string;
+  lastService: string;
+  tier: 'VIP' | 'Régulière' | 'Nouvelle';
 }
 
 interface BookingSection {
@@ -65,18 +82,27 @@ export default function BookingsTab() {
   const { user } = useAuth();
   const isProviderUser = user?.role === 'PROVIDER';
 
+  // For providers: 'provider' = aggregated client accounts view, 'client' = their own personal bookings as a client
   const [viewMode, setViewMode] = useState<'client' | 'provider'>('client');
+  const [didInitViewMode, setDidInitViewMode] = useState(false);
+  useEffect(() => {
+    if (!didInitViewMode && isProviderUser) {
+      setViewMode('provider');
+      setDidInitViewMode(true);
+    }
+  }, [isProviderUser, didInitViewMode]);
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [clientSearch, setClientSearch] = useState('');
 
   const fetchBookings = useCallback(async () => {
     if (!user) return;
     try {
+      // Clientes mode: fetch all bookings (no status filter) — needed for aggregation
       const params = viewMode === 'provider'
-        ? `role=provider&status=${tab}`
+        ? `role=provider`
         : `status=${tab}`;
       const res: any = await api(`/bookings/mine?${params}`);
       setBookings(res.data || []);
@@ -103,21 +129,6 @@ export default function BookingsTab() {
     return `${amount.toLocaleString('fr-FR')} ${symbol}`;
   }
 
-  async function confirmBooking(bookingId: string) {
-    setConfirmingId(bookingId);
-    try {
-      await api(`/bookings/${bookingId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'CONFIRMED' }),
-      });
-      fetchBookings();
-    } catch (e: any) {
-      showAlert('Erreur', e.message);
-    } finally {
-      setConfirmingId(null);
-    }
-  }
-
   const sections: BookingSection[] = useMemo(() => {
     const groups: Record<string, BookingItem[]> = {};
     for (const b of bookings) {
@@ -127,6 +138,74 @@ export default function BookingsTab() {
     }
     return Object.entries(groups).map(([title, data]) => ({ title, data }));
   }, [bookings]);
+
+  // Aggregate bookings into client accounts (provider view)
+  const clientAccounts: ClientAccount[] = useMemo(() => {
+    const byId: Record<string, ClientAccount> = {};
+    for (const b of bookings) {
+      // Prefer client.id when present (API returns it after redeploy); fall back to name
+      const cid = b.client?.id || (b.client?.name ? `name:${b.client.name}` : null);
+      if (!cid) continue;
+      const isPaidStatus = b.status !== 'CANCELLED' && b.status !== 'NO_SHOW';
+      const isUpcoming = ['REQUESTED', 'CONFIRMED', 'DEPOSIT_PAID', 'IN_PROGRESS'].includes(b.status);
+      const isCompleted = b.status === 'COMPLETED';
+      if (!byId[cid]) {
+        byId[cid] = {
+          id: cid,
+          name: b.client.name,
+          avatar: b.client.avatar,
+          phone: b.client.phone,
+          totalBookings: 0,
+          completed: 0,
+          upcoming: 0,
+          totalSpent: 0,
+          currency: b.currency,
+          lastBookingDate: b.date,
+          lastService: b.service?.name ?? '',
+          tier: 'Nouvelle',
+        };
+      }
+      const acc = byId[cid];
+      acc.totalBookings++;
+      if (isCompleted) acc.completed++;
+      if (isUpcoming) acc.upcoming++;
+      if (isPaidStatus) acc.totalSpent += b.agreedPrice;
+      if (new Date(b.date) > new Date(acc.lastBookingDate)) {
+        acc.lastBookingDate = b.date;
+        acc.lastService = b.service?.name ?? '';
+      }
+    }
+    const list = Object.values(byId).map(a => ({
+      ...a,
+      tier: (a.completed >= 5 ? 'VIP' : a.completed >= 2 ? 'Régulière' : 'Nouvelle') as ClientAccount['tier'],
+    }));
+    // Search filter
+    const q = clientSearch.trim().toLowerCase();
+    const filtered = q ? list.filter(c => c.name.toLowerCase().includes(q)) : list;
+    // Sort: upcoming first, then most recent
+    return filtered.sort((a, b) => {
+      if (a.upcoming !== b.upcoming) return b.upcoming - a.upcoming;
+      return new Date(b.lastBookingDate).getTime() - new Date(a.lastBookingDate).getTime();
+    });
+  }, [bookings, clientSearch]);
+
+  const TIER_COLOR: Record<ClientAccount['tier'], string> = {
+    VIP: colors.accent,
+    'Régulière': colors.primary,
+    Nouvelle: colors.success,
+  };
+
+  function formatRelativeDate(iso: string): string {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const days = Math.round(diffMs / 86400000);
+    if (days === 0) return "aujourd'hui";
+    if (days === 1) return 'hier';
+    if (days > 0 && days < 7) return `il y a ${days}j`;
+    if (days < 0 && days > -7) return `dans ${-days}j`;
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  }
 
   if (!user) {
     return (
@@ -150,14 +229,6 @@ export default function BookingsTab() {
       {isProviderUser && (
         <View style={styles.modeSwitcher}>
           <PressableScale
-            style={[styles.modePill, viewMode === 'client' && styles.modePillActive]}
-            onPress={() => setViewMode('client')}
-          >
-            <Text style={[styles.modePillText, viewMode === 'client' && styles.modePillTextActive]}>
-              Mes RDV
-            </Text>
-          </PressableScale>
-          <PressableScale
             style={[styles.modePill, viewMode === 'provider' && styles.modePillActive]}
             onPress={() => setViewMode('provider')}
           >
@@ -165,24 +236,48 @@ export default function BookingsTab() {
               Mes clientes
             </Text>
           </PressableScale>
+          <PressableScale
+            style={[styles.modePill, viewMode === 'client' && styles.modePillActive]}
+            onPress={() => setViewMode('client')}
+          >
+            <Text style={[styles.modePillText, viewMode === 'client' && styles.modePillTextActive]}>
+              Mes RDV
+            </Text>
+          </PressableScale>
         </View>
       )}
 
-      {/* ── Upcoming / Past tabs ── */}
-      <View style={styles.tabBar}>
-        <PressableScale
-          style={[styles.tabPill, tab === 'upcoming' && styles.tabPillActive]}
-          onPress={() => setTab('upcoming')}
-        >
-          <Text style={[styles.tabPillText, tab === 'upcoming' && styles.tabPillTextActive]}>À venir</Text>
-        </PressableScale>
-        <PressableScale
-          style={[styles.tabPill, tab === 'past' && styles.tabPillActive]}
-          onPress={() => setTab('past')}
-        >
-          <Text style={[styles.tabPillText, tab === 'past' && styles.tabPillTextActive]}>Passées</Text>
-        </PressableScale>
-      </View>
+      {/* ── Upcoming / Past tabs (hidden in clientes mode) ── */}
+      {viewMode !== 'provider' && (
+        <View style={styles.tabBar}>
+          <PressableScale
+            style={[styles.tabPill, tab === 'upcoming' && styles.tabPillActive]}
+            onPress={() => setTab('upcoming')}
+          >
+            <Text style={[styles.tabPillText, tab === 'upcoming' && styles.tabPillTextActive]}>À venir</Text>
+          </PressableScale>
+          <PressableScale
+            style={[styles.tabPill, tab === 'past' && styles.tabPillActive]}
+            onPress={() => setTab('past')}
+          >
+            <Text style={[styles.tabPillText, tab === 'past' && styles.tabPillTextActive]}>Passées</Text>
+          </PressableScale>
+        </View>
+      )}
+
+      {/* ── Search bar (clientes mode only) ── */}
+      {viewMode === 'provider' && (
+        <View style={styles.searchWrap}>
+          <IconSearch size={16} color={colors.textMuted} strokeWidth={1.8} />
+          <TextInput
+            value={clientSearch}
+            onChangeText={setClientSearch}
+            placeholder="Chercher une cliente..."
+            placeholderTextColor={colors.textMuted}
+            style={styles.searchInput}
+          />
+        </View>
+      )}
 
       {loading ? (
         <View style={{ padding: 20, gap: 20 }}>
@@ -198,13 +293,89 @@ export default function BookingsTab() {
             </View>
           ))}
         </View>
+      ) : viewMode === 'provider' ? (
+        clientAccounts.length === 0 ? (
+          <View style={styles.empty}>
+            <IconUsersGroup size={48} color={colors.textMuted} />
+            <Text style={styles.emptyText}>
+              {clientSearch ? 'Aucune cliente trouvée' : 'Aucune cliente pour l\'instant'}
+            </Text>
+            {!clientSearch && (
+              <Text style={styles.emptySubtext}>
+                Vos clientes apparaîtront ici après leur première réservation
+              </Text>
+            )}
+          </View>
+        ) : (
+          <FlatList
+            data={clientAccounts}
+            keyExtractor={c => c.id}
+            contentContainerStyle={styles.list}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+            renderItem={({ item, index }) => {
+              const tierColor = TIER_COLOR[item.tier];
+              return (
+                <FadeInStagger index={index}>
+                  <PressableScale
+                    style={styles.clientCard}
+                    onPress={() => {
+                      if (!item.id.startsWith('name:')) router.push(`/clients/${item.id}` as any);
+                    }}
+                  >
+                    <View style={styles.clientAvatar}>
+                      {item.avatar ? (
+                        <Image source={{ uri: item.avatar }} style={styles.clientAvatarImg} />
+                      ) : (
+                        <Text style={styles.clientAvatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+                      )}
+                      {item.upcoming > 0 && (
+                        <View style={styles.upcomingDot} />
+                      )}
+                    </View>
+                    <View style={styles.clientBody}>
+                      <View style={styles.clientNameRow}>
+                        <Text style={styles.clientName} numberOfLines={1}>{item.name}</Text>
+                        <View style={[styles.tierBadge, { backgroundColor: `${tierColor}1A` }]}>
+                          <Text style={[styles.tierBadgeText, { color: tierColor }]}>{item.tier}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.clientService} numberOfLines={1}>
+                        {item.lastService} · {formatRelativeDate(item.lastBookingDate)}
+                      </Text>
+                      <View style={styles.clientStatsRow}>
+                        <Text style={styles.clientStat}>
+                          <Text style={styles.clientStatNum}>{item.totalBookings}</Text>
+                          {item.totalBookings > 1 ? ' RDV' : ' RDV'}
+                        </Text>
+                        <Text style={styles.clientStatDot}>·</Text>
+                        <Text style={styles.clientStat}>
+                          <Text style={styles.clientStatNum}>
+                            {item.totalSpent.toLocaleString('fr-FR')}
+                          </Text>{' '}
+                          {item.currency === 'CDF' ? 'FC' : 'FCFA'}
+                        </Text>
+                        {item.upcoming > 0 && (
+                          <>
+                            <Text style={styles.clientStatDot}>·</Text>
+                            <Text style={[styles.clientStat, { color: colors.success }]}>
+                              {item.upcoming} à venir
+                            </Text>
+                          </>
+                        )}
+                      </View>
+                    </View>
+                    <IconChevronRight size={18} color={colors.textMuted} strokeWidth={2} />
+                  </PressableScale>
+                </FadeInStagger>
+              );
+            }}
+          />
+        )
       ) : bookings.length === 0 ? (
         <View style={styles.empty}>
           <IconCalendarOff size={48} color={colors.textMuted} />
           <Text style={styles.emptyText}>
-            {viewMode === 'provider'
-              ? tab === 'upcoming' ? 'Aucune cliente à venir' : 'Aucune cliente passée'
-              : tab === 'upcoming' ? 'Aucune réservation à venir' : 'Aucune réservation passée'}
+            {tab === 'upcoming' ? 'Aucune réservation à venir' : 'Aucune réservation passée'}
           </Text>
         </View>
       ) : (
@@ -219,14 +390,10 @@ export default function BookingsTab() {
           )}
           renderItem={({ item, index, section }) => {
             const status = STATUS_LABELS[item.status] || { label: item.status, color: colors.textMuted };
-            const isProviderMode = viewMode === 'provider';
-            const displayName = isProviderMode
-              ? (item.client?.name || '?')
-              : (item.provider?.user?.name || item.provider?.displayName || '?');
-            const avatarUri = isProviderMode ? item.client?.avatar : item.provider?.user?.avatar;
+            const displayName = item.provider?.user?.name || item.provider?.displayName || '?';
+            const avatarUri = item.provider?.user?.avatar;
             const initial = displayName.charAt(0).toUpperCase();
             const isLast = index === section.data.length - 1;
-            const isConfirming = confirmingId === item.id;
 
             return (
               <FadeInStagger index={index}>
@@ -254,19 +421,7 @@ export default function BookingsTab() {
                         <IconClock size={13} color={colors.textMuted} strokeWidth={1.8} />
                         <Text style={styles.timeText}>{item.startTime}</Text>
                       </View>
-                      {/* Provider mode: inline confirm for REQUESTED */}
-                      {isProviderMode && item.status === 'REQUESTED' ? (
-                        <Pressable
-                          style={[styles.confirmChip, isConfirming && { opacity: 0.6 }]}
-                          disabled={isConfirming}
-                          onPress={(e: any) => { e?.stopPropagation?.(); confirmBooking(item.id); }}
-                        >
-                          <IconCheck size={12} color={colors.white} strokeWidth={2.5} />
-                          <Text style={styles.confirmChipText}>{isConfirming ? '…' : 'Confirmer'}</Text>
-                        </Pressable>
-                      ) : (
-                        <Text style={styles.priceText}>{formatPrice(item.agreedPrice, item.currency)}</Text>
-                      )}
+                      <Text style={styles.priceText}>{formatPrice(item.agreedPrice, item.currency)}</Text>
                     </View>
                   </View>
                 </PressableScale>
@@ -390,19 +545,75 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
   priceText: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
 
-  // Inline confirm chip
-  confirmChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: colors.success,
-    paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 20,
+  // Search bar (clientes mode)
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
-  confirmChipText: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.white },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.text,
+    padding: 0,
+  },
+
+  // Client account card (clientes mode)
+  clientCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clientAvatar: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: colors.primaryGhost,
+    alignItems: 'center', justifyContent: 'center',
+    position: 'relative',
+    overflow: 'visible',
+  },
+  clientAvatarImg: { width: 52, height: 52, borderRadius: 26 },
+  clientAvatarText: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  upcomingDot: {
+    position: 'absolute', top: -2, right: -2,
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: colors.success,
+    borderWidth: 2, borderColor: colors.card,
+  },
+  clientBody: { flex: 1, gap: 4 },
+  clientNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  clientName: { flex: 1, fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  tierBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
+  tierBadgeText: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', letterSpacing: 0.3 },
+  clientService: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
+  clientStatsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  clientStat: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  clientStatNum: { fontFamily: 'Poppins_700Bold', color: colors.text },
+  clientStatDot: { fontSize: 11, color: colors.textMuted, marginHorizontal: 2 },
 
   empty: { alignItems: 'center', paddingTop: 60, gap: 12 },
   emptyText: {
     fontSize: 16, fontFamily: 'Poppins_400Regular', color: colors.textMuted,
     textAlign: 'center', paddingHorizontal: 40,
+  },
+  emptySubtext: {
+    fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted,
+    textAlign: 'center', paddingHorizontal: 40, marginTop: -4,
   },
   loginButton: {
     marginTop: 16, backgroundColor: colors.primary,

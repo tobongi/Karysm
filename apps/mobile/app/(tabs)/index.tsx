@@ -292,7 +292,7 @@ function ProviderHome({ user }: { user: any }) {
       const [wRes, bRes, rRes] = await Promise.allSettled([
         api('/wallet') as Promise<any>,
         api('/bookings/mine?role=provider&status=upcoming&pageSize=3') as Promise<any>,
-        api('/requests/browse?pageSize=4') as Promise<any>,
+        api('/requests?pageSize=4') as Promise<any>,
       ]);
       if (wRes.status === 'fulfilled') setWallet(wRes.value?.data ?? null);
       if (bRes.status === 'fulfilled') setBookings(bRes.value?.data?.items ?? []);

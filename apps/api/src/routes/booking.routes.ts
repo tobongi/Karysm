@@ -106,7 +106,7 @@ router.get('/mine', authMiddleware, asyncHandler(async (req: Request, res: Respo
     include: {
       service: true,
       provider: { include: { user: { select: { name: true, avatar: true } } } },
-      client: { select: { name: true, avatar: true, phone: true } },
+      client: { select: { id: true, name: true, avatar: true, phone: true } },
     },
     orderBy: { date: 'desc' },
   });

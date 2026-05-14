@@ -93,6 +93,7 @@ function AppContent() {
         <Stack.Screen name="store/[providerId]" options={{ headerShown: false }} />
         <Stack.Screen name="store/product/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="hair-journal" options={{ headerShown: false }} />
+        <Stack.Screen name="clients/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="booking/occasion" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="booking/completed" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
