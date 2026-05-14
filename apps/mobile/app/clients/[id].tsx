@@ -99,7 +99,7 @@ export default function ClientDetailScreen() {
       {/* Curved header */}
       <View style={styles.header}>
         <PressableScale onPress={handleBack} style={styles.backBtn} hitSlop={12}>
-          <IconArrowLeft size={22} color="#FFFFFF" strokeWidth={1.8} />
+          <IconArrowLeft size={22} color={colors.white} strokeWidth={1.8} />
         </PressableScale>
         <View style={styles.headerContent}>
           <View style={styles.avatarLg}>
@@ -140,7 +140,7 @@ export default function ClientDetailScreen() {
       {client?.phone && (
         <View style={styles.contactRow}>
           <PressableScale style={[styles.contactBtn, styles.whatsappBtn]} onPress={handleWhatsapp}>
-            <IconBrandWhatsapp size={18} color="#FFFFFF" strokeWidth={2} />
+            <IconBrandWhatsapp size={18} color={colors.white} strokeWidth={2} />
             <Text style={styles.contactBtnText}>WhatsApp</Text>
           </PressableScale>
           <PressableScale style={[styles.contactBtn, styles.callBtn]} onPress={handleCall}>
@@ -168,7 +168,7 @@ export default function ClientDetailScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
           <PressableScale onPress={handleBack} style={styles.backBtn} hitSlop={12}>
-            <IconArrowLeft size={22} color="#FFFFFF" strokeWidth={1.8} />
+            <IconArrowLeft size={22} color={colors.white} strokeWidth={1.8} />
           </PressableScale>
         </View>
         <View style={{ padding: 20, gap: 16 }}>
@@ -185,7 +185,7 @@ export default function ClientDetailScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
           <PressableScale onPress={handleBack} style={styles.backBtn} hitSlop={12}>
-            <IconArrowLeft size={22} color="#FFFFFF" strokeWidth={1.8} />
+            <IconArrowLeft size={22} color={colors.white} strokeWidth={1.8} />
           </PressableScale>
         </View>
         <View style={styles.empty}>
@@ -271,8 +271,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   avatarLgImg: { width: 80, height: 80 },
-  avatarLgText: { fontSize: 32, fontFamily: 'Poppins_700Bold', color: '#FFFFFF' },
-  clientName: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: '#FFFFFF', fontStyle: 'italic' },
+  avatarLgText: { fontSize: 32, fontFamily: 'Poppins_700Bold', color: colors.white },
+  clientName: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.white, fontStyle: 'italic' },
   tierPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   tierPillText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', textTransform: 'uppercase', letterSpacing: 0.5 },
 
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   whatsappBtn: { backgroundColor: '#25D366' },
   callBtn: { backgroundColor: 'rgba(91,33,182,0.10)', borderWidth: 1, borderColor: 'rgba(91,33,182,0.25)' },
-  contactBtnText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: '#FFFFFF' },
+  contactBtnText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.white },
 
   lastVisitBox: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

@@ -330,7 +330,7 @@ export default function ProviderProfile() {
             )}
             {provider.idVerified && (
               <View style={styles.verifiedDot}>
-                <IconRosetteDiscountCheck size={18} color="#00875A" fill="#00875A" strokeWidth={1.5} />
+                <IconRosetteDiscountCheck size={18} color={colors.success} fill={colors.success} strokeWidth={1.5} />
               </View>
             )}
           </View>
@@ -910,7 +910,8 @@ const styles = StyleSheet.create({
     }) as any,
   },
   ctaButtonPressed: {
-    backgroundColor: '#4C1D95',
+    backgroundColor: colors.accent,
+    opacity: 0.8,
   },
   ctaButtonText: {
     color: colors.white,
