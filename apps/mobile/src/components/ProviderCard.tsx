@@ -8,6 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { colors, spacing, radius, shadows, fonts } from '../theme';
+import { IconStar } from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import { IconHeart } from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 
 interface ProviderCardProps {
   name: string;
@@ -67,9 +69,11 @@ export default function ProviderCard({
             style={styles.favoriteButton}
             hitSlop={8}
           >
-            <Text style={styles.favoriteIcon}>
-              {isFavorite ? '\u2665' : '\u2661'}
-            </Text>
+            <IconHeart
+              size={18}
+              color={colors.primary}
+              fill={isFavorite ? colors.primary : 'transparent'}
+            />
           </Pressable>
         )}
       </View>
@@ -93,7 +97,7 @@ export default function ProviderCard({
         </Text>
         <View style={styles.row}>
           <View style={styles.ratingRow}>
-            <Text style={styles.star}>{'\u2605'}</Text>
+            <IconStar size={13} color={colors.star} fill={colors.star} />
             <Text style={styles.ratingValue}>{rating.toFixed(1)}</Text>
             {reviewCount > 0 && (
               <Text style={styles.reviewCount}>({reviewCount})</Text>
@@ -138,10 +142,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  favoriteIcon: {
-    fontSize: 18,
-    color: colors.white,
-  },
   offerBar: {
     backgroundColor: colors.n300,
     paddingHorizontal: 12,
@@ -179,10 +179,6 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  star: {
-    fontSize: 14,
-    color: colors.star,
   },
   ratingValue: {
     fontFamily: fonts.bodySemiBold,

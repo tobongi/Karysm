@@ -15,6 +15,7 @@ import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import IconMap from '@tabler/icons-react-native/dist/esm/icons/IconMap.mjs';
 import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
 import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
 import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
 import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
@@ -661,7 +662,10 @@ export default function ExplorerTab() {
                   <Text style={styles.recentAvatarText}>{p.displayName[0]}</Text>
                 </View>
                 <Text style={styles.recentName} numberOfLines={1}>{p.displayName}</Text>
-                <Text style={styles.recentRating}>{'\u2605'} {p.avgRating.toFixed(1)}</Text>
+                <View style={styles.recentRatingRow}>
+                  <IconStar size={12} color={colors.star} fill={colors.star} />
+                  <Text style={styles.recentRating}>{p.avgRating.toFixed(1)}</Text>
+                </View>
               </Pressable>
             ))}
           </ScrollView>
@@ -768,7 +772,7 @@ export default function ExplorerTab() {
                     <View style={styles.cardRow}>
                       <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
                       <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingStar}>{'\u2605'}</Text>
+                        <IconStar size={13} color={colors.star} fill={colors.star} />
                         <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
                         <Text style={styles.reviewCount}>({item.totalReviews})</Text>
                       </View>
@@ -1291,7 +1295,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  ratingStar: { fontSize: 13, color: colors.terracotta },
   ratingText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 14,
@@ -1408,12 +1411,17 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center' as const,
   },
+  recentRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 2,
+  },
   recentRating: {
     fontSize: 10,
     color: colors.terracotta,
     fontFamily: fonts.bodySemiBold,
     fontWeight: '600' as const,
-    marginTop: 2,
   },
 
   // Map
