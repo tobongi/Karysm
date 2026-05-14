@@ -8,17 +8,13 @@ import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
+import { IconCurrencyDollar } from '@tabler/icons-react-native/dist/esm/icons/IconCurrencyDollar.mjs';
+import { IconMapPin } from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
+import { IconCalendar } from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
+import { IconClipboardList } from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville'];
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'Coiffure': '\uD83D\uDC87\u200D\u2640\uFE0F',
-  'Ongles': '\uD83D\uDC85',
-  'Maquillage': '\uD83D\uDC84',
-  'Soins': '\uD83D\uDC86\u200D\u2640\uFE0F',
-  'Barber': '\u2702\uFE0F',
-  'Spa': '\uD83E\uDDD6\u200D\u2640\uFE0F',
-};
 
 interface BrowseRequest {
   id: string;
@@ -131,10 +127,6 @@ export default function BrowseRequestsScreen() {
     return cat?.name || '';
   }
 
-  function getCategoryIcon(catId: string): string {
-    const name = getCategoryName(catId);
-    return CATEGORY_ICONS[name] || '\u2728';
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -172,7 +164,6 @@ export default function BrowseRequestsScreen() {
               style={[styles.filterChip, selectedCategory === cat.id && styles.filterChipActive]}
               onPress={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
             >
-              <Text style={styles.filterIcon}>{CATEGORY_ICONS[cat.name] || '\u2728'}</Text>
               <Text style={[styles.filterText, selectedCategory === cat.id && styles.filterTextActive]}>{cat.name}</Text>
             </Pressable>
           ))}
@@ -190,7 +181,7 @@ export default function BrowseRequestsScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>{'\uD83D\uDCCB'}</Text>
+                <IconClipboardList size={48} color={colors.textMuted} />
                 <Text style={styles.emptyTitle}>Aucune demande ouverte</Text>
                 <Text style={styles.emptySubtitle}>Revenez bientôt ou changez les filtres</Text>
               </View>
@@ -202,7 +193,6 @@ export default function BrowseRequestsScreen() {
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryBadgeIcon}>{getCategoryIcon(item.categoryId)}</Text>
                     <Text style={styles.categoryBadgeText}>{getCategoryName(item.categoryId)}</Text>
                   </View>
                   <Text style={styles.cardTime}>{timeAgo(item.createdAt)}</Text>
@@ -213,20 +203,20 @@ export default function BrowseRequestsScreen() {
 
                 <View style={styles.cardMeta}>
                   <View style={styles.cardMetaItem}>
-                    <Text style={styles.cardMetaIcon}>{'\uD83D\uDCB0'}</Text>
+                    <IconCurrencyDollar size={14} color={colors.textSecondary} />
                     <Text style={styles.cardMetaText}>
                       {formatPrice(item.budgetMin, item.currency)} — {formatPrice(item.budgetMax, item.currency)}
                     </Text>
                   </View>
                   <View style={styles.cardMetaItem}>
-                    <Text style={styles.cardMetaIcon}>{'\uD83D\uDCCD'}</Text>
+                    <IconMapPin size={14} color={colors.textSecondary} />
                     <Text style={styles.cardMetaText}>{item.city}</Text>
                   </View>
                 </View>
 
                 <View style={styles.cardFooter}>
                   <View style={styles.cardFooterLeft}>
-                    <Text style={styles.cardMetaIcon}>{'\uD83D\uDCC5'}</Text>
+                    <IconCalendar size={14} color={colors.textSecondary} />
                     <Text style={styles.cardFooterText}>
                       {item.flexibleDate ? 'Date flexible' : formatDate(item.preferredDate)}
                     </Text>
@@ -276,13 +266,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost,
     borderColor: colors.primary,
   },
-  filterIcon: { fontSize: 14, marginRight: 4 },
   filterText: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.text },
   filterTextActive: { color: colors.primary, fontFamily: 'Poppins_700Bold' },
   list: { padding: 16, paddingTop: 4 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { fontSize: 18, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   emptySubtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 4 },
   // Card
@@ -308,14 +296,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 16,
   },
-  categoryBadgeIcon: { fontSize: 12, marginRight: 4 },
   categoryBadgeText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   cardTime: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
   cardTitle: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
   cardDescription: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 12 },
   cardMeta: { flexDirection: 'row', gap: 16, marginBottom: 10 },
-  cardMetaItem: { flexDirection: 'row', alignItems: 'center' },
-  cardMetaIcon: { fontSize: 13, marginRight: 4 },
+  cardMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cardMetaText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   cardFooter: {
     flexDirection: 'row',
@@ -325,7 +311,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  cardFooterLeft: { flexDirection: 'row', alignItems: 'center' },
+  cardFooterLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cardFooterText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
   cardDot: { fontSize: 12, color: colors.textMuted, marginHorizontal: 6 },
   proposalCountBadge: {
