@@ -78,12 +78,19 @@ export default function KycScreen() {
       const base64 = await pickImage();
       if (!base64) { setUploading(null); return; }
 
-      await api('/kyc/upload', {
+      const res: any = await api('/kyc/upload', {
         method: 'POST',
         body: JSON.stringify({ type, data: base64 }),
       });
 
-      showAlert('Document envoyé', 'Votre document est en cours de vérification.');
+      const v = res?.verification;
+      if (v?.decision === 'APPROVED') {
+        showAlert('Identité vérifiée ✓', v.reason || 'Vérification automatique réussie.');
+      } else if (v?.decision === 'REJECTED') {
+        showAlert('Vérification refusée', v.reason || 'Veuillez re-soumettre un document de meilleure qualité.');
+      } else {
+        showAlert('Document envoyé', 'Vérification automatique en cours…');
+      }
       fetchStatus();
     } catch (err: any) {
       showAlert('Erreur', err.message || 'Impossible d\'envoyer le document');
@@ -122,6 +129,16 @@ export default function KycScreen() {
         <Text style={styles.subtitle}>
           Soumettez vos documents pour obtenir le badge vérifié sur votre profil.
         </Text>
+
+        <View style={styles.aiBanner}>
+          <Text style={styles.aiBannerEmoji}>⚡</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiBannerTitle}>Vérification automatique par IA</Text>
+            <Text style={styles.aiBannerSub}>
+              Soumettez les 3 documents — décision en quelques secondes, plus de délais d'attente.
+            </Text>
+          </View>
+        </View>
 
         {/* Overall status */}
         <View style={[styles.statusCard, { borderColor: statusDisplay.color }]}>
@@ -227,7 +244,19 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 
   title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 14 },
+
+  // AI banner
+  aiBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    borderRadius: 16, padding: 14,
+    marginBottom: 20,
+    borderWidth: 1, borderColor: 'rgba(91,33,182,0.18)',
+  },
+  aiBannerEmoji: { fontSize: 24 },
+  aiBannerTitle: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 2 },
+  aiBannerSub: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 15 },
 
   // Overall status
   statusCard: {
