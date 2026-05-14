@@ -330,7 +330,7 @@ export default function LookbookScreen() {
     <>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={8}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/' as any)} style={styles.backButton} hitSlop={8}>
           <IconArrowLeft size={22} color={colors.text} strokeWidth={2} />
         </Pressable>
         <View style={styles.headerText}>
