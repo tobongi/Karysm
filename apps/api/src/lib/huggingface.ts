@@ -4,7 +4,14 @@ import OpenAI from 'openai';
 const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN || '';
 const hf = new HfInference(HF_TOKEN);
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openai || new OpenAI({ apiKey: '' });
+}
 
 // Fine-tuned model overrides — set after training completes, falls back to gpt-4o
 const SKIN_MODEL = process.env.OPENAI_FINETUNE_SKIN_MODEL || 'gpt-4o';
@@ -216,7 +223,7 @@ Si le visage n'est pas clairement visible, analyse la peau visible et fais de to
     HF_TOKEN
       ? hf.imageClassification({ model: 'dima806/skin_types_image_detection', data: imageBlob as any })
       : Promise.reject('no HF token'),
-    openai.chat.completions.create({
+    getOpenAIClient().chat.completions.create({
       model: SKIN_MODEL,
       max_tokens: 900,
       messages: [{
@@ -442,7 +449,7 @@ Si les cheveux sont dans un style protecteur (tresses, locks, twists), classe ha
     HF_TOKEN
       ? hf.imageClassification({ model: HAIR_TYPE_HF_MODEL, data: imageBlob as any })
       : Promise.reject('no HF token'),
-    openai.chat.completions.create({
+    getOpenAIClient().chat.completions.create({
       model: HAIR_MODEL,
       max_tokens: 800,
       messages: [{
