@@ -155,7 +155,7 @@ export default function MessagesTab() {
   if (!authLoading && !user) {
     return (
       <View style={styles.container}>
-        <CurveHeader title="Activité" height={160} />
+        <CurveHeader title="Activité" height={160} showBack />
         <View style={styles.centerContent}>
           <IconLock size={48} color={colors.primary} />
           <Text style={styles.emptyTitle}>Connectez-vous pour voir votre activité</Text>
@@ -172,7 +172,7 @@ export default function MessagesTab() {
   if (loading || authLoading) {
     return (
       <View style={styles.container}>
-        <CurveHeader title="Activité" height={160} />
+        <CurveHeader title="Activité" height={160} showBack />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -217,7 +217,7 @@ export default function MessagesTab() {
 
   return (
     <View style={styles.container}>
-      <CurveHeader title="Activité" height={160} />
+      <CurveHeader title="Activité" height={160} showBack />
       {unreadCount > 0 && (
         <View style={styles.actionBar}>
           <Text style={styles.unreadLabel}>
