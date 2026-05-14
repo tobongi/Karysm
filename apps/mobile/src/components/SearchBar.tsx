@@ -2,13 +2,13 @@ import React from 'react';
 import {
   View,
   TextInput,
-  Text,
   Pressable,
   StyleSheet,
   ViewStyle,
 } from 'react-native';
 import { colors, radius, fonts, shadows } from '../theme';
 import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import { IconX } from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 
 interface SearchBarProps {
   value: string;
@@ -38,7 +38,7 @@ export default function SearchBar({
       />
       {value.length > 0 && (
         <Pressable onPress={() => onChangeText('')} hitSlop={8}>
-          <Text style={styles.clearButton}>{'\u00D7'}</Text>
+          <IconX size={16} color={colors.textMuted} />
         </Pressable>
       )}
     </View>
@@ -61,10 +61,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     padding: 0,
-  },
-  clearButton: {
-    fontSize: 18,
-    color: colors.textMuted,
-    paddingLeft: 8,
   },
 });
