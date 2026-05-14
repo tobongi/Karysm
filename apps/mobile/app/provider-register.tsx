@@ -19,6 +19,7 @@ import { api } from '../src/lib/api';
 import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
 import { pickAndUploadAvatar } from '../src/lib/upload';
+import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 
 const CITIES = [
   { name: 'Kinshasa', country: 'RDC', currency: 'CDF' },
@@ -155,7 +156,7 @@ export default function ProviderRegisterScreen() {
                 ) : uploadingAvatar ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : (
-                  <Text style={styles.avatarPlaceholder}>{'\uD83D\uDCF7'}</Text>
+                  <IconCamera size={32} color={colors.textMuted} />
                 )}
               </Pressable>
               <Text style={styles.avatarHint}>
@@ -432,9 +433,6 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-  },
-  avatarPlaceholder: {
-    fontSize: 32,
   },
   avatarHint: {
     fontSize: 13,

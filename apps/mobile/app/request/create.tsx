@@ -10,6 +10,9 @@ import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
 import { pickAndUploadImage } from '../../src/lib/upload';
+import { IconX } from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import { IconPhoto } from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville', 'Abidjan', 'Dakar'];
 
@@ -213,7 +216,7 @@ export default function CreateRequestScreen() {
               <View key={i} style={styles.photoThumb}>
                 <Image source={{ uri }} style={styles.photoThumbImage} />
                 <Pressable style={styles.photoRemove} onPress={() => handleRemovePhoto(i)}>
-                  <Text style={styles.photoRemoveText}>{'\u2715'}</Text>
+                  <IconX size={14} color={colors.white} />
                 </Pressable>
               </View>
             ))}
@@ -224,7 +227,7 @@ export default function CreateRequestScreen() {
             {uploadingPhoto ? (
               <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
             ) : (
-              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF8'}</Text>
+              <IconPhoto size={20} color={colors.primary} />
             )}
             <Text style={styles.photoButtonText}>
               {photos.length === 0 ? "Ajouter des photos d'inspiration" : `Ajouter une photo (${photos.length}/5)`}
@@ -246,7 +249,7 @@ export default function CreateRequestScreen() {
             {uploadingSelfie ? (
               <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
             ) : (
-              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF7'}</Text>
+              <IconCamera size={20} color={colors.primary} />
             )}
             <Text style={styles.photoButtonText}>Ajouter un selfie</Text>
           </Pressable>
@@ -435,7 +438,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderStyle: 'dashed',
   },
-  photoButtonIcon: { fontSize: 20, marginRight: 8 },
   photoButtonText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
   photoGrid: {
     flexDirection: 'row',
@@ -465,11 +467,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  photoRemoveText: {
-    color: colors.white,
-    fontSize: 12,
-    fontFamily: 'Poppins_700Bold',
   },
   selfieContainer: {
     flexDirection: 'row',

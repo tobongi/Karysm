@@ -8,6 +8,7 @@ import { pickAndUploadAvatar } from '../../src/lib/upload';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
 import { PressableScale, FadeInStagger } from '../../src/components/animations';
+import { IconCamera } from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 
 export default function ProfileTab() {
   const { user, logout, isProvider } = useAuth();
@@ -68,7 +69,7 @@ export default function ProfileTab() {
               </View>
             ) : (
               <View style={styles.cameraOverlay}>
-                <Text style={styles.cameraIcon}>{'\uD83D\uDCF7'}</Text>
+                <IconCamera size={20} color={colors.white} />
               </View>
             )}
           </PressableScale>
@@ -190,7 +191,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.headerDark,
   },
-  cameraIcon: { fontSize: 11 },
   avatarText: { fontSize: 24, fontFamily: 'Poppins_700Bold', color: colors.white },
   headerInfo: {
     marginLeft: 16,
