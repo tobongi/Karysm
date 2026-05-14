@@ -287,7 +287,7 @@ export default function ExplorerTab() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>
-            {user?.name ? `Salut, ${user.name.split(' ')[0]}` : 'Salut'} {'\uD83D\uDC4B'}
+            {user?.name ? `Salut, ${user.name.split(' ')[0]}` : 'Salut'}
           </Text>
           <Text style={styles.headerSubtitle}>Kinshasa</Text>
         </View>
