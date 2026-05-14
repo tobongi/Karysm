@@ -282,17 +282,19 @@ export default function LookbookTabScreen() {
                 </Text>
               </View>
 
-              <Pressable
-                style={styles.wantButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  router.push(
-                    `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
-                  );
-                }}
-              >
-                <Text style={styles.wantButtonText}>Je veux ça</Text>
-              </Pressable>
+              <View style={{ width: '100%' }}>
+                <Pressable
+                  style={styles.wantButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    router.push(
+                      `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
+                    );
+                  }}
+                >
+                  <Text style={styles.wantButtonText}>Je veux ça</Text>
+                </Pressable>
+              </View>
             </View>
           </PressableScale>
         </View>
@@ -590,6 +592,7 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingTop: 8,
     backgroundColor: colors.card,
+    flexDirection: 'column',
   },
 
   // Star rating row
@@ -653,6 +656,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 7,
     alignItems: 'center',
+    alignSelf: 'stretch',
+    width: '100%' as any,
   },
   wantButtonText: {
     fontSize: 11,
