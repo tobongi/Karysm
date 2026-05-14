@@ -16,6 +16,7 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
 import { showAlert } from '../../src/lib/alert';
+import CurveHeader from '../../src/components/CurveHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCAN_SIZE = Math.min(SCREEN_WIDTH - 40, 340);
@@ -135,17 +136,20 @@ export default function SkinCaptureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Header */}
-        <Text style={styles.title}>Analyse de peau</Text>
-        <Text style={styles.subtitle}>
-          {scanPhase === 'idle'
-            ? 'Prenez un selfie en bonne lumière pour analyser votre peau'
-            : scanPhase === 'scanning'
-            ? 'Analyse du visage en cours...'
-            : 'Visage détecté — prête pour l\'analyse'}
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse de peau" showBack>
+        <Text style={styles.headerSubtitle}>
+          Révélez la beauté qui est déjà en vous
         </Text>
+      </CurveHeader>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Intro card */}
+        <View style={styles.introCard}>
+          <Text style={styles.introTitle}>Prêt(e) ?</Text>
+          <Text style={styles.introSubtitle}>
+            Prenez un selfie en lumière naturelle, sans maquillage
+          </Text>
+        </View>
 
         {/* Face scanner area */}
         <View style={styles.scannerContainer}>
@@ -256,10 +260,10 @@ export default function SkinCaptureScreen() {
         {analyzing && (
           <View style={styles.analyzingContainer}>
             <View style={styles.analyzingCard}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.analyzingTitle}>Analyse en cours</Text>
+              <SparkleSpinner />
+              <Text style={styles.analyzingTitle}>L'IA analyse votre peau…</Text>
               <Text style={styles.analyzingDesc}>
-                Détection de la carnation, hydratation,{'\n'}sébum, pores, taches, uniformité...
+                Détection du visage et analyse des métriques de peau
               </Text>
               <View style={styles.analyzingSteps}>
                 <AnalysisStep label="Détection du visage" done />
@@ -274,6 +278,27 @@ export default function SkinCaptureScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+// Rotating sparkles spinner
+function SparkleSpinner() {
+  const rotation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, []);
+  const rotate = rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  return (
+    <Animated.View style={{ transform: [{ rotate }], marginBottom: 16 }}>
+      <IconSparkles size={40} color={colors.accent} />
+    </Animated.View>
   );
 }
 
@@ -296,8 +321,19 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20 },
 
-  title: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  headerSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)' },
+
+  // Intro card
+  introCard: {
+    backgroundColor: `rgba(91, 33, 182, 0.08)`,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: `rgba(91, 33, 182, 0.15)`,
+  },
+  introTitle: { fontSize: 18, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  introSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 19 },
 
   // Scanner
   scannerContainer: { alignItems: 'center', marginBottom: 24 },

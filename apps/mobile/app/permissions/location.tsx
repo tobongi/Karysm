@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
 import { colors } from '../../src/theme/colors';
+import { PressableScale } from '../../src/components/animations';
 
 let Location: any = null;
 try {
@@ -33,24 +34,22 @@ export default function LocationPermissionScreen() {
       <View style={styles.content}>
         {/* Map pin illustration */}
         <View style={styles.iconCircle}>
-          <IconMapPin size={48} color={colors.primaryLight} strokeWidth={1.5} />
+          <IconMapPin size={56} color={colors.accent} strokeWidth={1.5} />
         </View>
 
-        <Text style={styles.title}>
-          Activez la localisation pour trouver les prestataires près de chez vous.
-        </Text>
+        <Text style={styles.title}>Trouvez les prestataires près de chez vous</Text>
         <Text style={styles.subtitle}>
-          Nous utilisons votre position pour vous montrer les prestataires les plus proches.
+          Nous utilisons votre position pour vous montrer les prestataires les plus proches, triés par distance et disponibilité.
         </Text>
       </View>
 
       <View style={styles.bottom}>
-        <Pressable style={styles.ctaButton} onPress={handleAllow}>
-          <Text style={styles.ctaText}>Activer la localisation</Text>
-        </Pressable>
-        <Pressable onPress={handleSkip} style={styles.skipButton}>
-          <Text style={styles.skipText}>Peut-être plus tard</Text>
-        </Pressable>
+        <PressableScale style={styles.ctaButton} onPress={handleAllow}>
+          <Text style={styles.ctaText}>Autoriser la localisation</Text>
+        </PressableScale>
+        <PressableScale onPress={handleSkip} style={styles.skipButton}>
+          <Text style={styles.skipText}>Plus tard</Text>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
@@ -76,20 +75,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.card,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.primaryGhost,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
   title: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 20,
-    color: colors.text,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 22,
+    color: colors.accent,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 30,
+    fontStyle: 'italic',
+    marginBottom: 10,
   },
   subtitle: {
     fontFamily: 'Poppins_400Regular',
@@ -97,33 +98,47 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginTop: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   bottom: {
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     paddingBottom: 40,
+    gap: 10,
   },
   ctaButton: {
     height: 54,
     borderRadius: 27,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 16px rgba(139,105,82,0.25)' }
+      : {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+        }
+    ) as any,
   },
   ctaText: {
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Poppins_700Bold',
     fontSize: 16,
     color: '#FFFFFF',
   },
   skipButton: {
-    marginTop: 16,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
   },
   skipText: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 14,
-    color: colors.headerDark,
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 15,
+    color: colors.text,
     textAlign: 'center',
   },
 });

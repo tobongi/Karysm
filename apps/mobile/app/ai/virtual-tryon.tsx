@@ -12,6 +12,7 @@ import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.m
 import IconEye from '@tabler/icons-react-native/dist/esm/icons/IconEye.mjs';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
+import CurveHeader from '../../src/components/CurveHeader';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -281,12 +282,13 @@ function loadScript(src: string, crossOrigin?: string): Promise<void> {
 
 function NativeFallback() {
   return (
-    <SafeAreaView style={nf.safe} edges={['top']}>
+    <SafeAreaView style={nf.safe} edges={['top', 'bottom']}>
+      <CurveHeader title="Miroir Virtuel" showBack />
       <View style={nf.center}>
         <IconSparkles size={48} color={colors.accent} />
-        <Text style={nf.title}>Miroir Virtuel</Text>
+        <Text style={nf.title}>Essayage IA</Text>
         <Text style={nf.sub}>
-          L'essayage virtuel fonctionne via{'\n'}app.karysm.com dans Chrome ou Edge.
+          Le miroir virtuel fonctionne via{'\n'}app.karysm.com dans Chrome ou Edge.
         </Text>
         <Pressable style={nf.btn} onPress={() => router.back()}>
           <Text style={nf.btnText}>Retour</Text>
@@ -523,6 +525,7 @@ export default function VirtualTryOnScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <CurveHeader title="Miroir Virtuel" showBack />
 
       {/* ── Camera / Mirror area ── */}
       <View ref={containerRef} style={styles.mirror}>
@@ -531,9 +534,9 @@ export default function VirtualTryOnScreen() {
         {tryOnState === 'idle' && (
           <View style={styles.overlay}>
             <IconSparkles size={48} color={colors.primary} />
-            <Text style={styles.overlayTitle}>Miroir Virtuel</Text>
+            <Text style={styles.overlayTitle}>Essayage IA</Text>
             <Text style={styles.overlaySub}>
-              Essayez rouge à lèvres, blush et fard à paupières en temps réel grâce à l'IA
+              Testez rouge à lèvres, blush et fard à paupières en temps réel
             </Text>
             <Pressable style={styles.startBtn} onPress={startCamera}>
               <Text style={styles.startBtnText}>Activer la caméra</Text>

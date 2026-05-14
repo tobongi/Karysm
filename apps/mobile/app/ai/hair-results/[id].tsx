@@ -17,6 +17,7 @@ import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
 import IconArrowsVertical from '@tabler/icons-react-native/dist/esm/icons/IconArrowsVertical.mjs';
 import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
+import CurveHeader from '../../../src/components/CurveHeader';
 
 const HAIR_TYPE_INFO: Record<string, { label: string; desc: string }> = {
   '3A': { label: 'Boucles larges', desc: 'Boucles lâches en forme de S, volume modéré' },
@@ -167,9 +168,9 @@ export default function HairResultsScreen() {
   })();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse cheveux" showBack />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Résultats cheveux</Text>
         <Text style={styles.date}>
           {new Date(data.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
         </Text>
@@ -416,8 +417,7 @@ const styles = StyleSheet.create({
   backBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
   backBtnText: { color: colors.white, fontFamily: 'Poppins_600SemiBold' },
 
-  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent },
-  date: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 20 },
+  date: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 20 },
 
   // Type card
   typeCard: {

@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import { colors } from '../../src/theme/colors';
+import { PressableScale } from '../../src/components/animations';
 
 export default function BookingCompletedScreen() {
   const { bookingId, providerName, serviceName, date, time, price } = useLocalSearchParams<{
@@ -49,8 +51,7 @@ export default function BookingCompletedScreen() {
 
         {/* Bottom buttons */}
         <View style={styles.bottomContainer}>
-          <Pressable
-            style={styles.primaryButton}
+          <PressableScale
             onPress={() => {
               if (bookingId) {
                 router.replace(`/booking/detail/${bookingId}` as any);
@@ -59,15 +60,18 @@ export default function BookingCompletedScreen() {
               }
             }}
           >
-            <Text style={styles.primaryButtonText}>Voir ma réservation</Text>
-          </Pressable>
+            <View style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Voir ma réservation</Text>
+            </View>
+          </PressableScale>
 
-          <Pressable
-            style={styles.homeLink}
+          <PressableScale
             onPress={() => router.replace('/(tabs)' as any)}
           >
-            <Text style={styles.homeLinkText}>Retour à l'accueil</Text>
-          </Pressable>
+            <View style={styles.homeLink}>
+              <Text style={styles.homeLinkText}>Retour à l'accueil</Text>
+            </View>
+          </PressableScale>
         </View>
       </View>
     </SafeAreaView>
@@ -77,7 +81,7 @@ export default function BookingCompletedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2E4D9',
+    backgroundColor: colors.bg,
   },
   webWrapper: {
     flex: 1,
@@ -92,82 +96,101 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   outerCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#CA987E',
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0 8px 24px rgba(0,135,90,0.25)' },
+      default: { shadowColor: colors.success, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20 },
+    }) as any,
   },
   innerCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#8B6952',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 26,
-    color: '#1A1A2E',
+    fontSize: 28,
+    color: colors.accent,
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 28,
+    letterSpacing: -0.3,
   },
   summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: colors.white,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.10)',
-    padding: 20,
-    marginTop: 28,
+    borderColor: colors.border,
+    padding: 24,
+    marginTop: 32,
     width: '100%',
     alignItems: 'center',
+    ...Platform.select({
+      web: { boxShadow: '0 4px 12px rgba(0,0,0,0.08)' },
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
+    }) as any,
   },
   providerName: {
     fontFamily: 'Poppins_600SemiBold',
-    fontSize: 16,
-    color: '#1A1A2E',
+    fontSize: 17,
+    color: colors.text,
     textAlign: 'center',
+    fontWeight: '600',
   },
   detailText: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 14,
-    color: '#4A4A4A',
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
   priceText: {
     fontFamily: 'Poppins_700Bold',
-    fontSize: 18,
-    color: '#8B6952',
+    fontSize: 19,
+    color: colors.terracotta,
     textAlign: 'center',
-    marginTop: 12,
+    marginTop: 14,
+    fontWeight: '700',
   },
   bottomContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 44,
+    gap: 12,
   },
   primaryButton: {
-    backgroundColor: '#CA987E',
-    borderRadius: 100,
-    paddingVertical: 16,
+    backgroundColor: colors.accent,
+    borderRadius: 28,
+    paddingVertical: 17,
     alignItems: 'center',
     width: '100%',
+    ...Platform.select({
+      web: { boxShadow: '0 6px 20px rgba(91,33,182,0.30)' },
+      default: { shadowColor: colors.accent, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 16 },
+    }) as any,
   },
   primaryButtonText: {
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Poppins_700Bold',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.white,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   homeLink: {
     alignItems: 'center',
-    marginTop: 16,
-    paddingVertical: 8,
+    marginTop: 8,
+    paddingVertical: 12,
   },
   homeLinkText: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 14,
-    color: '#3A2228',
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '500',
   },
 });

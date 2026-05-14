@@ -8,10 +8,13 @@ import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
-import IconCurrencyDollar from '@tabler/icons-react-native/dist/esm/icons/IconCurrencyDollar.mjs';
+import CurveHeader from '../../src/components/CurveHeader';
+import { PressableScale } from '../../src/components/animations';
 import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
 import IconCalendar from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
 import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
+import IconFlame from '@tabler/icons-react-native/dist/esm/icons/IconFlame.mjs';
+import IconCurrencyDollar from '@tabler/icons-react-native/dist/esm/icons/IconCurrencyDollar.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville'];
 
@@ -128,44 +131,58 @@ export default function BrowseRequestsScreen() {
   }
 
 
+  const NEW_WINDOW_HOURS = 6;
+
+  function timeAgo(dateStr: string): string {
+    const now = new Date().getTime();
+    const then = new Date(dateStr).getTime();
+    const diffH = Math.floor((now - then) / 3600000);
+    if (diffH < 1) return "à l'instant";
+    if (diffH < 24) return `il y a ${diffH}h`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD === 1) return 'hier';
+    return `il y a ${diffD}j`;
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <CurveHeader title="Demandes ouvertes" showBack />
       <View style={styles.webWrapper}>
         {/* City filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          <Pressable
+          <PressableScale
             style={[styles.filterChip, !selectedCity && styles.filterChipActive]}
             onPress={() => setSelectedCity(null)}
           >
             <Text style={[styles.filterText, !selectedCity && styles.filterTextActive]}>Toutes</Text>
-          </Pressable>
+          </PressableScale>
           {CITIES.map((c) => (
-            <Pressable
+            <PressableScale
               key={c}
               style={[styles.filterChip, selectedCity === c && styles.filterChipActive]}
               onPress={() => setSelectedCity(selectedCity === c ? null : c)}
             >
               <Text style={[styles.filterText, selectedCity === c && styles.filterTextActive]}>{c}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </ScrollView>
 
         {/* Category filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          <Pressable
+          <PressableScale
             style={[styles.filterChip, !selectedCategory && styles.filterChipActive]}
             onPress={() => setSelectedCategory(null)}
           >
             <Text style={[styles.filterText, !selectedCategory && styles.filterTextActive]}>Toutes</Text>
-          </Pressable>
+          </PressableScale>
           {categories.map((cat) => (
-            <Pressable
+            <PressableScale
               key={cat.id}
               style={[styles.filterChip, selectedCategory === cat.id && styles.filterChipActive]}
               onPress={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
             >
               <Text style={[styles.filterText, selectedCategory === cat.id && styles.filterTextActive]}>{cat.name}</Text>
-            </Pressable>
+            </PressableScale>
           ))}
         </ScrollView>
 
@@ -187,49 +204,82 @@ export default function BrowseRequestsScreen() {
               </View>
             }
             renderItem={({ item }) => (
-              <Pressable
+              <PressableScale
                 style={styles.card}
                 onPress={() => router.push(`/request/${item.id}` as any)}
               >
-                <View style={styles.cardHeader}>
-                  <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryBadgeText}>{getCategoryName(item.categoryId)}</Text>
+                {/* Top row */}
+                <View style={styles.cardTopRow}>
+                  <View style={styles.cardTopLeft}>
+                    {(() => {
+                      const isNew = (Date.now() - new Date(item.createdAt).getTime()) < NEW_WINDOW_HOURS * 3600000;
+                      return isNew ? (
+                        <View style={styles.newBadge}>
+                          <View style={styles.newDot} />
+                          <Text style={styles.newText}>NOUVEAU</Text>
+                        </View>
+                      ) : null;
+                    })()}
+                    <View style={styles.categoryChip}>
+                      <Text style={styles.categoryChipText}>{getCategoryName(item.categoryId)}</Text>
+                    </View>
                   </View>
-                  <Text style={styles.cardTime}>{timeAgo(item.createdAt)}</Text>
+                  <Text style={styles.timeText}>{timeAgo(item.createdAt)}</Text>
                 </View>
 
+                {/* Title + description */}
                 <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-                <Text style={styles.cardDescription} numberOfLines={2}>{item.description}</Text>
+                {item.description ? (
+                  <Text style={styles.cardDescription} numberOfLines={2}>{item.description}</Text>
+                ) : null}
 
-                <View style={styles.cardMeta}>
-                  <View style={styles.cardMetaItem}>
-                    <IconCurrencyDollar size={14} color={colors.textSecondary} />
-                    <Text style={styles.cardMetaText}>
-                      {formatPrice(item.budgetMin, item.currency)} — {formatPrice(item.budgetMax, item.currency)}
+                {/* Budget — prominent */}
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Budget</Text>
+                  <Text style={styles.budgetValue}>
+                    {item.budgetMax > item.budgetMin
+                      ? `${formatPrice(item.budgetMin, item.currency)} – ${formatPrice(item.budgetMax, item.currency)}`
+                      : formatPrice(item.budgetMin, item.currency)}
+                  </Text>
+                </View>
+
+                {/* Meta row */}
+                <View style={styles.metaRow}>
+                  <View style={styles.metaItem}>
+                    <IconMapPin size={13} color={colors.textMuted} strokeWidth={1.8} />
+                    <Text style={styles.metaText} numberOfLines={1}>
+                      {item.city} \u00B7 {locationLabel(item.locationType)}
                     </Text>
                   </View>
-                  <View style={styles.cardMetaItem}>
-                    <IconMapPin size={14} color={colors.textSecondary} />
-                    <Text style={styles.cardMetaText}>{item.city}</Text>
+                  <View style={styles.metaItem}>
+                    <IconCalendar size={13} color={colors.textMuted} strokeWidth={1.8} />
+                    <Text style={styles.metaText}>
+                      {item.flexibleDate ? 'Flexible' : formatDate(item.preferredDate)}
+                    </Text>
                   </View>
                 </View>
 
-                <View style={styles.cardFooter}>
-                  <View style={styles.cardFooterLeft}>
-                    <IconCalendar size={14} color={colors.textSecondary} />
-                    <Text style={styles.cardFooterText}>
-                      {item.flexibleDate ? 'Date flexible' : formatDate(item.preferredDate)}
-                    </Text>
-                    <Text style={styles.cardDot}>{'\u00B7'}</Text>
-                    <Text style={styles.cardFooterText}>{locationLabel(item.locationType)}</Text>
-                  </View>
-                  <View style={styles.proposalCountBadge}>
-                    <Text style={styles.proposalCountText}>
-                      {item.proposalCount} proposition{item.proposalCount !== 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
+                {/* Competition meter */}
+                {(() => {
+                  const comp = (() => {
+                    const n = item.proposalCount;
+                    if (n === 0) return { label: 'Aucune offre', color: colors.success };
+                    if (n <= 2) return { label: `${n} offre${n>1?'s':''}`, color: colors.warning };
+                    return { label: `${n} offres \u00B7 comp\u00E9titif`, color: colors.error };
+                  })();
+                  return (
+                    <View style={styles.compRow}>
+                      <View style={styles.compChip}>
+                        <IconFlame size={12} color={comp.color} strokeWidth={1.8} />
+                        <Text style={[styles.compText, { color: comp.color }]}>{comp.label}</Text>
+                      </View>
+                      <Pressable onPress={() => router.push(`/request/${item.id}` as any)} hitSlop={8}>
+                        <Text style={styles.detailsLink}>Voir d\u00E9tails</Text>
+                      </Pressable>
+                    </View>
+                  );
+                })()}
+              </PressableScale>
             )}
           />
         )}
@@ -276,49 +326,51 @@ const styles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 16px rgba(90,56,60,0.07)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3 },
+    }) as any,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  cardTopLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  newBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(0,135,90,0.12)',
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 10,
   },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryGhost,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
+  newDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
+  newText: { fontSize: 9, fontFamily: 'Poppins_700Bold', color: colors.success, letterSpacing: 0.5 },
+  categoryChip: {
+    paddingHorizontal: 9, paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: colors.n300,
   },
-  categoryBadgeText: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
-  cardTime: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
-  cardTitle: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
-  cardDescription: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 12 },
-  cardMeta: { flexDirection: 'row', gap: 16, marginBottom: 10 },
-  cardMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  cardMetaText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+  categoryChipText: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary, letterSpacing: 0.3 },
+  timeText: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  cardTitle: { fontSize: 17, fontFamily: 'PlayfairDisplay_700Bold', color: colors.text, lineHeight: 22, marginBottom: 6 },
+  cardDescription: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 19, marginBottom: 12 },
+  budgetRow: {
+    flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
+    paddingTop: 10, paddingBottom: 8,
+    borderTopWidth: 1, borderTopColor: colors.borderLight,
   },
-  cardFooterLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  cardFooterText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
-  cardDot: { fontSize: 12, color: colors.textMuted, marginHorizontal: 6 },
-  proposalCountBadge: {
-    backgroundColor: colors.primaryGhost,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 16,
+  budgetLabel: { fontSize: 11, fontFamily: 'Poppins_500Medium', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  budgetValue: { fontSize: 17, fontFamily: 'Poppins_700Bold', color: colors.terracotta, letterSpacing: -0.3 },
+  metaRow: { gap: 6, marginBottom: 12 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, flexShrink: 1 },
+  compRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: 12, paddingBottom: 12,
+    borderTopWidth: 1, borderTopColor: colors.borderLight,
   },
-  proposalCountText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
+  compChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  compText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold' },
+  detailsLink: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: colors.primary },
 });

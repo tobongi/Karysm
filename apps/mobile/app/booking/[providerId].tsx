@@ -33,6 +33,7 @@ import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import { showAlert } from '../../src/lib/alert';
 import Skeleton from '../../src/components/Skeleton';
+import { FadeInStagger, PressableScale } from '../../src/components/animations';
 
 // ─── French locale helpers ────────────────────────────────────────────────────
 
@@ -161,29 +162,40 @@ const TOTAL_STEPS = 4;
 function ProgressBar({ current }: { current: number }) {
   return (
     <View style={pb.wrap}>
-      {STEP_LABELS.map((label, i) => {
-        const stepNum = i + 1;
-        const done = stepNum < current;
-        const active = stepNum === current;
-        return (
-          <View key={label} style={pb.item}>
-            <View style={[pb.bar, done && pb.barDone, active && pb.barActive]} />
-            <Text style={[pb.label, (done || active) && pb.labelActive]}>{label}</Text>
-          </View>
-        );
-      })}
+      <View style={pb.dotsRow}>
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => {
+          const stepNum = i + 1;
+          const done = stepNum < current;
+          const active = stepNum === current;
+          return (
+            <View
+              key={i}
+              style={[
+                pb.dot,
+                done && pb.dotDone,
+                active && pb.dotActive,
+              ]}
+            />
+          );
+        })}
+      </View>
+      <View style={pb.labelRow}>
+        <Text style={pb.stepCounter}>Étape {current} de {TOTAL_STEPS}</Text>
+        <Text style={pb.stepLabel}>{STEP_LABELS[current - 1]}</Text>
+      </View>
     </View>
   );
 }
 
 const pb = StyleSheet.create({
-  wrap: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4 },
-  item: { flex: 1, alignItems: 'center', gap: 5 },
-  bar: { height: 3, width: '100%', borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.2)' },
-  barDone: { backgroundColor: 'rgba(255,255,255,0.55)' },
-  barActive: { backgroundColor: colors.white },
-  label: { fontSize: 10, fontFamily: 'Poppins_500Medium', color: 'rgba(255,255,255,0.45)', letterSpacing: 0.4 },
-  labelActive: { color: 'rgba(255,255,255,0.9)' },
+  wrap: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+  dotsRow: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.25)' },
+  dotDone: { backgroundColor: 'rgba(255,255,255,0.55)' },
+  dotActive: { backgroundColor: colors.white },
+  labelRow: { alignItems: 'center', gap: 4 },
+  stepCounter: { fontSize: 10, fontFamily: 'Poppins_500Medium', color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 },
+  stepLabel: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.white },
 });
 
 // ─── Time slot picker ────────────────────────────────────────────────────────
@@ -879,14 +891,14 @@ export default function BookingFlow() {
               <Text style={s.empty}>Aucun service disponible</Text>
             ) : (
               <View style={{ gap: 10 }}>
-                {provider.services.map(svc => {
+                {provider.services.map((svc, idx) => {
                   const isSel = selectedService?.id === svc.id;
                   return (
-                    <Pressable
-                      key={svc.id}
-                      style={[s.svcCard, isSel && s.svcCardSel]}
-                      onPress={() => setSelectedService(svc)}
-                    >
+                    <FadeInStagger key={svc.id} index={idx}>
+                      <PressableScale onPress={() => setSelectedService(svc)}>
+                        <View
+                          style={[s.svcCard, isSel && s.svcCardSel]}
+                        >
                       <View style={s.svcLeft}>
                         <View style={[s.svcRadio, isSel && s.svcRadioSel]}>
                           {isSel && <IconCheck size={13} color={colors.white} strokeWidth={3} />}
@@ -907,7 +919,9 @@ export default function BookingFlow() {
                           <Text style={[s.svcDur, isSel && s.svcDurSel]}>{svc.durationMin} min</Text>
                         </View>
                       </View>
-                    </Pressable>
+                        </View>
+                      </PressableScale>
+                    </FadeInStagger>
                   );
                 })}
               </View>
@@ -1008,12 +1022,6 @@ export default function BookingFlow() {
 
         {/* ── Footer CTA ── */}
         <View style={s.footer}>
-          {/* Mini progress dots */}
-          <View style={s.footerDots}>
-            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-              <View key={i} style={[s.footerDot, i + 1 <= currentStep && s.footerDotActive]} />
-            ))}
-          </View>
           <Pressable
             style={[s.nextBtn, !canAdvance() && s.nextBtnDisabled, submitting && { opacity: 0.7 }]}
             onPress={handleNext}
@@ -1088,10 +1096,10 @@ const s = StyleSheet.create({
   headerProviderCity: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.6)' },
 
   // Body
-  body: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 20 },
-  stepHeadingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 },
-  stepHeading: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.text },
-  stepCounter: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: colors.textMuted },
+  body: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 20 },
+  stepHeadingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, gap: 12 },
+  stepHeading: { fontSize: 26, fontFamily: 'PlayfairDisplay_700Bold', color: colors.text, flex: 1 },
+  stepCounter: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.textMuted, marginTop: 4 },
   empty: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted, fontStyle: 'italic' },
 
   // Service cards
@@ -1100,8 +1108,15 @@ const s = StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.border,
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 16, paddingHorizontal: 16, gap: 14,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 6px rgba(0,0,0,0.05)' },
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4 },
+    }) as any,
   },
-  svcCardSel: { borderColor: colors.primary, backgroundColor: 'rgba(139,105,82,0.05)' },
+  svcCardSel: { borderColor: colors.primary, backgroundColor: 'rgba(139,105,82,0.08)', ...Platform.select({
+    web: { boxShadow: '0 4px 12px rgba(139,105,82,0.15)' },
+    default: { shadowColor: colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8 },
+  }) as any },
   svcLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   svcRadio: {
     width: 22, height: 22, borderRadius: 11,
@@ -1172,21 +1187,18 @@ const s = StyleSheet.create({
       default: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 10 },
     }) as any,
   },
-  footerDots: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  footerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border },
-  footerDotActive: { backgroundColor: colors.primary, width: 18 },
   nextBtn: {
     backgroundColor: colors.accent,
-    paddingVertical: 16, borderRadius: 25,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    minHeight: 52,
+    paddingVertical: 17, paddingHorizontal: 24, borderRadius: 28,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    minHeight: 54,
     ...Platform.select({
-      web: { boxShadow: '0 4px 20px rgba(91,33,182,0.30)' },
-      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 16, elevation: 6 },
+      web: { boxShadow: '0 6px 20px rgba(91,33,182,0.32)' },
+      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.32, shadowRadius: 18, elevation: 8 },
     }) as any,
   },
-  nextBtnDisabled: { backgroundColor: colors.textMuted, ...(Platform.OS === 'web' ? { boxShadow: 'none' } : {}) as any },
-  nextBtnText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_700Bold' },
+  nextBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.6, ...(Platform.OS === 'web' ? { boxShadow: 'none' } : {}) as any },
+  nextBtnText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_700Bold', letterSpacing: 0.3 },
 
   // Success Modal
   modalOverlay: {

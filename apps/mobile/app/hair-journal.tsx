@@ -3,16 +3,16 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   StyleSheet,
   Platform,
-  SafeAreaView,
 } from 'react-native';
-import { router } from 'expo-router';
 import IconBook from '@tabler/icons-react-native/dist/esm/icons/IconBook.mjs';
 import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import IconPlus from '@tabler/icons-react-native/dist/esm/icons/IconPlus.mjs';
 import { colors } from '../src/theme/colors';
 import { showAlert } from '../src/lib/alert';
+import CurveHeader from '../src/components/CurveHeader';
+import { PressableScale, FadeInStagger } from '../src/components/animations';
 
 interface JournalEntry {
   id: string;
@@ -64,90 +64,109 @@ export default function HairJournalScreen() {
     );
   };
 
-  const webWrapper = Platform.OS === 'web'
-    ? { maxWidth: 480, width: '100%' as any, alignSelf: 'center' as any }
-    : {};
+  const totalEntries = entries.length;
+  const currentHairType = entries[0]?.hairType || '—';
+  const lastEntryDate = entries[0]?.month || '—';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={[{ flex: 1 }, webWrapper]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backArrow}>‹</Text>
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Mon journal capillaire</Text>
-            <Text style={styles.headerSubtitle}>Suivez votre parcours cheveux</Text>
-          </View>
-        </View>
+    <View style={styles.container}>
+      <CurveHeader
+        title="Journal Capillaire"
+        subtitle="Votre parcours, mois par mois"
+        showBack
+      />
 
-        {/* Add entry CTA */}
-        <View style={styles.ctaContainer}>
-          <Pressable style={styles.addButton} onPress={handleAddEntry}>
-            <Text style={styles.addButtonText}>+ Ajouter une entrée</Text>
-          </Pressable>
+      {entries.length === 0 ? (
+        /* Empty state */
+        <View style={styles.emptyState}>
+          <IconBook size={56} color={colors.accent} />
+          <Text style={styles.emptyTitle}>Commencez votre journal</Text>
+          <Text style={styles.emptySubtitle}>
+            Prenez une photo de vos cheveux chaque mois pour suivre votre progression
+          </Text>
+          <PressableScale style={styles.emptyButton} onPress={handleAddEntry}>
+            <Text style={styles.emptyButtonText}>Première entrée</Text>
+          </PressableScale>
         </View>
-
-        {entries.length === 0 ? (
-          /* Empty state */
-          <View style={styles.emptyState}>
-            <IconBook size={56} color={colors.accent} />
-            <Text style={styles.emptyTitle}>Commencez votre journal</Text>
-            <Text style={styles.emptySubtitle}>
-              Prenez une photo de vos cheveux chaque mois pour suivre votre progression
-            </Text>
-            <Pressable style={styles.emptyButton} onPress={handleAddEntry}>
-              <Text style={styles.emptyButtonText}>Première entrée</Text>
-            </Pressable>
+      ) : (
+        <>
+          {/* Stats card */}
+          <View style={styles.statsCard}>
+            <View style={styles.statRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{totalEntries}</Text>
+                <Text style={styles.statLabel}>Entrées</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>Type {currentHairType}</Text>
+                <Text style={styles.statLabel}>Cheveux</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{lastEntryDate}</Text>
+                <Text style={styles.statLabel}>Dernière</Text>
+              </View>
+            </View>
           </View>
-        ) : (
-          /* Timeline */
+
+          {/* Timeline */}
           <ScrollView
             contentContainerStyle={styles.timeline}
             showsVerticalScrollIndicator={false}
           >
-            {entries.map((entry) => (
-              <View key={entry.id} style={styles.entryCard}>
-                {/* Month label */}
-                <Text style={styles.monthLabel}>{entry.month.toUpperCase()}</Text>
+            {entries.map((entry, idx) => (
+              <FadeInStagger key={entry.id} index={idx} style={styles.entryCardWrapper}>
+                <View style={styles.entryCard}>
+                  {/* Month label */}
+                  <Text style={styles.monthLabel}>{entry.month.toUpperCase()}</Text>
 
-                {/* Photo placeholder */}
-                <View style={styles.imagePlaceholder}>
-                  <IconPhoto size={32} color={colors.textMuted} />
-                  <Text style={styles.imagePlaceholderText}>Photo à venir</Text>
-                </View>
-
-                {/* Badges row */}
-                <View style={styles.badgesRow}>
-                  <View style={styles.styleBadge}>
-                    <Text style={styles.styleBadgeText}>{entry.style}</Text>
+                  {/* Photo placeholder */}
+                  <View style={styles.imagePlaceholder}>
+                    <IconPhoto size={32} color={colors.textMuted} />
+                    <Text style={styles.imagePlaceholderText}>Photo à venir</Text>
                   </View>
-                  {entry.hairType && (
-                    <View style={styles.hairTypeBadge}>
-                      <Text style={styles.hairTypeBadgeText}>Type {entry.hairType}</Text>
-                    </View>
-                  )}
-                </View>
 
-                {/* Notes */}
-                <Text style={styles.notes}>{entry.notes}</Text>
-
-                {/* Products */}
-                <View style={styles.productsRow}>
-                  {entry.products.map((product, idx) => (
-                    <View key={idx} style={styles.productPill}>
-                      <Text style={styles.productPillText}>{product}</Text>
+                  {/* Badges row */}
+                  <View style={styles.badgesRow}>
+                    <View style={styles.styleBadge}>
+                      <Text style={styles.styleBadgeText}>{entry.style}</Text>
                     </View>
-                  ))}
+                    {entry.hairType && (
+                      <View style={styles.hairTypeBadge}>
+                        <Text style={styles.hairTypeBadgeText}>Type {entry.hairType}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Notes */}
+                  <Text style={styles.notes}>{entry.notes}</Text>
+
+                  {/* Products */}
+                  <View style={styles.productsRow}>
+                    {entry.products.map((product, i) => (
+                      <View key={i} style={styles.productPill}>
+                        <Text style={styles.productPillText}>{product}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              </View>
+              </FadeInStagger>
             ))}
-            <View style={{ height: 40 }} />
+            <View style={{ height: 80 }} />
           </ScrollView>
-        )}
-      </View>
-    </SafeAreaView>
+
+          {/* FAB sticky button */}
+          <PressableScale
+            style={styles.fab}
+            onPress={handleAddEntry}
+          >
+            <IconPlus size={24} color={colors.white} strokeWidth={2.2} />
+            <Text style={styles.fabText}>Nouvelle entrée</Text>
+          </PressableScale>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -156,56 +175,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'web' ? 20 : 10,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    backgroundColor: colors.card,
-    gap: 8,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backArrow: {
-    fontSize: 24,
-    color: colors.accent,
-    marginTop: -2,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: 'PlayfairDisplay_700Bold',
-    color: colors.accent,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-
-  // CTA
-  ctaContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  addButton: {
-    backgroundColor: colors.accent,
-    paddingVertical: 14,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: colors.white,
-    fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-  },
 
   // Empty state
   emptyState: {
@@ -213,6 +182,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
+    gap: 12,
   },
   emptyTitle: {
     fontSize: 20,
@@ -241,27 +211,66 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
   },
 
+  // Stats card
+  statsCard: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginBottom: 20,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  statNumber: {
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
+    color: colors.accent,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 10,
+    fontFamily: 'Poppins_500Medium',
+    color: colors.textMuted,
+    letterSpacing: 0.3,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: colors.border,
+  },
+
   // Timeline
   timeline: {
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
 
   // Entry card
+  entryCardWrapper: {
+    marginBottom: 16,
+  },
   entryCard: {
     backgroundColor: colors.card,
     borderRadius: 20,
     padding: 16,
-    marginBottom: 16,
-    ...Platform.select({
-      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
-      default: {
-        shadowColor: '#5A383C',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 20,
-        elevation: 3,
-      },
-    }) as any,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#5A383C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
   },
   monthLabel: {
     fontSize: 11,
@@ -306,13 +315,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
   },
   hairTypeBadge: {
-    backgroundColor: colors.primaryGhost,
+    backgroundColor: colors.terracotta,
     borderRadius: 100,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
   hairTypeBadgeText: {
-    color: colors.primary,
+    color: colors.white,
     fontSize: 12,
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -324,6 +333,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     marginTop: 2,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.primary,
+    paddingLeft: 12,
   },
 
   // Products
@@ -334,15 +346,40 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   productPill: {
+    backgroundColor: colors.primaryGhost,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 100,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   productPillText: {
     fontSize: 11,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Poppins_500Medium',
     color: colors.primary,
+  },
+
+  // FAB button
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 100,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  fabText: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
   },
 });

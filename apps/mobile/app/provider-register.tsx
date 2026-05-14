@@ -135,6 +135,21 @@ export default function ProviderRegisterScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={100}
       >
+        {/* ── Step Indicator ─────────────────────── */}
+        <View style={styles.stepIndicator}>
+          {[1, 2, 3].map((step) => (
+            <View
+              key={step}
+              style={[
+                styles.stepDot,
+                // This is a placeholder — actual step tracking would require state
+                // For now, show all as inactive
+                { backgroundColor: colors.border },
+              ]}
+            />
+          ))}
+        </View>
+
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.scrollContent}
@@ -143,12 +158,7 @@ export default function ProviderRegisterScreen() {
         >
           {/* ── Step 1: Identity ─────────────────── */}
           <View style={styles.stepSection}>
-            <View style={styles.stepHeader}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>1</Text>
-              </View>
-              <Text style={styles.stepTitle}>Identite</Text>
-            </View>
+            <Text style={styles.stepTitleDisplay}>Qui êtes-vous ?</Text>
 
             <View style={styles.avatarSection}>
               <Pressable onPress={handleAvatarPick} style={styles.avatarCircle}>
@@ -193,12 +203,7 @@ export default function ProviderRegisterScreen() {
 
           {/* ── Step 2: Location ─────────────────── */}
           <View style={styles.stepSection}>
-            <View style={styles.stepHeader}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>2</Text>
-              </View>
-              <Text style={styles.stepTitle}>Localisation</Text>
-            </View>
+            <Text style={styles.stepTitleDisplay}>Où ?</Text>
 
             <Text style={styles.label}>Dans quelle ville exercez-vous ?</Text>
             <View style={styles.cityGrid}>
@@ -269,12 +274,7 @@ export default function ProviderRegisterScreen() {
 
           {/* ── Step 3: Contact ──────────────────── */}
           <View style={styles.stepSection}>
-            <View style={styles.stepHeader}>
-              <View style={styles.stepBadge}>
-                <Text style={styles.stepBadgeText}>3</Text>
-              </View>
-              <Text style={styles.stepTitle}>Contact</Text>
-            </View>
+            <Text style={styles.stepTitleDisplay}>Contact</Text>
 
             <Text style={styles.label}>Numero WhatsApp</Text>
             <TextInput
@@ -384,33 +384,30 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { padding: 20, paddingTop: 8 },
 
+  // Step indicator
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 16,
+  },
+  stepDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+
   // Step sections
   stepSection: {
     marginBottom: 28,
   },
-  stepHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  stepBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  stepBadgeText: {
-    color: colors.white,
-    fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-  },
-  stepTitle: {
-    fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
+  stepTitleDisplay: {
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
     color: colors.accent,
+    marginBottom: 20,
+    fontStyle: 'italic',
   },
 
   // Avatar
@@ -628,6 +625,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 16px rgba(139,105,82,0.25)' }
+      : {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+        }
+    ) as any,
   },
   submitButtonDisabled: {
     opacity: 0.5,

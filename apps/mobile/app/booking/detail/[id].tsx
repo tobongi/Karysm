@@ -23,6 +23,7 @@ import { api } from '../../../src/lib/api';
 import { useAuth } from '../../../src/lib/auth-context';
 import { showAlert, showConfirm } from '../../../src/lib/alert';
 import Skeleton from '../../../src/components/Skeleton';
+import { FadeInStagger, PressableScale } from '../../../src/components/animations';
 
 // ─── Status config ─────────────────────────────────────────────────────────────
 
@@ -356,24 +357,26 @@ export default function BookingDetail() {
         )}
 
         {/* ── Provider card ── */}
-        <Pressable style={s.providerCard} onPress={() => router.push(`/provider/${booking.provider.slug}`)}>
-          {booking.provider.user.avatar ? (
-            <Image source={{ uri: booking.provider.user.avatar }} style={s.providerAvatar} />
-          ) : (
-            <View style={s.providerAvatarFallback}>
-              <Text style={s.providerAvatarInitial}>{getInitials(booking.provider.displayName)}</Text>
+        <PressableScale onPress={() => router.push(`/provider/${booking.provider.slug}`)}>
+          <View style={s.providerCard}>
+            {booking.provider.user.avatar ? (
+              <Image source={{ uri: booking.provider.user.avatar }} style={s.providerAvatar} />
+            ) : (
+              <View style={s.providerAvatarFallback}>
+                <Text style={s.providerAvatarInitial}>{getInitials(booking.provider.displayName)}</Text>
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={s.providerName}>{booking.provider.displayName}</Text>
+              <Text style={s.providerCity}>
+                {booking.provider.commune ? `${booking.provider.commune}, ` : ''}{booking.provider.city}
+              </Text>
             </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={s.providerName}>{booking.provider.displayName}</Text>
-            <Text style={s.providerCity}>
-              {booking.provider.commune ? `${booking.provider.commune}, ` : ''}{booking.provider.city}
-            </Text>
+            <View style={s.providerChevron}>
+              <IconChevronRight size={16} color={colors.primary} strokeWidth={2} />
+            </View>
           </View>
-          <View style={s.providerChevron}>
-            <IconChevronRight size={16} color={colors.primary} strokeWidth={2} />
-          </View>
-        </Pressable>
+        </PressableScale>
 
         {/* ── Info card ── */}
         <View style={s.card}>
@@ -452,96 +455,82 @@ export default function BookingDetail() {
         <View style={s.actions}>
           {/* WhatsApp */}
           {booking.provider.whatsappNumber && !isFinished && (
-            <Pressable
-              style={s.whatsappBtn}
-              onPress={() => openWhatsApp(booking.provider.whatsappNumber!)}
-            >
-              <IconBrandWhatsapp size={20} color={colors.white} strokeWidth={1.8} />
-              <Text style={s.whatsappBtnText}>Contacter sur WhatsApp</Text>
-            </Pressable>
+            <PressableScale onPress={() => openWhatsApp(booking.provider.whatsappNumber!)}>
+              <View style={s.whatsappBtn}>
+                <IconBrandWhatsapp size={20} color={colors.white} strokeWidth={1.8} />
+                <Text style={s.whatsappBtnText}>Contacter sur WhatsApp</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Provider: confirm */}
           {isProvider && isPending && (
-            <Pressable
-              style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => handleStatusChange('CONFIRMED', 'Confirmer cette réservation ?')}
-            >
-              <IconCheck size={18} color={colors.white} strokeWidth={2.5} />
-              <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Confirmer la réservation'}</Text>
-            </Pressable>
+            <PressableScale onPress={() => handleStatusChange('CONFIRMED', 'Confirmer cette réservation ?')} disabled={actionLoading}>
+              <View style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconCheck size={18} color={colors.white} strokeWidth={2.5} />
+                <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Confirmer la réservation'}</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Provider: start */}
           {isProvider && (isConfirmed || booking.status === 'DEPOSIT_PAID') && (
-            <Pressable
-              style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => handleStatusChange('IN_PROGRESS', 'Démarrer le service ?')}
-            >
-              <IconPlayerPlay size={18} color={colors.white} strokeWidth={2} />
-              <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Démarrer le service'}</Text>
-            </Pressable>
+            <PressableScale onPress={() => handleStatusChange('IN_PROGRESS', 'Démarrer le service ?')} disabled={actionLoading}>
+              <View style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconPlayerPlay size={18} color={colors.white} strokeWidth={2} />
+                <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Démarrer le service'}</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Provider: complete */}
           {isProvider && isInProgress && (
-            <Pressable
-              style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => handleStatusChange('COMPLETED', 'Marquer le service comme terminé ?')}
-            >
-              <IconCheck size={18} color={colors.white} strokeWidth={2.5} />
-              <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Service terminé'}</Text>
-            </Pressable>
+            <PressableScale onPress={() => handleStatusChange('COMPLETED', 'Marquer le service comme terminé ?')} disabled={actionLoading}>
+              <View style={[s.primaryBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconCheck size={18} color={colors.white} strokeWidth={2.5} />
+                <Text style={s.primaryBtnText}>{actionLoading ? 'Chargement…' : 'Service terminé'}</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* No-show (provider only, date passed) */}
           {canNoShow && (
-            <Pressable
-              style={[s.warnBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => handleStatusChange('NO_SHOW', 'Marquer la cliente comme absente ?')}
-            >
-              <IconAlertCircle size={16} color={colors.warning} strokeWidth={2.5} />
-              <Text style={s.warnBtnText}>Cliente absente</Text>
-            </Pressable>
+            <PressableScale onPress={() => handleStatusChange('NO_SHOW', 'Marquer la cliente comme absente ?')} disabled={actionLoading}>
+              <View style={[s.warnBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconAlertCircle size={16} color={colors.warning} strokeWidth={2.5} />
+                <Text style={s.warnBtnText}>Cliente absente</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Dispute */}
           {canDispute && (
-            <Pressable
-              style={[s.disputeBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => handleStatusChange('DISPUTED', 'Signaler un litige pour cette réservation ?')}
-            >
-              <IconAlertCircle size={16} color={colors.error} strokeWidth={2} />
-              <Text style={s.disputeBtnText}>Signaler un litige</Text>
-            </Pressable>
+            <PressableScale onPress={() => handleStatusChange('DISPUTED', 'Signaler un litige pour cette réservation ?')} disabled={actionLoading}>
+              <View style={[s.disputeBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconAlertCircle size={16} color={colors.error} strokeWidth={2} />
+                <Text style={s.disputeBtnText}>Signaler un litige</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Cancel */}
           {canCancel && (
-            <Pressable
-              style={[s.cancelBtn, actionLoading && { opacity: 0.6 }]}
-              disabled={actionLoading}
-              onPress={() => setCancelModal(true)}
-            >
-              <IconX size={16} color={colors.error} strokeWidth={2.5} />
-              <Text style={s.cancelBtnText}>Annuler la réservation</Text>
-            </Pressable>
+            <PressableScale onPress={() => setCancelModal(true)} disabled={actionLoading}>
+              <View style={[s.cancelBtn, actionLoading && { opacity: 0.6 }]}>
+                <IconX size={16} color={colors.error} strokeWidth={2.5} />
+                <Text style={s.cancelBtnText}>Annuler la réservation</Text>
+              </View>
+            </PressableScale>
           )}
 
           {/* Rebook */}
           {isFinished && isClient && (
-            <Pressable
-              style={s.rebookBtn}
-              onPress={() => router.push(`/booking/${booking.provider.id}?slug=${booking.provider.slug}`)}
-            >
-              <IconRefresh size={18} color={colors.accent} strokeWidth={2} />
-              <Text style={s.rebookBtnText}>Réserver à nouveau</Text>
-            </Pressable>
+            <PressableScale onPress={() => router.push(`/booking/${booking.provider.id}?slug=${booking.provider.slug}`)}>
+              <View style={s.rebookBtn}>
+                <IconRefresh size={18} color={colors.accent} strokeWidth={2} />
+                <Text style={s.rebookBtnText}>Réserver à nouveau</Text>
+              </View>
+            </PressableScale>
           )}
         </View>
 
@@ -654,18 +643,22 @@ const s = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 10, paddingBottom: 16,
   },
   backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center', alignItems: 'center',
   },
-  heroTitle: { fontSize: 17, fontFamily: 'Poppins_700Bold', color: colors.white, letterSpacing: 0.2 },
+  heroTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.white, letterSpacing: 0.3 },
   heroBody: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingBottom: 20,
+    paddingHorizontal: 20, paddingBottom: 24,
+    gap: 12,
   },
-  heroRef: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: 'rgba(255,255,255,0.65)', letterSpacing: 0.5 },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100 },
-  statusText: { fontSize: 13, fontFamily: 'Poppins_700Bold' },
+  heroRef: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: 'rgba(255,255,255,0.6)', letterSpacing: 0.6 },
+  statusBadge: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, ...Platform.select({
+    web: { boxShadow: '0 2px 8px rgba(0,0,0,0.15)' },
+    default: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6 },
+  }) as any },
+  statusText: { fontSize: 12, fontFamily: 'Poppins_700Bold', fontWeight: '700' },
 
   // Scroll
   scroll: { padding: 20, gap: 14 },
@@ -781,25 +774,37 @@ const s = StyleSheet.create({
   reviewCardComment: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text, lineHeight: 22, marginTop: 6 },
   reviewPrompt: {
     backgroundColor: colors.card, borderRadius: 20,
-    borderWidth: 1, borderColor: colors.primaryBorder,
-    padding: 20, alignItems: 'center', gap: 6,
+    borderWidth: 2, borderColor: colors.primaryBorder,
+    padding: 22, alignItems: 'center', gap: 8,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 16px rgba(139,105,82,0.12)' },
+      default: { shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 12 },
+    }) as any,
   },
-  reviewPromptTitle: { fontSize: 17, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, textAlign: 'center' },
-  reviewPromptSub: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  reviewPromptTitle: { fontSize: 19, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, textAlign: 'center', letterSpacing: -0.3 },
+  reviewPromptSub: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
   reviewPromptBtn: {
-    marginTop: 10, backgroundColor: colors.primary, borderRadius: 25,
-    paddingHorizontal: 28, paddingVertical: 12,
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 14, backgroundColor: colors.primary, borderRadius: 26,
+    paddingHorizontal: 32, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 16px rgba(139,105,82,0.25)' },
+      default: { shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12 },
+    }) as any,
   },
-  reviewPromptBtnText: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.white },
+  reviewPromptBtnText: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.white, fontWeight: '700' },
 
   // Timeline
   timelineCard: {
     backgroundColor: colors.card, borderRadius: 20,
     borderWidth: 1, borderColor: colors.border,
-    padding: 18,
+    padding: 20,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
+      default: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4 },
+    }) as any,
   },
-  timelineTitle: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 0.8, marginBottom: 16 },
+  timelineTitle: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 0.9, marginBottom: 18, textTransform: 'uppercase' },
 
   // Disputed banner
   disputedBanner: {

@@ -28,6 +28,7 @@ import IconActivity from '@tabler/icons-react-native/dist/esm/icons/IconActivity
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
+import { FadeInStagger, PressableScale } from '../../src/components/animations';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -172,19 +173,19 @@ export default function OccasionBookingScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.occasionScroll}
           >
-            {OCCASIONS.map(o => {
+            {OCCASIONS.map((o, idx) => {
               const isActive = occasion === o.id;
               return (
-                <Pressable
-                  key={o.id}
-                  style={[styles.occasionChip, isActive && styles.occasionChipActive]}
-                  onPress={() => setOccasion(isActive ? null : o.id)}
-                >
-                  <o.icon size={24} color={isActive ? colors.white : colors.primary} />
-                  <Text style={[styles.occasionLabel, isActive && styles.occasionLabelActive]}>
-                    {o.label}
-                  </Text>
-                </Pressable>
+                <FadeInStagger key={o.id} index={idx} delay={40}>
+                  <PressableScale onPress={() => setOccasion(isActive ? null : o.id)}>
+                    <View style={[styles.occasionChip, isActive && styles.occasionChipActive]}>
+                      <o.icon size={24} color={isActive ? colors.white : colors.primary} />
+                      <Text style={[styles.occasionLabel, isActive && styles.occasionLabelActive]}>
+                        {o.label}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                </FadeInStagger>
               );
             })}
           </ScrollView>
@@ -196,27 +197,29 @@ export default function OccasionBookingScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.dateScroll}
           >
-            {days.map(d => {
+            {days.map((d, idx) => {
               const isActive = selectedDateStr === d.dateStr;
               return (
-                <Pressable
-                  key={d.dateStr}
-                  style={[styles.dateCircle, isActive && styles.dateCircleActive]}
-                  onPress={() => {
-                    setSelectedDate(d.date);
-                    setSelectedDateStr(d.dateStr);
-                  }}
-                >
-                  <Text style={[styles.dateDayName, isActive && styles.dateDayNameActive]}>
-                    {d.dayName}
-                  </Text>
-                  <Text style={[styles.dateDayNum, isActive && styles.dateDayNumActive]}>
-                    {d.dayNum}
-                  </Text>
-                  <Text style={[styles.dateMonth, isActive && styles.dateMonthActive]}>
-                    {d.monthName}
-                  </Text>
-                </Pressable>
+                <FadeInStagger key={d.dateStr} index={idx} delay={35}>
+                  <PressableScale
+                    onPress={() => {
+                      setSelectedDate(d.date);
+                      setSelectedDateStr(d.dateStr);
+                    }}
+                  >
+                    <View style={[styles.dateCircle, isActive && styles.dateCircleActive]}>
+                      <Text style={[styles.dateDayName, isActive && styles.dateDayNameActive]}>
+                        {d.dayName}
+                      </Text>
+                      <Text style={[styles.dateDayNum, isActive && styles.dateDayNumActive]}>
+                        {d.dayNum}
+                      </Text>
+                      <Text style={[styles.dateMonth, isActive && styles.dateMonthActive]}>
+                        {d.monthName}
+                      </Text>
+                    </View>
+                  </PressableScale>
+                </FadeInStagger>
               );
             })}
           </ScrollView>
@@ -224,22 +227,25 @@ export default function OccasionBookingScreen() {
           {/* Section 3: Services multi-select */}
           <Text style={styles.sectionLabel}>Services souhaités</Text>
           <View style={styles.servicesContainer}>
-            {SERVICES.map(svc => {
+            {SERVICES.map((svc, idx) => {
               const isSelected = selectedServices.has(svc.id);
               return (
-                <View key={svc.id}>
-                  <Pressable
-                    style={[styles.serviceRow, isSelected && styles.serviceRowSelected]}
-                    onPress={() => toggleService(svc.id)}
-                  >
-                    <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                      {isSelected && <IconCheck size={14} color={colors.white} strokeWidth={3} />}
+                <FadeInStagger key={svc.id} index={idx} delay={25}>
+                  <PressableScale onPress={() => toggleService(svc.id)}>
+                    <View style={[styles.serviceRow, isSelected && styles.serviceRowSelected]}>
+                      <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                        {isSelected && <IconCheck size={14} color={colors.white} strokeWidth={3} />}
+                      </View>
+                      <svc.icon size={20} color={isSelected ? colors.accent : colors.primary} />
+                      <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>
+                        {svc.label}
+                      </Text>
                     </View>
-                    <svc.icon size={20} color={isSelected ? colors.accent : colors.primary} />
-                    <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>
-                      {svc.label}
-                    </Text>
-                  </Pressable>
+                  </PressableScale>
+                </FadeInStagger>
+              );
+            })}
+          </View>
                   {isSelected && (
                     <TextInput
                       style={styles.noteInput}
@@ -251,10 +257,9 @@ export default function OccasionBookingScreen() {
                       }
                     />
                   )}
-                </View>
+                </FadeInStagger>
               );
             })}
-          </View>
 
           {/* Section 4: Person count */}
           <Text style={styles.sectionLabel}>Pour combien de personnes ?</Text>
@@ -345,8 +350,7 @@ export default function OccasionBookingScreen() {
 
         {/* CTA */}
         <View style={styles.ctaContainer}>
-          <Pressable
-            style={[styles.ctaButton, !canSearch && styles.ctaButtonDisabled]}
+          <PressableScale
             onPress={() => {
               if (!canSearch) return;
               const categories = Array.from(selectedServices)
@@ -359,10 +363,14 @@ export default function OccasionBookingScreen() {
             }}
             disabled={!canSearch}
           >
-            <Text style={[styles.ctaText, !canSearch && styles.ctaTextDisabled]}>
-              Rechercher des prestataires
-            </Text>
-          </Pressable>
+            <View
+              style={[styles.ctaButton, !canSearch && styles.ctaButtonDisabled]}
+            >
+              <Text style={[styles.ctaText, !canSearch && styles.ctaTextDisabled]}>
+                Rechercher des prestataires
+              </Text>
+            </View>
+          </PressableScale>
         </View>
       </View>
     </SafeAreaView>
@@ -435,18 +443,18 @@ const styles = StyleSheet.create({
   // Occasion chips
   occasionScroll: {
     paddingHorizontal: screenPadding.horizontal,
-    gap: 10,
+    gap: 12,
   },
   occasionChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 100,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 20,
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: colors.border,
-    gap: 6,
+    gap: 8,
   } as ViewStyle,
   occasionChipActive: {
     backgroundColor: colors.accent,
@@ -465,18 +473,18 @@ const styles = StyleSheet.create({
   // Date picker
   dateScroll: {
     paddingHorizontal: screenPadding.horizontal,
-    gap: 10,
+    gap: 12,
   },
   dateCircle: {
-    width: 64,
-    height: 80,
-    borderRadius: 20,
+    width: 68,
+    height: 84,
+    borderRadius: 22,
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 2,
+    gap: 3,
   },
   dateCircleActive: {
     backgroundColor: colors.accent,
@@ -699,28 +707,30 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: screenPadding.horizontal,
-    paddingBottom: Platform.OS === 'web' ? 20 : 10,
-    paddingTop: 12,
+    paddingBottom: Platform.OS === 'web' ? 24 : 16,
+    paddingTop: 16,
     backgroundColor: colors.bg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   } as ViewStyle,
   ctaButton: {
     backgroundColor: colors.accent,
-    borderRadius: radius.xl,
-    paddingVertical: 16,
+    borderRadius: 28,
+    paddingVertical: 17,
     alignItems: 'center',
   },
   ctaButtonDisabled: {
-    backgroundColor: colors.border,
+    backgroundColor: colors.textMuted,
+    opacity: 0.55,
   },
   ctaText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 16,
     fontWeight: '600',
     color: colors.white,
+    letterSpacing: 0.2,
   },
   ctaTextDisabled: {
-    color: colors.textMuted,
+    color: 'rgba(255,255,255,0.7)',
   },
 });

@@ -16,9 +16,9 @@ import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
 import IconSnowflake from '@tabler/icons-react-native/dist/esm/icons/IconSnowflake.mjs';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
-import IconRefresh from '@tabler/icons-react-native/dist/esm/icons/IconRefresh.mjs';
 import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
+import CurveHeader from '../../../src/components/CurveHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const FACE_SIZE = Math.min(SCREEN_WIDTH - 40, 340);
@@ -178,16 +178,14 @@ export default function SkinResultsScreen() {
   const recommendations = Array.isArray(data.recommendations) ? data.recommendations : [];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse de peau" showBack />
       <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* ── SKIN REPORT Header ── */}
-        <View style={styles.reportHeader}>
-          <Text style={styles.reportTitle}>SKIN REPORT</Text>
-          <Text style={styles.reportDate}>
-            {new Date(data.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </Text>
-        </View>
+        {/* Date */}
+        <Text style={styles.reportDate}>
+          {new Date(data.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </Text>
 
         {/* ── Face Map with detection points ── */}
         <View style={styles.faceMapContainer}>
@@ -478,10 +476,8 @@ const styles = StyleSheet.create({
   backBtn: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
   backBtnText: { color: colors.white, fontFamily: 'Poppins_600SemiBold' },
 
-  // Report header
-  reportHeader: { marginBottom: 20 },
-  reportTitle: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.primary, letterSpacing: 3 },
-  reportDate: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
+  // Report date
+  reportDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 20 },
 
   // Face map
   faceMapContainer: {

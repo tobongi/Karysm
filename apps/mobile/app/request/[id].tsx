@@ -9,6 +9,7 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { showAlert, showConfirm } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
+import CurveHeader from '../../src/components/CurveHeader';
 
 interface Proposal {
   id: string;
@@ -208,6 +209,7 @@ export default function RequestDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <CurveHeader title="Demande" showBack />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -489,36 +491,40 @@ const styles = StyleSheet.create({
   // Proposal card
   proposalCard: {
     backgroundColor: colors.card,
-    borderRadius: 24,
+    borderRadius: 22,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    }) as any,
   },
   proposalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   proposalAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center', marginRight: 10,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent,
+    justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
-  proposalAvatarText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.white },
+  proposalAvatarText: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.white },
   proposalInfo: { flex: 1 },
-  proposalName: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.accent },
-  proposalRating: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  ratingStar: { fontSize: 12, color: colors.terracotta, marginRight: 3 },
-  ratingValue: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.terracotta, marginRight: 3 },
-  reviewCount: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
-  proposalPrice: { fontSize: 17, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  proposalName: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text },
+  proposalRating: { flexDirection: 'row', alignItems: 'center', marginTop: 3 },
+  ratingStar: { fontSize: 13, color: colors.terracotta, marginRight: 4 },
+  ratingValue: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.terracotta, marginRight: 4 },
+  reviewCount: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  proposalPrice: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
   proposalMessage: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text, lineHeight: 20, marginBottom: 8 },
   proposalDuration: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
   // Proposal actions
   proposalActions: { flexDirection: 'row', marginTop: 12, gap: 8 },
   acceptBtn: {
     flex: 1,
-    backgroundColor: colors.success,
+    backgroundColor: colors.accent,
     borderRadius: 20,
     paddingVertical: 12,
     alignItems: 'center',

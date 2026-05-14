@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
 import { colors } from '../../src/theme/colors';
 import { registerForPushNotifications } from '../../src/lib/notifications';
+import { PressableScale } from '../../src/components/animations';
 
 export default function NotificationPermissionScreen() {
   const handleAllow = async () => {
@@ -25,24 +26,22 @@ export default function NotificationPermissionScreen() {
       <View style={styles.content}>
         {/* Bell illustration */}
         <View style={styles.iconCircle}>
-          <IconBell size={48} color={colors.primaryLight} strokeWidth={1.5} />
+          <IconBell size={56} color={colors.accent} strokeWidth={1.5} />
         </View>
 
-        <Text style={styles.title}>
-          Restez informée de vos rendez-vous et messages.
-        </Text>
+        <Text style={styles.title}>Restez informée</Text>
         <Text style={styles.subtitle}>
-          Activez les notifications pour ne manquer aucune réservation ou offre.
+          Recevez des notifications pour vos rendez-vous, messages et offres personnalisées des prestataires.
         </Text>
       </View>
 
       <View style={styles.bottom}>
-        <Pressable style={styles.ctaButton} onPress={handleAllow}>
-          <Text style={styles.ctaText}>Activer les notifications</Text>
-        </Pressable>
-        <Pressable onPress={handleSkip} style={styles.skipButton}>
-          <Text style={styles.skipText}>Peut-être plus tard</Text>
-        </Pressable>
+        <PressableScale style={styles.ctaButton} onPress={handleAllow}>
+          <Text style={styles.ctaText}>Autoriser les notifications</Text>
+        </PressableScale>
+        <PressableScale onPress={handleSkip} style={styles.skipButton}>
+          <Text style={styles.skipText}>Plus tard</Text>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
@@ -68,20 +67,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.card,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.primaryGhost,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
   title: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 20,
-    color: colors.text,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 22,
+    color: colors.accent,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 30,
+    fontStyle: 'italic',
+    marginBottom: 10,
   },
   subtitle: {
     fontFamily: 'Poppins_400Regular',
@@ -89,33 +90,47 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginTop: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   bottom: {
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     paddingBottom: 40,
+    gap: 10,
   },
   ctaButton: {
     height: 54,
     borderRadius: 27,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 16px rgba(139,105,82,0.25)' }
+      : {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+        }
+    ) as any,
   },
   ctaText: {
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Poppins_700Bold',
     fontSize: 16,
     color: '#FFFFFF',
   },
   skipButton: {
-    marginTop: 16,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.card,
   },
   skipText: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 14,
-    color: colors.headerDark,
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 15,
+    color: colors.text,
     textAlign: 'center',
   },
 });

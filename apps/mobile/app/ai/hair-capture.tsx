@@ -8,13 +8,12 @@ import { router } from 'expo-router';
 import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
 import IconRuler from '@tabler/icons-react-native/dist/esm/icons/IconRuler.mjs';
 import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
-import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
-import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
 import { showAlert } from '../../src/lib/alert';
+import CurveHeader from '../../src/components/CurveHeader';
 
 const TIPS = [
   { icon: IconSun, title: 'Lumière naturelle', desc: 'Éclairage uniforme, pas de flash' },
@@ -52,13 +51,22 @@ export default function HairCaptureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Analyse cheveux</Text>
-        <Text style={styles.subtitle}>
-          Photographiez vos cheveux naturels pour connaître votre type capillaire et recevoir des conseils adaptés.
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse cheveux" showBack>
+        <Text style={styles.headerSubtitle}>
+          Découvrez votre texture capillaire
         </Text>
+      </CurveHeader>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Intro card */}
+        <View style={styles.introCard}>
+          <Text style={styles.introTitle}>Prêt(e) ?</Text>
+          <Text style={styles.introSubtitle}>
+            Photographiez vos cheveux en lumière naturelle pour connaître votre type
+          </Text>
+        </View>
 
+        <Text style={styles.tipsLabel}>Conseils pour une analyse précise</Text>
         <View style={styles.tipsRow}>
           {TIPS.map((tip, i) => (
             <View key={i} style={styles.tipCard}>
@@ -124,8 +132,22 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1 },
   content: { padding: 20 },
-  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+
+  headerSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)' },
+
+  // Intro card
+  introCard: {
+    backgroundColor: `rgba(91, 33, 182, 0.08)`,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: `rgba(91, 33, 182, 0.15)`,
+  },
+  introTitle: { fontSize: 18, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  introSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 19 },
+
+  tipsLabel: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 1, marginBottom: 12, textTransform: 'uppercase' },
   tipsRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   tipCard: {
     flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
