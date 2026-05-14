@@ -70,7 +70,7 @@ function AppContent() {
         <Stack.Screen name="booking/[providerId]" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="booking/detail/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="provider-register" options={{ title: 'Devenir prestataire' }} />
-        <Stack.Screen name="provider-dashboard/services" options={{ title: 'Mes services' }} />
+        <Stack.Screen name="provider-dashboard/services" options={{ headerShown: false }} />
         <Stack.Screen name="provider-dashboard/availability" options={{ title: 'Disponibilités' }} />
         <Stack.Screen name="provider-dashboard/earnings" options={{ title: 'Mes revenus' }} />
         <Stack.Screen name="request/create" options={{ title: 'Nouvelle demande', animation: 'slide_from_bottom' }} />
