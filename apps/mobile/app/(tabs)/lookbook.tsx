@@ -19,7 +19,7 @@ import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 import { shadows } from '../../src/theme/shadows';
 import Skeleton from '../../src/components/Skeleton';
 import CurveHeader from '../../src/components/CurveHeader';
-import { PressableScale } from '../../src/components/animations';
+import { PressableScale, BounceScale } from '../../src/components/animations';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import { imgUrl } from '../../src/lib/image';
@@ -63,11 +63,11 @@ function LookCardSkeleton({ index }: { index: number }) {
   return (
     <View style={styles.cardWrapper}>
       <View style={styles.card}>
-        <Skeleton width="100%" height={h} borderRadius={0} style={{ borderTopLeftRadius: 18, borderTopRightRadius: 18 }} />
-        <View style={{ padding: 10 }}>
+        <Skeleton width="100%" height={h} borderRadius={0} style={{ borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md }} />
+        <View style={{ padding: spacing.sm }}>
           <Skeleton width="80%" height={12} borderRadius={6} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <Skeleton width={22} height={22} borderRadius={11} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm }}>
+            <Skeleton width={20} height={20} borderRadius={10} />
             <Skeleton width="50%" height={11} borderRadius={6} />
           </View>
         </View>
@@ -88,6 +88,7 @@ export default function LookbookTabScreen() {
   const [category, setCategory] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [bounceId, setBounceId] = useState<string | null>(null);
 
   const fetchFeed = useCallback(
     async (pageNum = 1, append = false) => {
@@ -153,6 +154,8 @@ export default function LookbookTabScreen() {
       router.push('/auth/login' as any);
       return;
     }
+    // Trigger bounce animation
+    setBounceId(itemId);
     // Optimistic update
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -222,37 +225,44 @@ export default function LookbookTabScreen() {
             style={styles.card}
             onPress={() => router.push(`/provider/${item.provider.slug}` as any)}
           >
-            {/* Full-card image */}
-            <Image
-              source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl || '' }}
-              style={[styles.lookImage, { height: imageHeight }]}
-              resizeMode="cover"
-            />
-
-            {/* TOP-LEFT: service tag badge */}
-            {item.serviceTag && (
-              <View style={styles.serviceTagBadge}>
-                <Text style={styles.serviceTagText}>{item.serviceTag}</Text>
-              </View>
-            )}
-
-            {/* TOP-RIGHT: heart save button */}
-            <Pressable
-              style={styles.saveButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                toggleSave(item.id);
-              }}
-              hitSlop={8}
-            >
-              <IconHeart
-                size={16}
-                color={isSaved ? colors.error : colors.white}
-                fill={isSaved ? colors.error : 'none'}
+            {/* Image container with overlays */}
+            <View style={[styles.imageContainer, { height: imageHeight }]}>
+              <Image
+                source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl || '' }}
+                style={styles.lookImage}
+                resizeMode="cover"
               />
-            </Pressable>
 
-            {/* BOTTOM: info overlay */}
+              {/* TOP-LEFT: service tag badge */}
+              {item.serviceTag && (
+                <View style={styles.serviceTagBadge}>
+                  <Text style={styles.serviceTagText}>{item.serviceTag}</Text>
+                </View>
+              )}
+
+              {/* TOP-RIGHT: heart save button with bounce */}
+              <BounceScale trigger={bounceId === item.id} style={styles.saveButtonWrapper}>
+                <Pressable
+                  style={styles.saveButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleSave(item.id);
+                  }}
+                  hitSlop={8}
+                >
+                  <IconHeart
+                    size={16}
+                    color={isSaved ? colors.error : colors.white}
+                    fill={isSaved ? colors.error : 'none'}
+                  />
+                </Pressable>
+              </BounceScale>
+
+              {/* BOTTOM gradient overlay */}
+              <View style={styles.lookInfoGradient} pointerEvents="none" />
+            </View>
+
+            {/* Info section below image */}
             <View style={styles.lookInfo}>
               {/* Star rating */}
               <View style={styles.ratingRow}>
@@ -270,7 +280,7 @@ export default function LookbookTabScreen() {
                 </Text>
               )}
 
-              {/* Provider row + "Je veux ça" */}
+              {/* Provider row */}
               <View style={styles.lookBottomRow}>
                 <View style={styles.lookProviderAvatar}>
                   <Text style={styles.lookProviderInitial}>
@@ -282,17 +292,9 @@ export default function LookbookTabScreen() {
                 </Text>
               </View>
 
+              {/* "Je veux ça" button */}
               <Pressable
-                style={{
-                  backgroundColor: colors.accent,
-                  borderRadius: 10,
-                  paddingVertical: 7,
-                  alignItems: 'center',
-                  width: '100%',
-                  position: 'relative',
-                  bottom: undefined,
-                  right: undefined,
-                }}
+                style={styles.wantButton}
                 onPress={(e) => {
                   e.stopPropagation();
                   router.push(
@@ -307,7 +309,7 @@ export default function LookbookTabScreen() {
         </View>
       );
     },
-    [savedIds, toggleSave]
+    [savedIds, toggleSave, bounceId]
   );
 
   const renderSkeletons = () => (
@@ -337,12 +339,15 @@ export default function LookbookTabScreen() {
       }
       return (
         <View style={styles.emptyContainer}>
+          <View style={styles.emptyHeartIcon}>
+            <IconHeart size={32} color={colors.accent} stroke={1.5} />
+          </View>
           <Text style={styles.emptyTitle}>Aucun look sauvegardé</Text>
           <Text style={styles.emptySubtitle}>
-            Parcourez les réalisations et sauvegardez vos préférés
+            Touchez le ♥ sur un look pour le retrouver ici
           </Text>
           <Pressable style={styles.emptyCta} onPress={() => setTab('discover')}>
-            <Text style={styles.emptyCtaText}>Découvrir</Text>
+            <Text style={styles.emptyCtaText}>Explorer le feed</Text>
           </Pressable>
         </View>
       );
@@ -375,28 +380,30 @@ export default function LookbookTabScreen() {
       {/* CurveHeader */}
       <CurveHeader
         title="Inspiration"
-        subtitle="Les réalisations de la communauté"
+        subtitle="Les plus beaux looks à votre image"
         height={160}
       />
 
-      {/* Tab toggle */}
-      <View style={styles.tabRow}>
-        <Pressable
-          style={[styles.tabItem, tab === 'discover' && styles.tabItemActive]}
-          onPress={() => setTab('discover')}
-        >
-          <Text style={[styles.tabText, tab === 'discover' && styles.tabTextActive]}>
-            Découvrir
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tabItem, tab === 'saved' && styles.tabItemActive]}
-          onPress={() => setTab('saved')}
-        >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>
-            Sauvegardés
-          </Text>
-        </Pressable>
+      {/* Segment control tab toggle */}
+      <View style={styles.segmentContainer}>
+        <View style={styles.segmentBackground}>
+          <Pressable
+            style={[styles.segmentButton, tab === 'discover' && styles.segmentButtonActive]}
+            onPress={() => setTab('discover')}
+          >
+            <Text style={[styles.segmentText, tab === 'discover' && styles.segmentTextActive]}>
+              Découvrir
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.segmentButton, tab === 'saved' && styles.segmentButtonActive]}
+            onPress={() => setTab('saved')}
+          >
+            <Text style={[styles.segmentText, tab === 'saved' && styles.segmentTextActive]}>
+              Sauvegardés
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Category filter chips — only on discover tab */}
@@ -471,33 +478,37 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  // Tab toggle
-  tabRow: {
-    flexDirection: 'row',
-    marginHorizontal: screenPadding.horizontal,
+  // Segment control tab toggle
+  segmentContainer: {
+    paddingHorizontal: screenPadding.horizontal,
     marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  tabItem: {
+  segmentBackground: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: radius.full,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...(shadows.card as any),
+  },
+  segmentButton: {
     flex: 1,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderRadius: radius.full - 4,
   },
-  tabItemActive: {
-    borderBottomColor: colors.accent,
+  segmentButtonActive: {
+    backgroundColor: colors.accent,
   },
-  tabText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
+  segmentText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.textMuted,
   },
-  tabTextActive: {
-    fontFamily: fonts.bodySemiBold,
-    fontWeight: '600',
-    color: colors.accent,
+  segmentTextActive: {
+    color: colors.white,
   },
 
   // Filters
@@ -546,31 +557,40 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
     maxWidth: '48%' as any,
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 18,
+    borderRadius: radius.md,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
     ...(shadows.card as any),
   },
 
-  // Image fills the full card
+  // Image container with overlays
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'hidden',
+  },
+
+  // Image fills container
   lookImage: {
     width: '100%',
+    height: '100%',
   },
 
   // TOP-LEFT: service tag badge
   serviceTagBadge: {
     position: 'absolute',
-    top: 10,
-    left: 10,
+    top: spacing.sm,
+    left: spacing.sm,
     backgroundColor: colors.accent,
-    borderRadius: 6,
+    borderRadius: radius.xs,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    zIndex: 2,
   },
   serviceTagText: {
     fontSize: 9,
@@ -581,23 +601,39 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // TOP-RIGHT: heart save button
-  saveButton: {
+  // TOP-RIGHT: heart save button with bounce wrapper
+  saveButtonWrapper: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    top: spacing.sm,
+    right: spacing.sm,
+    zIndex: 3,
+  },
+  saveButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(0,0,0,0.22)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // BOTTOM: info section on light card
+  // BOTTOM: gradient overlay for text readability
+  lookInfoGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 140,
+    backgroundColor: 'rgba(0,0,0,0)',
+    ...(Platform.OS === 'web' ? {
+      background: 'linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.35))',
+    } : {}),
+  },
+
+  // Info section below image (white card background)
   lookInfo: {
-    padding: 10,
-    paddingTop: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.card,
     flexDirection: 'column',
   },
@@ -660,14 +696,15 @@ const styles = StyleSheet.create({
   // "Je veux ça" button — full width at bottom of card
   wantButton: {
     backgroundColor: colors.accent,
-    borderRadius: 10,
-    paddingVertical: 7,
+    borderRadius: radius.lg,
+    paddingVertical: 8,
     alignItems: 'center',
     alignSelf: 'stretch',
     width: '100%' as any,
+    marginTop: spacing.xs,
   },
   wantButtonText: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.white,
     fontFamily: fonts.bodySemiBold,
     fontWeight: '600',
@@ -678,7 +715,16 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 80,
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyHeartIcon: {
+    marginBottom: spacing.md,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyTitle: {
     fontFamily: fonts.bodySemiBold,
@@ -691,16 +737,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textMuted,
-    marginTop: 8,
+    marginTop: spacing.xs,
     textAlign: 'center',
     lineHeight: 20,
   },
   emptyCta: {
-    marginTop: 24,
+    marginTop: spacing.xl,
     backgroundColor: colors.accent,
     borderRadius: radius.full,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
   },
   emptyCtaText: {
     fontFamily: fonts.bodySemiBold,

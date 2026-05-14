@@ -320,7 +320,7 @@ export default function EditProfileScreen() {
           {/* ── Tab: Cliente ── */}
           <TabCrossfade active={tab === 'client'}>
             <View style={styles.formArea}>
-              <Field label="Nom" value={name} onChangeText={setName} placeholder="Votre nom" />
+              <Field label="Nom" value={name} onChangeText={setName} placeholder="Votre nom" helper="Visible sur votre profil public" />
               <Field label="Téléphone" value={user?.phone || ''} editable={false} hint="Le numéro ne peut pas être modifié." />
             </View>
           </TabCrossfade>
@@ -329,6 +329,13 @@ export default function EditProfileScreen() {
           <TabCrossfade active={tab === 'provider' && isProvider}>
             <View style={styles.formArea}>
               <Field
+                label="Nom professionnel"
+                value={name}
+                onChangeText={setName}
+                placeholder="Votre nom"
+                helper="Affiché sur votre profil public"
+              />
+              <Field
                 label="Bio"
                 value={bio}
                 onChangeText={setBio}
@@ -336,10 +343,32 @@ export default function EditProfileScreen() {
                 multiline
                 maxLength={500}
                 charCount
+                helper="500 caractères max"
               />
-              <Field label="WhatsApp" value={whatsapp} onChangeText={setWhatsapp} placeholder="+243 812 345 678" keyboardType="phone-pad" />
-              <Field label="Instagram" value={instagram} onChangeText={setInstagram} placeholder="@votre_compte" autoCapitalize="none" />
-              <Field label="TikTok" value={tiktok} onChangeText={setTiktok} placeholder="@votre_compte" autoCapitalize="none" />
+              <Field
+                label="WhatsApp"
+                value={whatsapp}
+                onChangeText={setWhatsapp}
+                placeholder="+243 812 345 678"
+                keyboardType="phone-pad"
+                helper="Pour que les clientes vous contactent"
+              />
+              <Field
+                label="Instagram"
+                value={instagram}
+                onChangeText={setInstagram}
+                placeholder="@votre_compte"
+                autoCapitalize="none"
+                helper="Votre identifiant Instagram"
+              />
+              <Field
+                label="TikTok"
+                value={tiktok}
+                onChangeText={setTiktok}
+                placeholder="@votre_compte"
+                autoCapitalize="none"
+                helper="Votre identifiant TikTok"
+              />
               <Field label="Ville" value={city || 'Non définie'} editable={false} hint="Contactez le support pour changer de ville." />
             </View>
           </TabCrossfade>
@@ -375,6 +404,7 @@ function Field({
   placeholder,
   editable = true,
   hint,
+  helper,
   multiline,
   maxLength,
   charCount,
@@ -387,6 +417,7 @@ function Field({
   placeholder?: string;
   editable?: boolean;
   hint?: string;
+  helper?: string;
   multiline?: boolean;
   maxLength?: number;
   charCount?: boolean;
@@ -402,7 +433,7 @@ function Field({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.primaryLight}
+          placeholderTextColor={colors.textMuted}
           multiline={multiline}
           maxLength={maxLength}
           keyboardType={keyboardType}
@@ -418,6 +449,7 @@ function Field({
         <Text style={styles.charCount}>{value.length}/{maxLength}</Text>
       )}
       {hint && <Text style={styles.hint}>{hint}</Text>}
+      {helper && <Text style={styles.helperText}>{helper}</Text>}
     </View>
   );
 }
@@ -461,27 +493,30 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    backgroundColor: 'transparent',
-    borderBottomWidth: 1.5,
-    borderBottomColor: colors.n300,
-    paddingVertical: 10,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     fontSize: 16,
     fontFamily: 'Poppins_400Regular',
-    color: colors.headerDark,
+    color: colors.text,
   },
   inputMulti: {
     minHeight: 90,
     borderWidth: 1,
-    borderColor: colors.n300,
-    borderRadius: 14,
+    borderColor: colors.border,
+    borderRadius: 12,
     padding: 14,
-    borderBottomWidth: 1,
+    textAlignVertical: 'top',
   },
   disabledText: {
     fontSize: 16,
     fontFamily: 'Poppins_400Regular',
     color: colors.textMuted,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   hint: {
     fontSize: 12,
@@ -512,5 +547,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
+  },
+  helperText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textMuted,
+    marginTop: 6,
   },
 });

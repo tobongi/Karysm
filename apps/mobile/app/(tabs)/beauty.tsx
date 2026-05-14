@@ -20,6 +20,7 @@ import IconPalette from '@tabler/icons-react-native/dist/esm/icons/IconPalette.m
 import IconFlower from '@tabler/icons-react-native/dist/esm/icons/IconFlower.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 import React from 'react';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
@@ -27,6 +28,8 @@ import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import Skeleton from '../../src/components/Skeleton';
 import CurveHeader from '../../src/components/CurveHeader';
+import { FadeInStagger, PressableScale } from '../../src/components/animations';
+import { showAlert } from '../../src/lib/alert';
 
 const BEAUTY_TIPS: { id: string; Icon: React.ComponentType<{ size: number; color: string }>; title: string; content: string }[] = [
   { id: '1', Icon: IconDroplet, title: 'Méthode LOC pour cheveux 4C', content: "Liquid, Oil, Cream — l'ordre d'application qui change tout pour l'hydratation des cheveux crépus." },
@@ -116,172 +119,211 @@ export default function BeautyTab() {
   const lastSkin = skinHistory[0];
   const lastHair = hairHistory[0];
 
+  const handleLearnMore = () => {
+    showAlert(
+      'À votre image',
+      'Notre IA comprend les peaux et cheveux africains — Monk Scale, undertone, porosité, densité, et 20+ métriques. Construite sur des datasets pensés pour vous.',
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <CurveHeader title="Beauté AI" subtitle="Analysez votre peau et vos cheveux" height={160} />
+      <CurveHeader title="Beauté AI" subtitle="Analyses personnalisées pour votre peau et vos cheveux" height={160} />
 
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.primary} />}
       >
+        {/* -- Hero Card -- */}
+        <FadeInStagger index={0} style={styles.heroCard}>
+          <Text style={styles.heroHeadline}>À votre image</Text>
+          <Text style={styles.heroSubtitle}>Notre IA comprend les peaux et cheveux africains comme aucune autre app</Text>
+          <Pressable onPress={handleLearnMore}>
+            <Text style={styles.heroLink}>En savoir plus →</Text>
+          </Pressable>
+        </FadeInStagger>
+
         {/* -- Skin Analysis Card -- */}
-        <Pressable
-          style={styles.analysisCard}
-          onPress={() => lastSkin ? router.push(`/ai/skin-results/${lastSkin.id}`) : router.push('/ai/skin-capture')}
-        >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconWrap}><IconDroplet size={26} color={colors.primary} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>Analyse de peau</Text>
-              <Text style={styles.cardDescription}>
-                {lastSkin ? `Dernière analyse : ${formatDate(lastSkin.createdAt)}` : 'Découvrez votre type de peau'}
-              </Text>
+        <FadeInStagger index={1}>
+          <PressableScale
+            onPress={() => lastSkin ? router.push(`/ai/skin-results/${lastSkin.id}`) : router.push('/ai/skin-capture')}
+            style={styles.analysisCard}
+          >
+            <View style={styles.analysisCardHeader}>
+              <View style={[styles.analysisCardIcon, { backgroundColor: colors.primaryGhost }]}>
+                <IconSparkles size={32} color={colors.accent} />
+              </View>
+              <View style={styles.analysisCardText}>
+                <Text style={styles.analysisCardTitle}>Analyse de peau</Text>
+                <Text style={styles.analysisCardDesc}>
+                  Détectez votre teint Monk Scale (1–10), undertone, hydratation, sébum, taches…
+                </Text>
+              </View>
             </View>
-            {lastSkin && lastSkin.overallScore != null && (
-              <View style={styles.scoreCircle}>
-                <Text style={styles.scoreText}>{lastSkin.overallScore}</Text>
-                <Text style={styles.scoreLabel}>score</Text>
+
+            {lastSkin && (
+              <View style={styles.cardDetails}>
+                {lastSkin.monkTone != null && (
+                  <View style={styles.monkBadge}>
+                    <View style={[styles.monkDot, { backgroundColor: MONK_COLORS[lastSkin.monkTone] || colors.textMuted }]} />
+                    <Text style={styles.monkText}>Monk {lastSkin.monkTone}</Text>
+                  </View>
+                )}
+                {lastSkin.undertone && (
+                  <View style={styles.undertoneBadge}>
+                    <Text style={styles.undertoneText}>
+                      {lastSkin.undertone === 'WARM' ? 'Chaud' : lastSkin.undertone === 'COOL' ? 'Froid' : 'Neutre'}
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
-          </View>
 
-          {lastSkin && (
-            <View style={styles.cardDetails}>
-              {lastSkin.monkTone != null && (
-                <View style={styles.monkBadge}>
-                  <View style={[styles.monkDot, { backgroundColor: MONK_COLORS[lastSkin.monkTone] || colors.textMuted }]} />
-                  <Text style={styles.monkText}>Monk {lastSkin.monkTone}</Text>
-                </View>
-              )}
-              {lastSkin.undertone && (
-                <View style={styles.undertoneBadge}>
-                  <Text style={styles.undertoneText}>
-                    {lastSkin.undertone === 'WARM' ? 'Chaud' : lastSkin.undertone === 'COOL' ? 'Froid' : 'Neutre'}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          <Pressable
-            style={styles.cardCta}
-            onPress={() => router.push('/ai/skin-capture')}
-          >
-            <Text style={styles.cardCtaText}>
-              {lastSkin ? 'Nouvelle analyse' : 'Analyser ma peau'}
-            </Text>
-          </Pressable>
-        </Pressable>
+            <Pressable
+              style={styles.cardCta}
+              onPress={() => router.push('/ai/skin-capture')}
+            >
+              <Text style={styles.cardCtaText}>
+                Analyser ma peau →
+              </Text>
+            </Pressable>
+          </PressableScale>
+        </FadeInStagger>
 
         {/* -- Hair Analysis Card -- */}
-        <Pressable
-          style={styles.analysisCard}
-          onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
-        >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardIconWrap}><IconScissors size={26} color={colors.primary} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>Analyse cheveux</Text>
-              <Text style={styles.cardDescription}>
-                {lastHair ? `Dernière analyse : ${formatDate(lastHair.createdAt)}` : 'Découvrez votre type de cheveux'}
-              </Text>
+        <FadeInStagger index={2}>
+          <PressableScale
+            onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
+            style={styles.analysisCard}
+          >
+            <View style={styles.analysisCardHeader}>
+              <View style={[styles.analysisCardIcon, { backgroundColor: colors.primaryGhost }]}>
+                <IconScissors size={32} color={colors.primary} />
+              </View>
+              <View style={styles.analysisCardText}>
+                <Text style={styles.analysisCardTitle}>Analyse cheveux</Text>
+                <Text style={styles.analysisCardDesc}>
+                  Identifiez votre type 4A–4C, porosité, densité, élasticité…
+                </Text>
+              </View>
             </View>
-            {lastHair && lastHair.overallScore != null && (
-              <View style={styles.scoreCircle}>
-                <Text style={styles.scoreText}>{lastHair.overallScore}</Text>
-                <Text style={styles.scoreLabel}>score</Text>
+
+            {lastHair?.hairType && (
+              <View style={styles.cardDetails}>
+                <View style={styles.hairTypeBadge}>
+                  <Text style={styles.hairTypeText}>Type {lastHair.hairType}</Text>
+                </View>
               </View>
             )}
-          </View>
 
-          {lastHair?.hairType && (
-            <View style={styles.cardDetails}>
-              <View style={styles.hairTypeBadge}>
-                <Text style={styles.hairTypeText}>Type {lastHair.hairType}</Text>
-              </View>
-            </View>
-          )}
-
-          <Pressable
-            style={styles.cardCta}
-            onPress={() => router.push('/ai/hair-capture')}
-          >
-            <Text style={styles.cardCtaText}>
-              {lastHair ? 'Nouvelle analyse' : 'Analyser mes cheveux'}
-            </Text>
-          </Pressable>
-        </Pressable>
+            <Pressable
+              style={styles.cardCta}
+              onPress={() => router.push('/ai/hair-capture')}
+            >
+              <Text style={styles.cardCtaText}>
+                Analyser mes cheveux →
+              </Text>
+            </Pressable>
+          </PressableScale>
+        </FadeInStagger>
 
         {/* -- Virtual Mirror Card -- */}
-        <Pressable
-          style={styles.mirrorCard}
-          onPress={() => router.push('/ai/virtual-tryon' as any)}
-        >
-          <View style={styles.mirrorContent}>
-            <View style={styles.mirrorBadge}>
-              <Text style={styles.mirrorBadgeText}>NOUVEAU</Text>
+        <FadeInStagger index={3}>
+          <PressableScale
+            onPress={() => router.push('/ai/virtual-tryon' as any)}
+            style={styles.mirrorCard}
+          >
+            <View style={styles.mirrorContent}>
+              <View style={styles.mirrorBadge}>
+                <Text style={styles.mirrorBadgeText}>NOUVEAU</Text>
+              </View>
+              <Text style={styles.mirrorTitle}>Miroir Virtuel</Text>
+              <Text style={styles.mirrorSubtitle}>
+                Essayez rouge à lèvres, blush et fard — en temps réel sur votre visage
+              </Text>
+              <View style={styles.mirrorCta}>
+                <Text style={styles.mirrorCtaText}>Essayer maintenant</Text>
+                <IconArrowRight size={14} color={colors.white} />
+              </View>
             </View>
-            <Text style={styles.mirrorTitle}>Miroir Virtuel</Text>
-            <Text style={styles.mirrorSubtitle}>
-              Essayez rouge à lèvres, blush et{'\n'}fard — en temps réel sur votre visage
-            </Text>
-            <View style={styles.mirrorCta}>
-              <Text style={styles.mirrorCtaText}>Essayer maintenant</Text>
-              <IconArrowRight size={14} color={colors.white} />
+            <View style={styles.mirrorIcons}>
+              <IconPalette size={28} color={colors.accent} />
+              <IconFlower size={28} color={colors.primary} style={{ marginTop: 8 }} />
+              <IconSparkles size={28} color={colors.accent} style={{ marginTop: 8 }} />
             </View>
-          </View>
-          <View style={styles.mirrorIcons}>
-            <IconPalette size={28} color={colors.accent} />
-            <IconFlower size={28} color={colors.primary} style={{ marginTop: 8 }} />
-            <IconSparkles size={28} color={colors.accent} style={{ marginTop: 8 }} />
-          </View>
-        </Pressable>
+          </PressableScale>
+        </FadeInStagger>
 
-        {/* -- History -- */}
-        {(skinHistory.length > 1 || hairHistory.length > 1) && (
-          <View style={styles.historySection}>
-            <Text style={styles.sectionTitle}>Historique</Text>
-            {skinHistory.slice(1).map((s) => (
-              <Pressable key={s.id} style={styles.historyRow} onPress={() => router.push(`/ai/skin-results/${s.id}`)}>
-                <View style={styles.historyIconWrap}><IconDroplet size={18} color={colors.primary} /></View>
-                <Text style={styles.historyLabel}>Peau — Score {s.overallScore || '—'}</Text>
-                <Text style={styles.historyDate}>{formatDate(s.createdAt)}</Text>
-              </Pressable>
-            ))}
-            {hairHistory.slice(1).map((h) => (
-              <Pressable key={h.id} style={styles.historyRow} onPress={() => router.push(`/ai/hair-results/${h.id}`)}>
-                <View style={styles.historyIconWrap}><IconScissors size={18} color={colors.primary} /></View>
-                <Text style={styles.historyLabel}>Cheveux — {h.hairType || 'Score ' + (h.overallScore || '—')}</Text>
-                <Text style={styles.historyDate}>{formatDate(h.createdAt)}</Text>
-              </Pressable>
-            ))}
-          </View>
+        {/* -- Recent Analyses -- */}
+        {(skinHistory.length > 0 || hairHistory.length > 0) && (
+          <FadeInStagger index={4}>
+            <View style={styles.recentSection}>
+              <Text style={styles.sectionTitle}>Mes analyses récentes</Text>
+              <View style={styles.recentGrid}>
+                {[...skinHistory, ...hairHistory]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .slice(0, 4)
+                  .map((analysis, i) => {
+                    const isSkin = 'monkTone' in analysis;
+                    return (
+                      <PressableScale
+                        key={analysis.id}
+                        onPress={() => router.push(isSkin ? `/ai/skin-results/${analysis.id}` : `/ai/hair-results/${analysis.id}`)}
+                        style={styles.recentCard}
+                      >
+                        <View style={[styles.recentIcon, { backgroundColor: isSkin ? colors.primaryGhost : colors.primaryGhost }]}>
+                          {isSkin ? <IconDroplet size={20} color={colors.primary} /> : <IconScissors size={20} color={colors.primary} />}
+                        </View>
+                        <Text style={styles.recentType}>{isSkin ? 'Peau' : 'Cheveux'}</Text>
+                        {isSkin ? (
+                          <Text style={styles.recentMetric}>M{(analysis as SkinSummary).monkTone || '—'}</Text>
+                        ) : (
+                          <Text style={styles.recentMetric}>{(analysis as HairSummary).hairType || '—'}</Text>
+                        )}
+                        <Text style={styles.recentDate}>{new Date(analysis.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</Text>
+                      </PressableScale>
+                    );
+                  })}
+              </View>
+              {skinHistory.length === 0 && hairHistory.length === 0 && (
+                <Text style={styles.emptyAnalysis}>Pas encore d'analyse — commencez maintenant !</Text>
+              )}
+            </View>
+          </FadeInStagger>
         )}
 
         {/* -- Hair Journal Card -- */}
-        <Pressable style={styles.journalCard} onPress={() => router.push('/hair-journal' as any)}>
-          <View style={styles.journalIcon}>
-            <IconBook size={24} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.journalTitle}>Journal capillaire</Text>
-            <Text style={styles.journalSubtitle}>Suivez votre parcours cheveux mois par mois</Text>
-          </View>
-          <IconChevronRight size={20} color={colors.textMuted} />
-        </Pressable>
+        <FadeInStagger index={5}>
+          <PressableScale style={styles.journalCard} onPress={() => router.push('/hair-journal' as any)}>
+            <View style={styles.journalIcon}>
+              <IconBook size={24} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.journalTitle}>Journal capillaire</Text>
+              <Text style={styles.journalSubtitle}>Suivez votre parcours cheveux mois par mois</Text>
+            </View>
+            <IconChevronRight size={20} color={colors.textMuted} />
+          </PressableScale>
+        </FadeInStagger>
 
         {/* -- Learn Section -- */}
-        <Text style={styles.learnSectionTitle}>Apprendre</Text>
+        <FadeInStagger index={6}>
+          <Text style={styles.learnSectionTitle}>Apprendre</Text>
+        </FadeInStagger>
 
-        {BEAUTY_TIPS.map((tip) => (
-          <View key={tip.id} style={styles.tipCard}>
-            <tip.Icon size={24} color={colors.primary} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.tipTitle}>{tip.title}</Text>
-              <Text style={styles.tipPreview} numberOfLines={2}>{tip.content}</Text>
-            </View>
-          </View>
-        ))}
+        <View style={styles.tipGrid}>
+          {BEAUTY_TIPS.map((tip, i) => (
+            <FadeInStagger key={tip.id} index={7 + i}>
+              <View style={styles.tipCard}>
+                <View style={styles.tipIconWrap}>
+                  <tip.Icon size={24} color={colors.primary} />
+                </View>
+                <Text style={styles.tipTitle}>{tip.title}</Text>
+                <Text style={styles.tipPreview} numberOfLines={2}>{tip.content}</Text>
+              </View>
+            </FadeInStagger>
+          ))}
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -294,25 +336,79 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
 
+  // Hero Card
+  heroCard: {
+    backgroundColor: colors.accent,
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    ...Platform.select({
+      web: { boxShadow: '0 8px 24px rgba(91,33,182,0.15)' },
+      default: { shadowColor: '#5B21B6', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 5 },
+    }) as any,
+  },
+  heroHeadline: {
+    fontSize: 32,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    color: colors.white,
+    marginBottom: 12,
+    lineHeight: 38,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: 'rgba(255,255,255,0.88)',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  heroLink: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.white,
+    textDecorationLine: 'underline',
+  },
+
   // Analysis cards
   analysisCard: {
-    backgroundColor: colors.card, borderRadius: 24, padding: 20,
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...Platform.select({
       web: { boxShadow: '0 4px 20px rgba(90,56,60,0.08)' },
       default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 3 },
     }) as any,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  cardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  cardTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent },
-  cardDescription: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
-  scoreCircle: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
+  analysisCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  scoreText: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.primary },
-  scoreLabel: { fontSize: 9, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: -2 },
+  analysisCardIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  analysisCardText: {
+    flex: 1,
+  },
+  analysisCardTitle: {
+    fontSize: 20,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    color: colors.accent,
+    marginBottom: 6,
+  },
+  analysisCardDesc: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
 
   cardDetails: { flexDirection: 'row', gap: 8, marginBottom: 14 },
   monkBadge: {
@@ -370,21 +466,60 @@ const styles = StyleSheet.create({
   mirrorCtaText: { color: colors.white, fontSize: 13, fontFamily: 'Poppins_600SemiBold' },
   mirrorIcons: { paddingLeft: 12, alignItems: 'center' },
 
-  // History
-  historySection: { marginTop: 8 },
-  sectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 14 },
-  historyRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.card, padding: 16, borderRadius: 16,
-    marginBottom: 10,
+  // Recent Analyses
+  recentSection: { marginTop: 8, marginBottom: 20 },
+  recentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  recentCard: {
+    width: '48%',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
     ...Platform.select({
       web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
       default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
     }) as any,
   },
-  historyIconWrap: { marginRight: 12, width: 24, alignItems: 'center' },
-  historyLabel: { flex: 1, fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
-  historyDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  recentIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  recentType: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  recentMetric: {
+    fontSize: 16,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    color: colors.accent,
+    marginBottom: 6,
+  },
+  recentDate: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textMuted,
+  },
+  emptyAnalysis: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 16,
+    fontStyle: 'italic',
+  },
+  sectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 14 },
 
   // Journal card
   journalCard: {
@@ -405,19 +540,36 @@ const styles = StyleSheet.create({
   journalSubtitle: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', marginTop: 2 },
 
   // Learn section
-  learnSectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginTop: 28, marginBottom: 12 },
+  learnSectionTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginTop: 28, marginBottom: 16 },
+  tipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 8,
+  },
   tipCard: {
-    flexDirection: 'row', padding: 16,
-    backgroundColor: colors.card, borderRadius: 16,
-    marginBottom: 10, gap: 14,
+    width: '48%',
+    padding: 16,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...Platform.select({
       web: { boxShadow: '0 2px 12px rgba(90,56,60,0.06)' },
       default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
     }) as any,
   },
-  tipEmoji: { fontSize: 28 },
-  tipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
-  tipPreview: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 18, marginTop: 4 },
+  tipIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 6 },
+  tipPreview: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 16 },
 
   // Empty/Auth
   emptyTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center', marginBottom: 20 },

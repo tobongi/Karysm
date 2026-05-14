@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
+import { PressableScale } from '../../src/components/animations';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const HEADER_HEIGHT = 240;
-const CURVE_HEIGHT = 50;
+const HEADER_HEIGHT = 220;
+const CURVE_HEIGHT = 40;
 
 function HeaderCurve() {
   const w = Math.min(SCREEN_WIDTH, 480);
   const h = HEADER_HEIGHT + CURVE_HEIGHT;
-  // Elegant concave curve like Beauty Master — sweeps from lower-left to upper-right
+  // Elegant concave curve — sweeps from lower-left to upper-right
   const d = `M0,0 L0,${HEADER_HEIGHT - 20} Q${w * 0.25},${HEADER_HEIGHT + CURVE_HEIGHT} ${w * 0.5},${HEADER_HEIGHT - 5} Q${w * 0.75},${HEADER_HEIGHT - CURVE_HEIGHT + 10} ${w},${HEADER_HEIGHT - 40} L${w},0 Z`;
 
   return (
@@ -22,7 +24,10 @@ function HeaderCurve() {
       <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ position: 'absolute', top: 0, left: 0 }}>
         <Path d={d} fill={colors.headerDark} />
       </Svg>
-      <Text style={headerStyles.title}>Connexion</Text>
+      <View style={headerStyles.content}>
+        <Text style={headerStyles.wordmark}>Karysm</Text>
+        <Text style={headerStyles.tagline}>La beauté à votre image</Text>
+      </View>
     </View>
   );
 }
@@ -33,15 +38,25 @@ const headerStyles = StyleSheet.create({
     position: 'relative',
     width: '100%',
   },
-  title: {
+  content: {
     position: 'absolute',
-    bottom: CURVE_HEIGHT + 30,
+    bottom: CURVE_HEIGHT + 25,
     left: 28,
+    right: 28,
+  },
+  wordmark: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 34,
+    fontSize: 44,
     color: '#FFFFFF',
     fontStyle: 'italic',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
+  },
+  tagline: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 6,
+    letterSpacing: 0.3,
   },
 });
 
@@ -97,60 +112,56 @@ export default function Login() {
 
             {/* Form area */}
             <View style={styles.formArea}>
-              {/* Toggle to register */}
-              <Pressable onPress={() => router.push('/auth/register')} style={styles.toggleRow}>
-                <Text style={styles.toggleText}>
-                  Pas encore membre ?{' '}
-                  <Text style={styles.toggleLink}>S'inscrire</Text>
-                </Text>
-              </Pressable>
-
               {step === 'phone' ? (
                 <>
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Numéro de téléphone</Text>
-                    <TextInput
-                      style={[styles.underlineInput, error ? styles.underlineError : null]}
-                      placeholder="+243 812 345 678"
-                      placeholderTextColor={colors.primaryLight}
-                      keyboardType="phone-pad"
-                      value={phone}
-                      onChangeText={(t) => { setPhone(t); setError(''); }}
-                      autoFocus
-                    />
+                    <View style={[styles.inputContainer, error ? styles.inputContainerError : null]}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="+243 812 345 678"
+                        placeholderTextColor={colors.textMuted}
+                        keyboardType="phone-pad"
+                        value={phone}
+                        onChangeText={(t) => { setPhone(t); setError(''); }}
+                        autoFocus
+                      />
+                    </View>
                     {error ? (
                       <Text style={styles.errorText}>{error}</Text>
                     ) : (
                       <Text style={styles.hintText}>
-                        Entrez votre numéro avec l'indicatif pays (+243, +225, +221...)
+                        Entrez votre numéro avec l'indicatif pays
                       </Text>
                     )}
                   </View>
 
-                  <Pressable
-                    style={[styles.ctaButton, (loading || phone.length < 3) && styles.ctaDisabled]}
+                  <PressableScale
                     onPress={handleSendOTP}
                     disabled={loading || phone.length < 3}
+                    style={[styles.ctaButton, (loading || phone.length < 3) && styles.ctaDisabled]}
                   >
                     <Text style={styles.ctaText}>
-                      {loading ? 'Envoi...' : 'Recevoir le code'}
+                      {loading ? 'Envoi...' : 'Envoyer le code'}
                     </Text>
-                  </Pressable>
+                  </PressableScale>
                 </>
               ) : (
                 <>
                   <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Code de vérification</Text>
-                    <TextInput
-                      style={[styles.underlineInput, error ? styles.underlineError : null]}
-                      placeholder="1234"
-                      placeholderTextColor={colors.primaryLight}
-                      keyboardType="number-pad"
-                      value={otp}
-                      onChangeText={(text) => { setOtp(text.slice(0, 4)); setError(''); }}
-                      autoFocus
-                      maxLength={4}
-                    />
+                    <View style={[styles.inputContainer, error ? styles.inputContainerError : null]}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="1234"
+                        placeholderTextColor={colors.textMuted}
+                        keyboardType="number-pad"
+                        value={otp}
+                        onChangeText={(text) => { setOtp(text.slice(0, 4)); setError(''); }}
+                        autoFocus
+                        maxLength={4}
+                      />
+                    </View>
                     {error ? (
                       <Text style={styles.errorText}>{error}</Text>
                     ) : (
@@ -160,21 +171,31 @@ export default function Login() {
                     )}
                   </View>
 
-                  <Pressable
-                    style={[styles.ctaButton, (loading || otp.length !== 4) && styles.ctaDisabled]}
+                  <PressableScale
                     onPress={handleVerifyOTP}
                     disabled={loading || otp.length !== 4}
+                    style={[styles.ctaButton, (loading || otp.length !== 4) && styles.ctaDisabled]}
                   >
                     <Text style={styles.ctaText}>
                       {loading ? 'Vérification...' : 'Vérifier'}
                     </Text>
-                  </Pressable>
+                  </PressableScale>
 
-                  <Pressable onPress={() => { setStep('phone'); setOtp(''); setError(''); }}>
+                  <PressableScale onPress={() => { setStep('phone'); setOtp(''); setError(''); }}>
                     <Text style={styles.changeLink}>Changer de numéro</Text>
-                  </Pressable>
+                  </PressableScale>
                 </>
               )}
+
+              {/* Toggle to register — at bottom */}
+              <View style={styles.footerRow}>
+                <Text style={styles.footerText}>
+                  Pas encore membre ?{' '}
+                </Text>
+                <PressableScale onPress={() => router.push('/auth/register')}>
+                  <Text style={styles.footerLink}>S'inscrire</Text>
+                </PressableScale>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -205,44 +226,39 @@ const styles = StyleSheet.create({
   formArea: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 8,
-  },
-  toggleRow: {
-    marginBottom: 36,
-  },
-  toggleText: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  toggleLink: {
-    fontFamily: 'Poppins_600SemiBold',
-    color: colors.headerDark,
-    textDecorationLine: 'underline',
+    paddingTop: 24,
+    paddingBottom: 32,
+    justifyContent: 'space-between',
   },
 
-  // Underline inputs (Beauty Master style)
+  // Card-style input container
   inputGroup: {
-    marginBottom: 32,
+    marginBottom: 28,
   },
   inputLabel: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    letterSpacing: 0.3,
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 11,
+    color: colors.text,
+    marginBottom: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  underlineInput: {
+  inputContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  inputContainerError: {
+    borderColor: colors.error,
+  },
+  input: {
     fontFamily: 'Poppins_400Regular',
-    fontSize: 17,
-    color: colors.headerDark,
-    borderBottomWidth: 1.5,
-    borderBottomColor: colors.n300,
-    paddingVertical: 10,
-    backgroundColor: 'transparent',
-  },
-  underlineError: {
-    borderBottomColor: colors.error,
+    fontSize: 16,
+    color: colors.text,
+    padding: 0,
   },
   hintText: {
     fontFamily: 'Poppins_400Regular',
@@ -257,30 +273,48 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // CTA button (warm rounded like reference)
+  // CTA button — accent violet, rounded pill
   ctaButton: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.accent,
     height: 54,
     borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginBottom: 16,
   },
   ctaDisabled: {
-    opacity: 0.45,
+    opacity: 0.5,
   },
   ctaText: {
     fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
     color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 
   // Change number link
   changeLink: {
     fontFamily: 'Poppins_500Medium',
-    color: colors.headerDark,
+    color: colors.accent,
     textAlign: 'center',
-    marginTop: 20,
     fontSize: 14,
+  },
+
+  // Footer register link
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  footerText: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  footerLink: {
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.accent,
+    textDecorationLine: 'underline',
   },
 });
