@@ -1,19 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Pressable, Platform, Image,
-  RefreshControl, ScrollView,
+  RefreshControl, ScrollView, ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect } from 'expo-router';
 import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
 import IconCalendar from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
 import IconFlame from '@tabler/icons-react-native/dist/esm/icons/IconFlame.mjs';
 import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
-import IconArrowRight from '@tabler/icons-react-native/dist/esm/icons/IconArrowRight.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
+import { showAlert } from '../../src/lib/alert';
 import Skeleton from '../../src/components/Skeleton';
 import { PressableScale, FadeInStagger } from '../../src/components/animations';
+
+const DISMISSED_KEY = 'karysm_requests_dismissed';
+const PROPOSED_KEY = 'karysm_requests_proposed';
+const QUICK_MESSAGE = 'Bonjour, je suis disponible pour votre demande au budget proposé. À très vite !';
+const QUICK_DURATION_MIN = 90;
 
 interface BrowseRequest {
   id: string;
@@ -78,6 +86,61 @@ export default function RequestsTab() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [proposedIds, setProposedIds] = useState<Set<string>>(new Set());
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+  // Hydrate dismissed + proposed sets once
+  useEffect(() => {
+    (async () => {
+      try {
+        const [dRaw, pRaw] = await Promise.all([
+          AsyncStorage.getItem(DISMISSED_KEY),
+          AsyncStorage.getItem(PROPOSED_KEY),
+        ]);
+        if (dRaw) setDismissedIds(new Set(JSON.parse(dRaw)));
+        if (pRaw) setProposedIds(new Set(JSON.parse(pRaw)));
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  async function persistSet(key: string, set: Set<string>) {
+    try { await AsyncStorage.setItem(key, JSON.stringify([...set])); } catch { /* ignore */ }
+  }
+
+  const handleRefuser = useCallback((id: string) => {
+    setDismissedIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      persistSet(DISMISSED_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const handleAccepter = useCallback(async (req: BrowseRequest) => {
+    if (submittingId) return;
+    setSubmittingId(req.id);
+    try {
+      await api(`/requests/${req.id}/proposals`, {
+        method: 'POST',
+        body: JSON.stringify({
+          price: req.budgetMax || req.budgetMin,
+          message: QUICK_MESSAGE,
+          estimatedDuration: QUICK_DURATION_MIN,
+        }),
+      });
+      setProposedIds(prev => {
+        const next = new Set(prev);
+        next.add(req.id);
+        persistSet(PROPOSED_KEY, next);
+        return next;
+      });
+    } catch (e: any) {
+      showAlert('Impossible d\'envoyer', e.message || 'Réessayez dans un instant');
+    } finally {
+      setSubmittingId(null);
+    }
+  }, [submittingId]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -111,20 +174,25 @@ export default function RequestsTab() {
     return m;
   }, [categories]);
 
+  const activeRequests = useMemo(
+    () => requests.filter(r => !dismissedIds.has(r.id)),
+    [requests, dismissedIds],
+  );
+
   const matchCount = useMemo(
-    () => requests.filter(r => myCategoryIds.has(r.categoryId) && (!myCity || r.city === myCity)).length,
-    [requests, myCategoryIds, myCity],
+    () => activeRequests.filter(r => myCategoryIds.has(r.categoryId) && (!myCity || r.city === myCity)).length,
+    [activeRequests, myCategoryIds, myCity],
   );
 
   const visible = useMemo(() => {
-    let list = requests;
+    let list = requests.filter(r => !dismissedIds.has(r.id));
     if (mode === 'mine') {
       list = list.filter(r => myCategoryIds.has(r.categoryId) && (!myCity || r.city === myCity));
     } else if (activeCategory) {
       list = list.filter(r => r.categoryId === activeCategory);
     }
     return list;
-  }, [requests, mode, activeCategory, myCategoryIds, myCity]);
+  }, [requests, mode, activeCategory, myCategoryIds, myCity, dismissedIds]);
 
   // Categories the provider works in — shown first when "Toutes" is active
   const sortedCategories = useMemo(() => {
@@ -140,8 +208,8 @@ export default function RequestsTab() {
       {/* Hero stats */}
       <View style={styles.hero}>
         <View style={styles.heroLeft}>
-          <Text style={styles.heroNum}>{requests.length}</Text>
-          <Text style={styles.heroLabel}>demande{requests.length > 1 ? 's' : ''} ouverte{requests.length > 1 ? 's' : ''}</Text>
+          <Text style={styles.heroNum}>{activeRequests.length}</Text>
+          <Text style={styles.heroLabel}>demande{activeRequests.length > 1 ? 's' : ''} ouverte{activeRequests.length > 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.heroDivider} />
         <View style={styles.heroRight}>
@@ -328,17 +396,56 @@ export default function RequestsTab() {
                   )}
                 </View>
 
-                {/* Footer: competition + CTA */}
-                <View style={styles.cardFooter}>
+                {/* Competition meter */}
+                <View style={styles.compRow}>
                   <View style={styles.compChip}>
                     <IconFlame size={12} color={comp.color} strokeWidth={1.8} />
                     <Text style={[styles.compText, { color: comp.color }]}>{comp.label}</Text>
                   </View>
-                  <View style={styles.cta}>
-                    <Text style={styles.ctaText}>Proposer</Text>
-                    <IconArrowRight size={14} color={colors.white} strokeWidth={2} />
-                  </View>
+                  <Pressable onPress={() => router.push(`/request/${item.id}` as any)} hitSlop={8}>
+                    <Text style={styles.detailsLink}>Voir détails</Text>
+                  </Pressable>
                 </View>
+
+                {/* Action row — proposed state OR Refuser/Accepter */}
+                {proposedIds.has(item.id) ? (
+                  <View style={styles.sentRow}>
+                    <View style={styles.sentLeft}>
+                      <View style={styles.sentIconCircle}>
+                        <IconCheck size={14} color={colors.white} strokeWidth={2.5} />
+                      </View>
+                      <Text style={styles.sentText}>Proposition envoyée</Text>
+                    </View>
+                    <Pressable onPress={() => router.push(`/request/${item.id}` as any)} hitSlop={8}>
+                      <Text style={styles.sentLink}>Suivi →</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={styles.actionRow}>
+                    <Pressable
+                      style={styles.refuseBtn}
+                      onPress={() => handleRefuser(item.id)}
+                      disabled={submittingId === item.id}
+                    >
+                      <IconX size={14} color={colors.textSecondary} strokeWidth={2} />
+                      <Text style={styles.refuseText}>Refuser</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.acceptBtn, submittingId === item.id && styles.acceptBtnDisabled]}
+                      onPress={() => handleAccepter(item)}
+                      disabled={submittingId === item.id}
+                    >
+                      {submittingId === item.id ? (
+                        <ActivityIndicator size="small" color={colors.white} />
+                      ) : (
+                        <>
+                          <IconCheck size={14} color={colors.white} strokeWidth={2.5} />
+                          <Text style={styles.acceptText}>Accepter</Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </View>
+                )}
               </PressableScale>
             </FadeInStagger>
           );
@@ -471,20 +578,47 @@ const styles = StyleSheet.create({
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, flexShrink: 1 },
 
-  cardFooter: {
+  compRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 12, paddingBottom: 12,
     borderTopWidth: 1, borderTopColor: colors.borderLight,
   },
   compChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   compText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold' },
-  cta: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
+  detailsLink: { fontSize: 12, fontFamily: 'Poppins_500Medium', color: colors.primary },
+
+  // Action row (Refuser / Accepter)
+  actionRow: { flexDirection: 'row', gap: 8 },
+  refuseBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 12, borderRadius: 14,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: colors.border,
+  },
+  refuseText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
+  acceptBtn: {
+    flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 12, borderRadius: 14,
     backgroundColor: colors.accent,
-    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  acceptBtnDisabled: { opacity: 0.6 },
+  acceptText: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.white },
+
+  // Proposed state
+  sentRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 12, paddingHorizontal: 14,
+    backgroundColor: 'rgba(0,135,90,0.08)',
     borderRadius: 14,
   },
-  ctaText: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.white },
+  sentLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sentIconCircle: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: colors.success,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sentText: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.success },
+  sentLink: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.success },
 
   empty: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 24, gap: 8 },
   emptyTitle: { fontSize: 17, fontFamily: 'PlayfairDisplay_700Bold', color: colors.text, marginTop: 8 },
