@@ -55,7 +55,13 @@ export default function ClientDetailScreen() {
     try {
       const res: any = await api('/bookings/mine?role=provider');
       const all: BookingRow[] = res.data || [];
-      setBookings(all.filter(b => b.client?.id === id));
+      // Match by client.id when available, fall back to name-prefixed key
+      const isNameKey = id?.startsWith('name:');
+      const nameKey = isNameKey ? id!.slice(5) : null;
+      setBookings(all.filter(b => {
+        if (isNameKey) return b.client?.name === nameKey;
+        return b.client?.id === id;
+      }));
     } finally {
       setLoading(false);
       setRefreshing(false);

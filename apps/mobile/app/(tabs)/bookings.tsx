@@ -318,9 +318,7 @@ export default function BookingsTab() {
                 <FadeInStagger index={index}>
                   <PressableScale
                     style={styles.clientCard}
-                    onPress={() => {
-                      if (!item.id.startsWith('name:')) router.push(`/clients/${item.id}` as any);
-                    }}
+                    onPress={() => router.push(`/clients/${encodeURIComponent(item.id)}` as any)}
                   >
                     <View style={styles.clientAvatar}>
                       {item.avatar ? (
