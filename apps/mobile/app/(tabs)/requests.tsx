@@ -334,7 +334,7 @@ export default function RequestsTab() {
           const photos = (item.photos ?? []).slice(0, 3);
 
           return (
-            <FadeInStagger index={index}>
+            <FadeInStagger index={index} style={{ width: '100%' }}>
               <PressableScale
                 style={styles.card}
                 onPress={() => router.push(`/request/${item.id}` as any)}

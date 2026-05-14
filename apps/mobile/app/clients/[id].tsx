@@ -213,7 +213,7 @@ export default function ClientDetailScreen() {
         renderItem={({ item, index }) => {
           const st = STATUS_LABELS[item.status] ?? { label: item.status, color: colors.textMuted };
           return (
-            <FadeInStagger index={index}>
+            <FadeInStagger index={index} style={{ width: '100%' }}>
               <PressableScale
                 style={styles.bookingRow}
                 onPress={() => router.push(`/booking/detail/${item.id}` as any)}

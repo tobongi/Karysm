@@ -741,7 +741,7 @@ export default function ServicesScreen() {
             const thumbs = getPhotoUrls(item.socialLinks).slice(0, 3);
             const extraCount = (getPhotoUrls(item.socialLinks).length) - 3;
             return (
-              <FadeInStagger index={index}>
+              <FadeInStagger index={index} style={{ width: '100%' }}>
                 <PressableScale
                   style={[styles.card, !item.isActive && styles.cardInactive]}
                   onPress={() => openEditForm(item)}

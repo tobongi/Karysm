@@ -894,7 +894,7 @@ export default function BookingFlow() {
                 {provider.services.map((svc, idx) => {
                   const isSel = selectedService?.id === svc.id;
                   return (
-                    <FadeInStagger key={svc.id} index={idx}>
+                    <FadeInStagger key={svc.id} index={idx} style={{ width: '100%' }}>
                       <PressableScale onPress={() => setSelectedService(svc)}>
                         <View
                           style={[s.svcCard, isSel && s.svcCardSel]}

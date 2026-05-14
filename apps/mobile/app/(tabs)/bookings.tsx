@@ -315,7 +315,7 @@ export default function BookingsTab() {
             renderItem={({ item, index }) => {
               const tierColor = TIER_COLOR[item.tier];
               return (
-                <FadeInStagger index={index}>
+                <FadeInStagger index={index} style={{ width: '100%' }}>
                   <PressableScale
                     style={styles.clientCard}
                     onPress={() => router.push(`/clients/${encodeURIComponent(item.id)}` as any)}
@@ -394,7 +394,7 @@ export default function BookingsTab() {
             const isLast = index === section.data.length - 1;
 
             return (
-              <FadeInStagger index={index}>
+              <FadeInStagger index={index} style={{ width: '100%' }}>
                 <PressableScale
                   style={[styles.row, !isLast && styles.rowBorder]}
                   onPress={() => router.push(`/booking/detail/${item.id}`)}

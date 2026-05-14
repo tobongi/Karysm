@@ -144,7 +144,7 @@ export default function BeautyTab() {
         </FadeInStagger>
 
         {/* -- Skin Analysis Card -- */}
-        <FadeInStagger index={1}>
+        <FadeInStagger index={1} style={{ width: '100%' }}>
           <PressableScale
             onPress={() => lastSkin ? router.push(`/ai/skin-results/${lastSkin.id}`) : router.push('/ai/skin-capture')}
             style={styles.analysisCard}
@@ -191,7 +191,7 @@ export default function BeautyTab() {
         </FadeInStagger>
 
         {/* -- Hair Analysis Card -- */}
-        <FadeInStagger index={2}>
+        <FadeInStagger index={2} style={{ width: '100%' }}>
           <PressableScale
             onPress={() => lastHair ? router.push(`/ai/hair-results/${lastHair.id}`) : router.push('/ai/hair-capture')}
             style={styles.analysisCard}
@@ -228,7 +228,7 @@ export default function BeautyTab() {
         </FadeInStagger>
 
         {/* -- Virtual Mirror Card -- */}
-        <FadeInStagger index={3}>
+        <FadeInStagger index={3} style={{ width: '100%' }}>
           <PressableScale
             onPress={() => router.push('/ai/virtual-tryon' as any)}
             style={styles.mirrorCard}
@@ -256,7 +256,7 @@ export default function BeautyTab() {
 
         {/* -- Recent Analyses -- */}
         {(skinHistory.length > 0 || hairHistory.length > 0) && (
-          <FadeInStagger index={4}>
+          <FadeInStagger index={4} style={{ width: '100%' }}>
             <View style={styles.recentSection}>
               <Text style={styles.sectionTitle}>Mes analyses récentes</Text>
               <View style={styles.recentGrid}>
@@ -313,7 +313,7 @@ export default function BeautyTab() {
 
         <View style={styles.tipGrid}>
           {BEAUTY_TIPS.map((tip, i) => (
-            <FadeInStagger key={tip.id} index={7 + i}>
+            <FadeInStagger key={tip.id} index={7 + i} style={{ width: '100%' }}>
               <View style={styles.tipCard}>
                 <View style={styles.tipIconWrap}>
                   <tip.Icon size={24} color={colors.primary} />

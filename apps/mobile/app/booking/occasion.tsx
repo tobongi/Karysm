@@ -230,7 +230,7 @@ export default function OccasionBookingScreen() {
             {SERVICES.map((svc, idx) => {
               const isSelected = selectedServices.has(svc.id);
               return (
-                <FadeInStagger key={svc.id} index={idx} delay={25}>
+                <FadeInStagger key={svc.id} index={idx} delay={25} style={{ width: '100%' }}>
                   <PressableScale onPress={() => toggleService(svc.id)}>
                     <View style={[styles.serviceRow, isSelected && styles.serviceRowSelected]}>
                       <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
