@@ -14,7 +14,7 @@ import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs
 import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import IconMap from '@tabler/icons-react-native/dist/esm/icons/IconMap.mjs';
 import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
-import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import { IconHeart } from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 import { IconStar } from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
 import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
