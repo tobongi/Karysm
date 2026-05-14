@@ -5,6 +5,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconAlertTriangle from '@tabler/icons-react-native/dist/esm/icons/IconAlertTriangle.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconEye from '@tabler/icons-react-native/dist/esm/icons/IconEye.mjs';
 import { colors } from '../../src/theme/colors';
 import { useAuth } from '../../src/lib/auth-context';
 
@@ -52,10 +57,10 @@ const PRODUCTS: Record<TryOnCategory, Product[]> = {
   ],
 };
 
-const CATEGORY_TABS: Array<{ key: TryOnCategory; label: string; emoji: string }> = [
-  { key: 'levres', label: 'Lèvres', emoji: '💋' },
-  { key: 'joues',  label: 'Joues',  emoji: '🌸' },
-  { key: 'yeux',   label: 'Yeux',   emoji: '👁' },
+const CATEGORY_TABS: Array<{ key: TryOnCategory; label: string; Icon: React.ComponentType<{size:number;color:string}> }> = [
+  { key: 'levres', label: 'Lèvres', Icon: IconDroplet },
+  { key: 'joues',  label: 'Joues',  Icon: IconSparkles },
+  { key: 'yeux',   label: 'Yeux',   Icon: IconEye },
 ];
 
 // ─── MediaPipe landmark indices ─────────────────────────────────────────────
@@ -278,7 +283,7 @@ function NativeFallback() {
   return (
     <SafeAreaView style={nf.safe} edges={['top']}>
       <View style={nf.center}>
-        <Text style={nf.icon}>💋</Text>
+        <IconSparkles size={48} color={colors.accent} />
         <Text style={nf.title}>Miroir Virtuel</Text>
         <Text style={nf.sub}>
           L'essayage virtuel fonctionne via{'\n'}app.karysm.com dans Chrome ou Edge.
@@ -292,8 +297,7 @@ function NativeFallback() {
 }
 const nf = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, marginTop: 60 },
-  icon: { fontSize: 48, marginBottom: 16 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, marginTop: 60, gap: 16 },
   title: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, textAlign: 'center', marginBottom: 10 },
   sub: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 20 },
@@ -526,7 +530,7 @@ export default function VirtualTryOnScreen() {
         {/* Idle */}
         {tryOnState === 'idle' && (
           <View style={styles.overlay}>
-            <Text style={styles.overlayIcon}>💋</Text>
+            <IconSparkles size={48} color={colors.primary} />
             <Text style={styles.overlayTitle}>Miroir Virtuel</Text>
             <Text style={styles.overlaySub}>
               Essayez rouge à lèvres, blush et fard à paupières en temps réel grâce à l'IA
@@ -552,7 +556,7 @@ export default function VirtualTryOnScreen() {
         {/* Error */}
         {tryOnState === 'error' && (
           <View style={styles.overlay}>
-            <Text style={styles.overlayIcon}>⚠️</Text>
+            <IconAlertTriangle size={48} color={colors.error} />
             <Text style={styles.overlayTitle}>Oops</Text>
             <Text style={styles.overlaySub}>{errMsg}</Text>
             <Pressable style={styles.startBtn} onPress={startCamera}>
@@ -571,7 +575,7 @@ export default function VirtualTryOnScreen() {
         {/* Stop button */}
         {isRunning && (
           <Pressable style={styles.stopBtn} onPress={stopCamera} hitSlop={8}>
-            <Text style={styles.stopBtnText}>✕</Text>
+            <IconX size={15} color="#FFFFFF" />
           </Pressable>
         )}
       </View>
@@ -590,7 +594,7 @@ export default function VirtualTryOnScreen() {
                   style={[styles.tab, active && styles.tabActive]}
                   onPress={() => pickCategory(tab.key)}
                 >
-                  <Text style={styles.tabEmoji}>{tab.emoji}</Text>
+                  <tab.Icon size={14} color={active ? '#FFFFFF' : colors.text} />
                   <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
                     {tab.label}
                   </Text>
@@ -634,7 +638,7 @@ export default function VirtualTryOnScreen() {
                 disabled={advisorLoading}
               >
                 <Text style={styles.advisorBtnText}>
-                  {advisorLoading ? '…' : '✨ Conseil IA'}
+                  {advisorLoading ? '…' : 'Conseil IA'}
                 </Text>
               </Pressable>
             )}
@@ -643,7 +647,7 @@ export default function VirtualTryOnScreen() {
               onPress={saveLook}
             >
               <Text style={styles.saveBtnText}>
-                {saved ? 'Ajouté ✓' : 'Dans mon look'}
+                {saved ? 'Ajouté' : 'Dans mon look'}
               </Text>
             </Pressable>
           </View>
@@ -651,7 +655,7 @@ export default function VirtualTryOnScreen() {
           {/* AI advisor tip */}
           {advisorTip && (
             <View style={styles.advisorCard}>
-              <Text style={styles.advisorCardLabel}>✨ Conseil IA</Text>
+              <Text style={styles.advisorCardLabel}>Conseil IA</Text>
               <Text style={styles.advisorCardText}>{advisorTip}</Text>
               <Pressable onPress={() => setAdvisorTip(null)} hitSlop={8}>
                 <Text style={styles.advisorCardDismiss}>Fermer</Text>
@@ -684,7 +688,6 @@ const styles = StyleSheet.create({
     padding: 32,
     backgroundColor: 'rgba(10,10,10,0.88)',
   },
-  overlayIcon: { fontSize: 48, marginBottom: 16 },
   overlayTitle: {
     fontSize: 22,
     fontFamily: 'PlayfairDisplay_700Bold',
@@ -763,7 +766,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  stopBtnText: { color: '#FFFFFF', fontSize: 15, fontFamily: 'Poppins_600SemiBold' },
+  stopBtnInner: { justifyContent: 'center', alignItems: 'center' },
 
   // Panel
   panel: {
@@ -791,7 +794,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   tabActive: { backgroundColor: colors.accent },
-  tabEmoji: { fontSize: 14 },
   tabLabel: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 12,

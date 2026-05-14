@@ -66,9 +66,9 @@ function AppContent() {
         <Stack.Screen name="auth/login" options={{ title: 'Connexion', headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="auth/register" options={{ title: 'Inscription', headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="provider/[slug]" options={{ title: '' }} />
-        <Stack.Screen name="booking/[providerId]" options={{ title: 'Réserver', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="booking/detail/[id]" options={{ title: 'Réservation' }} />
+        <Stack.Screen name="provider/[slug]" options={{ headerShown: false }} />
+        <Stack.Screen name="booking/[providerId]" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="booking/detail/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="provider-register" options={{ title: 'Devenir prestataire' }} />
         <Stack.Screen name="provider-dashboard/services" options={{ title: 'Mes services' }} />
         <Stack.Screen name="provider-dashboard/availability" options={{ title: 'Disponibilités' }} />
@@ -88,10 +88,12 @@ function AppContent() {
         <Stack.Screen name="permissions/location" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="permissions/notification" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
-        <Stack.Screen name="referral" options={{ title: 'Parrainage' }} />
-        <Stack.Screen name="settings/index" options={{ title: 'Paramètres' }} />
-        <Stack.Screen name="store/[providerId]" options={{ title: 'Boutique' }} />
-        <Stack.Screen name="store/product/[id]" options={{ title: 'Produit' }} />
+        <Stack.Screen name="referral" options={{ headerShown: false }} />
+        <Stack.Screen name="settings/index" options={{ headerShown: false }} />
+        <Stack.Screen name="store/[providerId]" options={{ headerShown: false }} />
+        <Stack.Screen name="store/product/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="hair-journal" options={{ headerShown: false }} />
+        <Stack.Screen name="booking/occasion" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="booking/completed" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
         <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="scan" options={{ title: 'Scanner un produit', animation: 'slide_from_bottom' }} />

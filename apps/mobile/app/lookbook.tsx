@@ -14,6 +14,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
+import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import IconBookmark from '@tabler/icons-react-native/dist/esm/icons/IconBookmark.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import { colors } from '../src/theme/colors';
 import { fonts } from '../src/theme/typography';
 import { radius, spacing, screenPadding } from '../src/theme/spacing';
@@ -209,7 +212,7 @@ export default function LookbookScreen() {
               />
             ) : (
               <View style={[styles.lookImage, styles.lookPlaceholder, { height: imageHeight }]}>
-                <Text style={styles.placeholderEmoji}>📸</Text>
+                <IconPhoto size={32} color={colors.textMuted} />
               </View>
             )}
 
@@ -223,7 +226,7 @@ export default function LookbookScreen() {
               hitSlop={8}
             >
               <BounceScale trigger={isSaved}>
-                <Text style={styles.saveIcon}>{isSaved ? '🔖' : '☆'}</Text>
+                <IconBookmark size={20} color={isSaved ? colors.accent : colors.white} fill={isSaved ? colors.accent : 'none'} strokeWidth={2} />
               </BounceScale>
             </Pressable>
 
@@ -291,7 +294,7 @@ export default function LookbookScreen() {
     if (tab === 'saved') {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🔖</Text>
+          <IconBookmark size={48} color={colors.primary} />
           <Text style={styles.emptyTitle}>Aucun look sauvegardé</Text>
           <Text style={styles.emptySubtitle}>
             Parcourez les réalisations et sauvegardez vos préférés
@@ -305,7 +308,7 @@ export default function LookbookScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>✨</Text>
+        <IconSparkles size={48} color={colors.primary} />
         <Text style={styles.emptyTitle}>Les réalisations arrivent bientôt</Text>
         <Text style={styles.emptySubtitle}>
           Nos prestataires ajoutent leurs meilleures créations. Revenez vite !
@@ -559,10 +562,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  placeholderEmoji: {
-    fontSize: 32,
-  },
-
   // Save button overlay
   saveButton: {
     position: 'absolute',
@@ -575,11 +574,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  saveIcon: {
-    fontSize: 16,
-    color: colors.white,
-  },
-
   // Service tag overlay
   serviceTagBadge: {
     position: 'absolute',
@@ -660,10 +654,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 80,
     paddingHorizontal: 32,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
   },
   emptyTitle: {
     fontFamily: fonts.bodySemiBold,

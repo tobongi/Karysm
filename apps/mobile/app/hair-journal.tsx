@@ -9,6 +9,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
+import IconBook from '@tabler/icons-react-native/dist/esm/icons/IconBook.mjs';
+import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
 import { colors } from '../src/theme/colors';
 import { showAlert } from '../src/lib/alert';
 
@@ -90,7 +92,7 @@ export default function HairJournalScreen() {
         {entries.length === 0 ? (
           /* Empty state */
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📖</Text>
+            <IconBook size={56} color={colors.accent} />
             <Text style={styles.emptyTitle}>Commencez votre journal</Text>
             <Text style={styles.emptySubtitle}>
               Prenez une photo de vos cheveux chaque mois pour suivre votre progression
@@ -112,7 +114,7 @@ export default function HairJournalScreen() {
 
                 {/* Photo placeholder */}
                 <View style={styles.imagePlaceholder}>
-                  <Text style={styles.imagePlaceholderIcon}>📸</Text>
+                  <IconPhoto size={32} color={colors.textMuted} />
                   <Text style={styles.imagePlaceholderText}>Photo à venir</Text>
                 </View>
 
@@ -212,10 +214,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
   },
-  emptyIcon: {
-    fontSize: 56,
-    marginBottom: 16,
-  },
   emptyTitle: {
     fontSize: 20,
     fontFamily: 'PlayfairDisplay_700Bold',
@@ -282,10 +280,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
-  },
-  imagePlaceholderIcon: {
-    fontSize: 32,
-    marginBottom: 6,
   },
   imagePlaceholderText: {
     fontSize: 12,

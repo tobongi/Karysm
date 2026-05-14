@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import IconCash from '@tabler/icons-react-native/dist/esm/icons/IconCash.mjs';
+import IconArrowUp from '@tabler/icons-react-native/dist/esm/icons/IconArrowUp.mjs';
+import IconReceipt from '@tabler/icons-react-native/dist/esm/icons/IconReceipt.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
@@ -108,17 +111,17 @@ export default function WalletScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>💰</Text>
+            <IconCash size={48} color={colors.primary} />
             <Text style={styles.emptyText}>Aucune transaction pour le moment</Text>
             <Text style={styles.emptySubtext}>Vos revenus apparaîtront ici</Text>
           </View>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const txIcon = item.type === 'CREDIT' ? IconCash : item.type === 'PAYOUT' ? IconArrowUp : IconReceipt;
+          return (
           <View style={styles.txRow}>
             <View style={styles.txIcon}>
-              <Text style={styles.txIconText}>
-                {item.type === 'CREDIT' ? '💰' : item.type === 'PAYOUT' ? '📤' : '📝'}
-              </Text>
+              {React.createElement(txIcon, { size: 20, color: colors.primary })}
             </View>
             <View style={styles.txInfo}>
               <Text style={styles.txLabel}>{item.description || item.type}</Text>
@@ -132,7 +135,8 @@ export default function WalletScreen() {
               {item.amount >= 0 ? '+' : ''}{formatPrice(item.amount, currency)}
             </Text>
           </View>
-        )}
+        );
+        }}
       />
     </SafeAreaView>
   );
@@ -166,8 +170,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 14 },
 
   // Empty
-  emptyState: { alignItems: 'center', paddingTop: 40 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyState: { alignItems: 'center', paddingTop: 40, gap: 12 },
   emptyText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
   emptySubtext: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
 
@@ -182,7 +185,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center',
     marginRight: 12,
   },
-  txIconText: { fontSize: 18 },
   txInfo: { flex: 1 },
   txLabel: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
   txDate: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 2 },

@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
 import { colors } from '../src/theme/colors';
 import { api } from '../src/lib/api';
 import { showAlert, showConfirm } from '../src/lib/alert';
@@ -87,7 +89,7 @@ export default function FavoritesScreen() {
 
         {providers.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>❤️</Text>
+            <IconHeart size={48} color={colors.primary} />
             <Text style={styles.emptyTitle}>Aucun favori</Text>
             <Text style={styles.emptyText}>
               Ajoutez des prestataires en favoris pour les retrouver facilement.
@@ -112,15 +114,16 @@ export default function FavoritesScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.providerName}>{provider.displayName}</Text>
-                    <Text style={styles.location}>
-                      📍 {provider.commune ? `${provider.commune}, ` : ''}{provider.city}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <IconMapPin size={14} color={colors.textMuted} strokeWidth={1.5} />
+                      <Text style={styles.location}>{provider.commune ? `${provider.commune}, ` : ''}{provider.city}</Text>
+                    </View>
                   </View>
                   <Pressable
                     style={styles.heartButton}
                     onPress={() => handleUnfavorite(provider.id, provider.displayName)}
                   >
-                    <Text style={styles.heartIcon}>❤️</Text>
+                    <IconHeart size={18} color={colors.error} fill={colors.error} strokeWidth={2} />
                   </Pressable>
                 </View>
 
@@ -143,7 +146,7 @@ export default function FavoritesScreen() {
 
                 {provider.isMobile && (
                   <View style={styles.mobileBadge}>
-                    <Text style={styles.mobileBadgeText}>🏠 Se déplace</Text>
+                    <Text style={styles.mobileBadgeText}>Se déplace</Text>
                   </View>
                 )}
               </Pressable>
@@ -167,8 +170,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 20 },
 
   // Empty state
-  emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
+  emptyContainer: { alignItems: 'center', paddingTop: 60, gap: 12 },
   emptyTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 8 },
   emptyText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 20 },
   exploreButton: { backgroundColor: colors.primary, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 22 },
@@ -192,7 +194,6 @@ const styles = StyleSheet.create({
   providerName: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
   location: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
   heartButton: { padding: 8 },
-  heartIcon: { fontSize: 20 },
 
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   rating: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },

@@ -6,6 +6,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconDeviceMobile from '@tabler/icons-react-native/dist/esm/icons/IconDeviceMobile.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconAlertTriangle from '@tabler/icons-react-native/dist/esm/icons/IconAlertTriangle.mjs';
 import { colors } from '../src/theme/colors';
 import { showAlert } from '../src/lib/alert';
 
@@ -56,7 +59,7 @@ function NativeFallback() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.centered}>
-        <Text style={styles.fallbackIcon}>📱</Text>
+        <IconDeviceMobile size={48} color={colors.accent} />
         <Text style={styles.fallbackTitle}>Disponible sur la webapp</Text>
         <Text style={styles.fallbackText}>
           Le scanner de produits cosmétiques fonctionne via{'\n'}app.karysm.com dans Chrome ou Edge.
@@ -137,7 +140,7 @@ export default function ScanScreen() {
               <View style={[styles.corner, styles.cBR]} />
             </View>
             <Pressable style={styles.primaryBtn} onPress={handleScan}>
-              <Text style={styles.primaryBtnText}>📷  Prendre une photo</Text>
+              <Text style={styles.primaryBtnText}>Prendre une photo</Text>
             </Pressable>
             <Text style={styles.supportNote}>Compatible Chrome et Edge · Open Beauty Facts</Text>
           </>
@@ -156,7 +159,7 @@ export default function ScanScreen() {
         {/* ── Not found ── */}
         {state === 'not_found' && (
           <View style={styles.stateCard}>
-            <Text style={styles.stateIcon}>🔍</Text>
+            <IconSearch size={40} color={colors.textMuted} />
             <Text style={styles.stateTitle}>Produit non trouvé</Text>
             <Text style={styles.stateBody}>
               Ce code-barres n'est pas dans la base de données cosmétique.
@@ -172,7 +175,7 @@ export default function ScanScreen() {
         {/* ── Error ── */}
         {state === 'error' && (
           <View style={styles.stateCard}>
-            <Text style={styles.stateIcon}>⚠️</Text>
+            <IconAlertTriangle size={40} color={colors.error} />
             <Text style={styles.stateTitle}>Code-barres illisible</Text>
             <Text style={styles.stateBody}>
               Assurez-vous que le code-barres est net, bien éclairé et entièrement visible.
@@ -289,7 +292,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 24, padding: 32,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  stateIcon: { fontSize: 40, marginBottom: 12 },
   stateTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 8 },
   stateText: { fontSize: 15, fontFamily: 'Poppins_500Medium', color: colors.textSecondary, marginTop: 16 },
   stateBody: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 19 },
@@ -324,7 +326,6 @@ const styles = StyleSheet.create({
   noIngredients: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginVertical: 12 },
 
   // Native fallback
-  fallbackIcon: { fontSize: 48, marginBottom: 16 },
   fallbackTitle: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: colors.accent, textAlign: 'center', marginBottom: 10 },
   fallbackText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
 });

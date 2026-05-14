@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from 'react-native-reanimated';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import IconBrush from '@tabler/icons-react-native/dist/esm/icons/IconBrush.mjs';
@@ -23,6 +24,8 @@ import IconAdjustments from '@tabler/icons-react-native/dist/esm/icons/IconAdjus
 import IconCar from '@tabler/icons-react-native/dist/esm/icons/IconCar.mjs';
 import IconSortAscending from '@tabler/icons-react-native/dist/esm/icons/IconSortAscending.mjs';
 import IconSortDescending from '@tabler/icons-react-native/dist/esm/icons/IconSortDescending.mjs';
+import IconCalendarEvent from '@tabler/icons-react-native/dist/esm/icons/IconCalendarEvent.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
@@ -42,6 +45,13 @@ const PLACEHOLDER_IMAGES = [
   require('../../assets/images/providers/provider_5.jpg'),
   require('../../assets/images/providers/provider_6.jpg'),
   require('../../assets/images/providers/provider_7.jpg'),
+];
+
+const LOOKBOOK_THUMBS = [
+  require('../../assets/images/lookbook/look_tresses.webp'),
+  require('../../assets/images/lookbook/look_ongles.webp'),
+  require('../../assets/images/lookbook/look_maq_smoky_violet.webp'),
+  require('../../assets/images/lookbook/look_mariee.webp'),
 ];
 
 const QUARTIERS = [
@@ -157,6 +167,13 @@ interface ProviderResult {
   user: { name: string; avatar?: string | null };
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bonjour';
+  if (hour < 18) return 'Salut';
+  return 'Bonsoir';
+}
+
 function CardGallery({ images, cardWidth }: { images: any[]; cardWidth: number }) {
   const [idx, setIdx] = useState(0);
   return (
@@ -181,6 +198,44 @@ function CardGallery({ images, cardWidth }: { images: any[]; cardWidth: number }
         ))}
       </View>
     </>
+  );
+}
+
+function HeroBanner({ slides, currentIndex }: { slides: typeof HERO_SLIDES; currentIndex: number }) {
+  const prevIndex = useRef(currentIndex);
+  const fadeAnim = useSharedValue(1);
+
+  useEffect(() => {
+    if (prevIndex.current !== currentIndex) {
+      fadeAnim.value = 0;
+      fadeAnim.value = withTiming(1, { duration: 500 });
+      prevIndex.current = currentIndex;
+    }
+  }, [currentIndex]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+  }));
+
+  const slide = slides[currentIndex];
+
+  return (
+    <View style={styles.heroBanner}>
+      <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+        <Image source={slide.image} style={styles.heroImage} resizeMode="cover" />
+      </Animated.View>
+      <View style={styles.heroOverlay} />
+      <Animated.View style={[styles.heroContent, animatedStyle]}>
+        <Text style={styles.heroLabel}>{slide.label}</Text>
+        <Text style={styles.heroTitle}>{slide.title}</Text>
+        <Text style={styles.heroSubtitle}>{slide.sub}</Text>
+      </Animated.View>
+      <View style={styles.heroDots}>
+        {slides.map((_, i) => (
+          <View key={i} style={[styles.heroDot, i === currentIndex && styles.heroDotActive]} />
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -213,7 +268,6 @@ export default function ExplorerTab() {
     return () => clearInterval(t);
   }, []);
 
-  // Debounce search input — only update API query after 500ms idle
   useEffect(() => {
     if (!search) { setDebouncedSearch(''); return; }
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -242,7 +296,7 @@ export default function ExplorerTab() {
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
     } catch (e) {
-      // console.error('Search error:', e);
+      // silent
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -265,7 +319,6 @@ export default function ExplorerTab() {
     try {
       await api(`/favorites/${providerId}`, { method: 'POST' });
     } catch (_e) {
-      // Revert on error
       setFavoriteIds(prev => {
         const next = new Set(prev);
         if (next.has(providerId)) next.delete(providerId);
@@ -281,6 +334,8 @@ export default function ExplorerTab() {
   }
 
   const activeFilterCount = [filterIsMobile, filterMaxPrice, filterMaxDistance, filterMinRating, sortBy !== 'rating'].filter(Boolean).length;
+  const greeting = getGreeting();
+  const firstName = user?.name?.split(' ')[0];
 
   const listHeader = (
     <>
@@ -288,9 +343,9 @@ export default function ExplorerTab() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>
-            {user?.name ? `Salut, ${user.name.split(' ')[0]}` : 'Salut'}
+            {firstName ? `${greeting}, ${firstName}` : greeting}
           </Text>
-          <Text style={styles.headerSubtitle}>Kinshasa</Text>
+          <Text style={styles.headerSubtitle}>Kinshasa · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
         </View>
         <View style={styles.headerRight}>
           <Pressable
@@ -312,31 +367,14 @@ export default function ExplorerTab() {
         </View>
       </View>
 
-      {/* Hero Banner — auto-scroll carousel */}
-      <View style={styles.heroBanner}>
-        <Image
-          source={HERO_SLIDES[heroIndex].image}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-        <View style={styles.heroOverlay} />
-        <View style={styles.heroContent}>
-          <Text style={styles.heroLabel}>{HERO_SLIDES[heroIndex].label}</Text>
-          <Text style={styles.heroTitle}>{HERO_SLIDES[heroIndex].title}</Text>
-          <Text style={styles.heroSubtitle}>{HERO_SLIDES[heroIndex].sub}</Text>
-        </View>
-        <View style={styles.heroDots}>
-          {HERO_SLIDES.map((_, i) => (
-            <View key={i} style={[styles.heroDot, i === heroIndex && styles.heroDotActive]} />
-          ))}
-        </View>
-      </View>
+      {/* Hero Banner — animated crossfade carousel */}
+      <HeroBanner slides={HERO_SLIDES} currentIndex={heroIndex} />
 
-      {/* Mes Favorites — horizontal avatar scroll */}
+      {/* Vu récemment — horizontal avatar scroll */}
       {recentlyViewed.length > 0 && (
         <>
           <SectionHeader
-            title="Mes Favorites"
+            title="Vu récemment"
             onSeeAll={() => router.push('/favorites' as any)}
           />
           <ScrollView
@@ -377,7 +415,6 @@ export default function ExplorerTab() {
           const matchingQuartiers = q
             ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q))
             : QUARTIERS;
-          // Flatten all services for suggestions
           const allServices = SERVICE_CATEGORIES.flatMap(cat =>
             [{ name: cat.name, slug: cat.slug, type: 'category' as const },
              ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug }))]
@@ -389,7 +426,6 @@ export default function ExplorerTab() {
           if (!hasResults && q) return null;
           return (
             <Pressable style={styles.suggestions} onPress={() => {}}>
-              {/* Service suggestions */}
               {matchingServices.length > 0 && (
                 <>
                   <Text style={styles.suggestionsTitle}>Prestations</Text>
@@ -420,7 +456,6 @@ export default function ExplorerTab() {
                   ))}
                 </>
               )}
-              {/* Quartier suggestions */}
               {matchingQuartiers.length > 0 && (
                 <>
                   <Text style={styles.suggestionsTitle}>Quartiers</Text>
@@ -437,7 +472,7 @@ export default function ExplorerTab() {
                       <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
                       <Text style={styles.suggestionText}>{item.name}</Text>
                       {selectedQuartier === item.name && (
-                        <Text style={styles.suggestionActive}>✓</Text>
+                        <IconCheck size={14} color={colors.white} strokeWidth={3} />
                       )}
                     </Pressable>
                   ))}
@@ -455,7 +490,6 @@ export default function ExplorerTab() {
         style={styles.filterBar}
         contentContainerStyle={styles.filterBarContent}
       >
-        {/* Quartier selector (inline) */}
         <PressableScale
           scale={0.95}
           style={[styles.filterChip, styles.filterChipQuartier]}
@@ -471,7 +505,6 @@ export default function ExplorerTab() {
           </Text>
         </PressableScale>
 
-        {/* Se déplace toggle */}
         <PressableScale
           scale={0.95}
           style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
@@ -483,7 +516,6 @@ export default function ExplorerTab() {
           </Text>
         </PressableScale>
 
-        {/* Sort toggle */}
         <PressableScale
           scale={0.95}
           style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
@@ -502,7 +534,6 @@ export default function ExplorerTab() {
           </Text>
         </PressableScale>
 
-        {/* Distance chips */}
         {[3, 5, 10].map(km => (
           <PressableScale
             key={km}
@@ -516,7 +547,6 @@ export default function ExplorerTab() {
           </PressableScale>
         ))}
 
-        {/* All filters button */}
         <PressableScale
           scale={0.95}
           style={[styles.filterChip, styles.filterChipOutline]}
@@ -529,10 +559,9 @@ export default function ExplorerTab() {
         </PressableScale>
       </ScrollView>
 
-      {/* Section title: Categories */}
+      {/* Categories */}
       <SectionHeader title="Catégories" />
 
-      {/* Categories — 3x2 grid with Tabler icons */}
       <View style={styles.categoriesGrid}>
         {SERVICE_CATEGORIES.map((cat, catIndex) => {
           const isActive = selectedCategory === cat.slug;
@@ -583,7 +612,7 @@ export default function ExplorerTab() {
         </ScrollView>
       )}
 
-      {/* Inspiration banner */}
+      {/* Inspiration banner — real lookbook thumbnails */}
       <Pressable
         style={styles.inspirationBanner}
         onPress={() => router.push('/lookbook' as any)}
@@ -594,10 +623,14 @@ export default function ExplorerTab() {
           <Text style={styles.inspirationCta}>Explorer →</Text>
         </View>
         <View style={styles.inspirationImageGrid}>
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.primary }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.accent }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.terracotta }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.primaryLight }]} />
+          {LOOKBOOK_THUMBS.map((src, i) => (
+            <Image
+              key={i}
+              source={src}
+              style={styles.inspirationThumb}
+              resizeMode="cover"
+            />
+          ))}
         </View>
       </Pressable>
 
@@ -620,7 +653,9 @@ export default function ExplorerTab() {
         style={styles.occasionBanner}
         onPress={() => router.push('/booking/occasion' as any)}
       >
-        <Text style={styles.occasionEmoji}>💒</Text>
+        <View style={styles.occasionIconWrap}>
+          <IconCalendarEvent size={20} color={colors.accent} strokeWidth={1.8} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.occasionTitle}>Un événement à préparer ?</Text>
           <Text style={styles.occasionSubtitle}>Mariage, fête, shooting — planifiez tout en une fois</Text>
@@ -628,39 +663,7 @@ export default function ExplorerTab() {
         <Text style={styles.occasionArrow}>›</Text>
       </Pressable>
 
-      {/* Recently viewed */}
-      {recentlyViewed.length > 0 && (
-        <>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Vu récemment</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: screenPadding.horizontal, gap: 12 }}
-            style={{ marginBottom: 8 }}
-          >
-            {recentlyViewed.slice(0, 5).map((p) => (
-              <Pressable
-                key={p.id}
-                style={styles.recentCard}
-                onPress={() => router.push(`/provider/${p.slug}`)}
-              >
-                <View style={styles.recentAvatar}>
-                  <Text style={styles.recentAvatarText}>{p.displayName[0]}</Text>
-                </View>
-                <Text style={styles.recentName} numberOfLines={1}>{p.displayName}</Text>
-                <View style={styles.recentRatingRow}>
-                  <IconStar size={12} color={colors.star} fill={colors.star} />
-                  <Text style={styles.recentRating}>{p.avgRating.toFixed(1)}</Text>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </>
-      )}
-
-      {/* Section title: Providers */}
+      {/* Providers section title */}
       <SectionHeader title="Recommandées" />
 
       {/* Map view inline */}
@@ -732,14 +735,12 @@ export default function ExplorerTab() {
                       images={[PLACEHOLDER_IMAGES[index % 7], PLACEHOLDER_IMAGES[(index + 2) % 7]]}
                       cardWidth={cardImgWidth}
                     />
-                    {/* TOP PRO badge */}
                     {item.avgRating >= 4.5 && (
                       <View style={styles.topProBadge}>
                         <IconAward size={12} color="#FFFFFF" strokeWidth={2} />
                         <Text style={styles.topProText}>TOP PRO</Text>
                       </View>
                     )}
-                    {/* Favorite heart overlay */}
                     <Pressable
                       style={styles.heartOverlay}
                       onPress={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
@@ -791,9 +792,16 @@ export default function ExplorerTab() {
                         <View style={styles.tag}><Text style={styles.tagText}>Se déplace</Text></View>
                       )}
                       {item.minPrice != null && (
-                        <View style={styles.tagPrice}><Text style={styles.tagPriceText}>des {formatPrice(item.minPrice, item.currency)}</Text></View>
+                        <View style={styles.tagPrice}><Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text></View>
                       )}
                     </View>
+
+                    <Pressable
+                      style={styles.reserverButton}
+                      onPress={(e) => { e.stopPropagation(); router.push({ pathname: '/booking/[providerId]', params: { providerId: item.id, slug: item.slug } } as any); }}
+                    >
+                      <Text style={styles.reserverButtonText}>Réserver</Text>
+                    </Pressable>
                   </View>
                 </PressableScale>
               </FadeInStagger>
@@ -870,7 +878,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
 
-  // Favorites horizontal avatars
+  // Favorites / recently viewed horizontal avatars
   favoriteAvatarCard: {
     alignItems: 'center',
     width: 64,
@@ -990,11 +998,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
   },
-  suggestionActive: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 14,
-    color: colors.primary,
-  },
   suggestionHint: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 11,
@@ -1010,6 +1013,7 @@ const styles = StyleSheet.create({
   filterBarContent: {
     paddingHorizontal: screenPadding.horizontal,
     gap: 8,
+    paddingBottom: spacing.sm,
   },
   filterChip: {
     flexDirection: 'row',
@@ -1043,31 +1047,6 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: colors.white,
     fontFamily: fonts.bodySemiBold,
-  },
-
-  // Section headers
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: screenPadding.horizontal,
-    marginTop: 28,
-    marginBottom: spacing.xs,
-  },
-  sectionTitle: {
-    fontFamily: fonts.displayBold,
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.accent,
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  seeAll: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase' as const,
   },
 
   // Categories — 3x2 grid
@@ -1162,10 +1141,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(124,58,237,0.15)',
+    borderColor: 'rgba(91,33,182,0.15)',
   } as ViewStyle,
-  occasionEmoji: {
-    fontSize: 28,
+  occasionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   occasionTitle: {
     fontFamily: fonts.bodySemiBold,
@@ -1343,54 +1327,31 @@ const styles = StyleSheet.create({
     color: colors.terracotta,
   },
 
-  // View toggle
+  // Réserver CTA button on provider card
+  reserverButton: {
+    marginTop: spacing.sm,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    alignItems: 'center',
+  },
+  reserverButtonText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    letterSpacing: 0.2,
+  },
+
+  // View toggle — accent violet
   viewToggle: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-
-  // Recently viewed
-  recentCard: {
-    width: 90,
-    alignItems: 'center',
-    paddingVertical: 8,
-  } as ViewStyle,
-  recentAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  } as ViewStyle,
-  recentAvatarText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontFamily: fonts.displayBold,
-    fontWeight: '700' as const,
-  },
-  recentName: {
-    fontSize: 11,
-    color: colors.text,
-    fontFamily: 'Poppins_500Medium',
-    marginTop: 6,
-    textAlign: 'center' as const,
-  },
-  recentRatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    marginTop: 2,
-  },
-  recentRating: {
-    fontSize: 10,
-    color: colors.terracotta,
-    fontFamily: fonts.bodySemiBold,
-    fontWeight: '600' as const,
   },
 
   // Map
@@ -1444,7 +1405,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
-  // Inspiration banner
+  // Inspiration banner — real thumbnails
   inspirationBanner: {
     flexDirection: 'row',
     marginHorizontal: screenPadding.horizontal,
@@ -1494,5 +1455,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
+    backgroundColor: colors.border,
   },
 });

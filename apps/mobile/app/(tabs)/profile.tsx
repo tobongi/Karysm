@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Platform, Dimensions } from 'react-native';
+import { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Platform, LayoutChangeEvent } from 'react-native';
 import { router } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { colors } from '../../src/theme/colors';
@@ -27,6 +27,19 @@ export default function ProfileTab() {
   const { user, logout, isProvider } = useAuth();
   const [avatar, setAvatar] = useState<string | null>(user?.avatar || null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [headerW, setHeaderW] = useState(480);
+
+  const onHeaderLayout = useCallback((e: LayoutChangeEvent) => {
+    const measured = e.nativeEvent.layout.width;
+    if (measured > 0) setHeaderW(measured);
+  }, []);
+
+  const svgPath = useMemo(
+    () => `M0,0 L0,130 C${headerW * 0.3},175 ${headerW * 0.7},103 ${headerW},115 L${headerW},0 Z`,
+    [headerW]
+  );
+
+  const group2Start = isProvider ? 8 : 3;
 
   async function handleAvatarUpload() {
     if (uploadingAvatar) return;
@@ -55,17 +68,16 @@ export default function ProfileTab() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Dark curved header */}
-      <View style={styles.header}>
+      <View style={styles.header} onLayout={onHeaderLayout}>
         <View style={styles.headerBg} />
         <Svg
-          width={Math.min(Dimensions.get('window').width, 480)}
+          width="100%"
           height={190}
+          viewBox={`0 0 ${headerW} 190`}
+          preserveAspectRatio="none"
           style={styles.headerCurve}
         >
-          <Path
-            d={`M0,0 L0,${130} C${Math.min(Dimensions.get('window').width, 480) * 0.3},${130 + 45} ${Math.min(Dimensions.get('window').width, 480) * 0.7},${130 - 27} ${Math.min(Dimensions.get('window').width, 480)},${130 - 15} L${Math.min(Dimensions.get('window').width, 480)},0 Z`}
-            fill={colors.headerDark}
-          />
+          <Path d={svgPath} fill={colors.headerDark} />
         </Svg>
         <View style={styles.headerContent}>
           <PressableScale onPress={handleAvatarUpload} style={styles.avatarWrapper}>
@@ -121,12 +133,12 @@ export default function ProfileTab() {
 
       {/* Menu Group 2 — Settings & Social */}
       <View style={styles.menuGroup}>
-        <FadeInStagger index={8}><MenuItem icon={<IconSettings size={20} color={colors.primary} />} label="Parametres" onPress={() => router.push('/settings' as any)} /></FadeInStagger>
-        <FadeInStagger index={9}><MenuItem icon={<IconGift size={20} color={colors.primary} />} label="Inviter des amies" onPress={() => router.push('/referral' as any)} /></FadeInStagger>
+        <FadeInStagger index={group2Start}><MenuItem icon={<IconSettings size={20} color={colors.primary} />} label="Parametres" onPress={() => router.push('/settings' as any)} /></FadeInStagger>
+        <FadeInStagger index={group2Start + 1}><MenuItem icon={<IconGift size={20} color={colors.primary} />} label="Inviter des amies" onPress={() => router.push('/referral' as any)} /></FadeInStagger>
       </View>
 
       {/* Logout */}
-      <FadeInStagger index={10}>
+      <FadeInStagger index={group2Start + 2}>
         <PressableScale style={styles.logoutItem} onPress={() => { logout(); router.replace('/auth/login'); }}>
           <View style={styles.iconCircle}>
             <IconLogout size={20} color={colors.error} />

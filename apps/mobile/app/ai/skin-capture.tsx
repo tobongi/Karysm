@@ -5,6 +5,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconEye from '@tabler/icons-react-native/dist/esm/icons/IconEye.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconUser from '@tabler/icons-react-native/dist/esm/icons/IconUser.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
@@ -14,9 +21,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCAN_SIZE = Math.min(SCREEN_WIDTH - 40, 340);
 
 const TIPS = [
-  { icon: '☀️', title: 'Lumière naturelle', desc: 'Face à une fenêtre' },
-  { icon: '👁️', title: 'Regard caméra', desc: 'Visage droit, yeux ouverts' },
-  { icon: '🧼', title: 'Peau nue', desc: 'Sans maquillage' },
+  { icon: IconSun, title: 'Lumière naturelle', desc: 'Face à une fenêtre' },
+  { icon: IconEye, title: 'Regard caméra', desc: 'Visage droit, yeux ouverts' },
+  { icon: IconDroplet, title: 'Peau nue', desc: 'Sans maquillage' },
 ];
 
 // Scan line animation
@@ -194,7 +201,7 @@ export default function SkinCaptureScreen() {
               {/* Empty oval guide */}
               <View style={styles.ovalGuide}>
                 <View style={styles.ovalGuideBorder} />
-                <Text style={styles.ovalGuideIcon}>👤</Text>
+                <IconUser size={48} color="rgba(255,255,255,0.6)" />
               </View>
               <Text style={styles.captureText}>Touchez pour prendre un selfie</Text>
               <View style={styles.captureHint}>
@@ -209,7 +216,7 @@ export default function SkinCaptureScreen() {
           <View style={styles.tipsRow}>
             {TIPS.map((tip, i) => (
               <View key={i} style={styles.tipCard}>
-                <Text style={styles.tipIcon}>{tip.icon}</Text>
+                <tip.icon size={20} color={colors.primary} />
                 <Text style={styles.tipTitle}>{tip.title}</Text>
                 <Text style={styles.tipDesc}>{tip.desc}</Text>
               </View>
@@ -222,7 +229,7 @@ export default function SkinCaptureScreen() {
           <>
             {/* Retake */}
             <Pressable style={styles.retakeButton} onPress={handleTakePhoto}>
-              <Text style={styles.retakeText}>📷 Reprendre la photo</Text>
+              <Text style={styles.retakeText}>Reprendre la photo</Text>
             </Pressable>
 
             {/* Consent */}
@@ -240,7 +247,7 @@ export default function SkinCaptureScreen() {
 
             {/* Analyze CTA */}
             <Pressable style={styles.analyzeButton} onPress={handleAnalyze}>
-              <Text style={styles.analyzeText}>✨ Lancer l'analyse complète</Text>
+              <Text style={styles.analyzeText}>Lancer l'analyse complète</Text>
             </Pressable>
           </>
         )}
@@ -274,7 +281,7 @@ function AnalysisStep({ label, done, active }: { label: string; done: boolean; a
   return (
     <View style={styles.stepRow}>
       <View style={[styles.stepDot, done && styles.stepDotDone, active && styles.stepDotActive]}>
-        {done && <Text style={styles.stepCheck}>✓</Text>}
+        {done && <IconCheck size={14} color={colors.success} strokeWidth={3} />}
         {active && <ActivityIndicator size="small" color={colors.white} />}
       </View>
       <Text style={[styles.stepLabel, done && styles.stepLabelDone, active && styles.stepLabelActive]}>
@@ -364,7 +371,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 999, borderWidth: 2, borderColor: colors.n300, borderStyle: 'dashed',
   },
-  ovalGuideIcon: { fontSize: 48, opacity: 0.3 },
   captureText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary, marginTop: 16 },
   captureHint: {
     marginTop: 8, backgroundColor: colors.primaryGhost,
@@ -378,7 +384,6 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  tipIcon: { fontSize: 22, marginBottom: 6 },
   tipTitle: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
   tipDesc: { fontSize: 10, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginTop: 2 },
 
@@ -425,7 +430,6 @@ const styles = StyleSheet.create({
   },
   stepDotDone: { backgroundColor: colors.success, borderColor: colors.success },
   stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  stepCheck: { fontSize: 14, color: colors.white, fontFamily: 'Poppins_700Bold' },
   stepLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
   stepLabelDone: { color: colors.textSecondary },
   stepLabelActive: { color: colors.accent, fontFamily: 'Poppins_600SemiBold' },

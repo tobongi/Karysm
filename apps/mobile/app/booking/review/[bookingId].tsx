@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
 import { showAlert } from '../../../src/lib/alert';
@@ -18,13 +20,13 @@ import { pickAndUploadImage } from '../../../src/lib/upload';
 import { REVIEW_TAGS } from '@karysm/shared';
 
 const TAG_LABELS: Record<string, string> = {
-  ponctuel: '⏰ Ponctuel',
-  professionnel: '👔 Professionnel',
-  propre: '✨ Propre',
-  bon_prix: '💰 Bon prix',
-  creatif: '🎨 Créatif',
-  rapide: '⚡ Rapide',
-  accueillant: '🤗 Accueillant',
+  ponctuel: 'Ponctuel',
+  professionnel: 'Professionnel',
+  propre: 'Propre',
+  bon_prix: 'Bon prix',
+  creatif: 'Créatif',
+  rapide: 'Rapide',
+  accueillant: 'Accueillant',
 };
 
 export default function ReviewScreen() {
@@ -80,7 +82,7 @@ export default function ReviewScreen() {
           tags: selectedTags.length > 0 ? selectedTags : undefined,
         }),
       });
-      showAlert('Merci ! 🎉', 'Votre avis a été publié avec succès.');
+      showAlert('Merci !', 'Votre avis a été publié avec succès.');
       router.back();
     } catch (err: any) {
       showAlert('Erreur', err.message || "Impossible d'envoyer l'avis");
@@ -104,9 +106,7 @@ export default function ReviewScreen() {
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
               <Pressable key={star} onPress={() => setRating(star)} style={styles.starButton}>
-                <Text style={[styles.starText, star <= rating && styles.starActive]}>
-                  ★
-                </Text>
+                <IconStar size={28} color={star <= rating ? colors.star : colors.textMuted} fill={star <= rating ? colors.star : 'none'} strokeWidth={2} />
               </Pressable>
             ))}
           </View>
@@ -162,7 +162,7 @@ export default function ReviewScreen() {
               <View key={i} style={styles.photoWrapper}>
                 <Image source={{ uri: url }} style={styles.photo} />
                 <Pressable style={styles.photoRemove} onPress={() => removePhoto(i)}>
-                  <Text style={styles.photoRemoveText}>✕</Text>
+                  <IconX size={12} color={colors.white} strokeWidth={3} />
                 </Pressable>
               </View>
             ))}
@@ -214,8 +214,6 @@ const styles = StyleSheet.create({
   // Stars
   starsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   starButton: { padding: 4 },
-  starText: { fontSize: 36, color: colors.n300 },
-  starActive: { color: colors.star },
   ratingLabel: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.star, fontWeight: '600' },
 
   // Tags
@@ -247,7 +245,6 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11,
     backgroundColor: colors.error, justifyContent: 'center', alignItems: 'center',
   },
-  photoRemoveText: { color: colors.white, fontSize: 12, fontFamily: 'Poppins_700Bold', fontWeight: '700' },
   addPhotoButton: {
     width: 72, height: 72, borderRadius: 12,
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,

@@ -5,6 +5,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconSpray from '@tabler/icons-react-native/dist/esm/icons/IconSpray.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconWaveSine from '@tabler/icons-react-native/dist/esm/icons/IconWaveSine.mjs';
+import IconFlower from '@tabler/icons-react-native/dist/esm/icons/IconFlower.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconSnowflake from '@tabler/icons-react-native/dist/esm/icons/IconSnowflake.mjs';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
+import IconRefresh from '@tabler/icons-react-native/dist/esm/icons/IconRefresh.mjs';
 import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
 
@@ -24,14 +36,14 @@ const MONK_LABELS: Record<number, string> = {
 };
 
 const CONDITIONS = [
-  { key: 'hydration', label: 'Hydratation', icon: '💧', desc: 'Niveau d\'eau dans la peau — essentiel pour la souplesse et l\'éclat', invert: false },
-  { key: 'sebum', label: 'Sébum', icon: '🧴', desc: 'Production de sébum — un excès peut causer brillance et imperfections', invert: true },
-  { key: 'pores', label: 'Pores', icon: '🔍', desc: 'Visibilité des pores — influencée par le sébum et l\'âge', invert: true },
-  { key: 'wrinkles', label: 'Rides', icon: '〰️', desc: 'Lignes fines et rides — liées à l\'hydratation et la protection solaire', invert: true },
-  { key: 'spots', label: 'Taches', icon: '🌸', desc: 'Taches pigmentaires — causées par le soleil ou l\'inflammation', invert: true },
-  { key: 'acne', label: 'Acné', icon: '🌿', desc: 'Imperfections actives — boutons, points noirs, inflammations', invert: true },
-  { key: 'hyperpigmentation', label: 'Hyperpigmentation', icon: '✨', desc: 'Zones plus foncées — fréquent sur les peaux riches en mélanine', invert: true },
-  { key: 'uniformity', label: 'Uniformité', icon: '🌺', desc: 'Régularité du teint — un teint uniforme reflète une peau saine', invert: false },
+  { key: 'hydration', label: 'Hydratation', icon: IconDroplet, desc: 'Niveau d\'eau dans la peau — essentiel pour la souplesse et l\'éclat', invert: false },
+  { key: 'sebum', label: 'Sébum', icon: IconSpray, desc: 'Production de sébum — un excès peut causer brillance et imperfections', invert: true },
+  { key: 'pores', label: 'Pores', icon: IconSearch, desc: 'Visibilité des pores — influencée par le sébum et l\'âge', invert: true },
+  { key: 'wrinkles', label: 'Rides', icon: IconWaveSine, desc: 'Lignes fines et rides — liées à l\'hydratation et la protection solaire', invert: true },
+  { key: 'spots', label: 'Taches', icon: IconFlower, desc: 'Taches pigmentaires — causées par le soleil ou l\'inflammation', invert: true },
+  { key: 'acne', label: 'Acné', icon: IconLeaf, desc: 'Imperfections actives — boutons, points noirs, inflammations', invert: true },
+  { key: 'hyperpigmentation', label: 'Hyperpigmentation', icon: IconSparkles, desc: 'Zones plus foncées — fréquent sur les peaux riches en mélanine', invert: true },
+  { key: 'uniformity', label: 'Uniformité', icon: IconStar, desc: 'Régularité du teint — un teint uniforme reflète une peau saine', invert: false },
 ];
 
 // Positions des points de détection sur le visage (relatifs)
@@ -50,14 +62,14 @@ const SKIN_PROVIDERS = [
   { id: '3', slug: 'dermapure', name: 'DermaPure', specialty: 'Soins anti-acné peaux mélanées', rating: '4.7' },
 ];
 
-function getPersonalizedTips(analysis: any): Array<{icon: string, title: string, tip: string}> {
-  const tips: Array<{icon: string, title: string, tip: string}> = [];
-  if (analysis.hydration < 50) tips.push({ icon: '💧', title: 'Hydratation', tip: 'Applique un sérum à l\'acide hyaluronique matin et soir. Bois au moins 2L d\'eau par jour.' });
-  if (analysis.sebum > 60) tips.push({ icon: '🧴', title: 'Excès de sébum', tip: 'Utilise un nettoyant doux sans sulfate. Évite les crèmes trop riches — privilégie les gels légers.' });
-  if (analysis.hyperpigmentation > 40) tips.push({ icon: '✨', title: 'Hyperpigmentation', tip: 'Applique une protection solaire SPF30+ chaque jour, même sous les tropiques. La vitamine C aide à unifier le teint.' });
-  if (analysis.acne > 30) tips.push({ icon: '🌿', title: 'Imperfections', tip: 'Nettoie ton visage 2x/jour avec un produit adapté. Ne perce jamais les boutons — ça aggrave les taches sur peau foncée.' });
-  if (analysis.pores > 50) tips.push({ icon: '🔍', title: 'Pores dilatés', tip: 'Utilise un tonique à l\'acide salicylique après le nettoyage. Les masques à l\'argile 1x/semaine réduisent les pores.' });
-  if (tips.length === 0) tips.push({ icon: '🌺', title: 'Belle peau !', tip: 'Tes résultats sont excellents. Continue ta routine actuelle et n\'oublie pas la protection solaire.' });
+function getPersonalizedTips(analysis: any): Array<{icon: React.ComponentType<{ size: number; color: string }>, title: string, tip: string}> {
+  const tips: Array<{icon: React.ComponentType<{ size: number; color: string }>, title: string, tip: string}> = [];
+  if (analysis.hydration < 50) tips.push({ icon: IconDroplet, title: 'Hydratation', tip: 'Applique un sérum à l\'acide hyaluronique matin et soir. Bois au moins 2L d\'eau par jour.' });
+  if (analysis.sebum > 60) tips.push({ icon: IconSpray, title: 'Excès de sébum', tip: 'Utilise un nettoyant doux sans sulfate. Évite les crèmes trop riches — privilégie les gels légers.' });
+  if (analysis.hyperpigmentation > 40) tips.push({ icon: IconSparkles, title: 'Hyperpigmentation', tip: 'Applique une protection solaire SPF30+ chaque jour, même sous les tropiques. La vitamine C aide à unifier le teint.' });
+  if (analysis.acne > 30) tips.push({ icon: IconLeaf, title: 'Imperfections', tip: 'Nettoie ton visage 2x/jour avec un produit adapté. Ne perce jamais les boutons — ça aggrave les taches sur peau foncée.' });
+  if (analysis.pores > 50) tips.push({ icon: IconSearch, title: 'Pores dilatés', tip: 'Utilise un tonique à l\'acide salicylique après le nettoyage. Les masques à l\'argile 1x/semaine réduisent les pores.' });
+  if (tips.length === 0) tips.push({ icon: IconStar, title: 'Belle peau !', tip: 'Tes résultats sont excellents. Continue ta routine actuelle et n\'oublie pas la protection solaire.' });
   return tips.slice(0, 3);
 }
 
@@ -232,9 +244,9 @@ export default function SkinResultsScreen() {
 
           {data.undertone && (
             <View style={styles.undertoneCard}>
-              <Text style={styles.undertoneEmoji}>
-                {data.undertone === 'WARM' ? '🌅' : data.undertone === 'COOL' ? '❄️' : '⚖️'}
-              </Text>
+              <View style={styles.undertoneIcon}>
+                {data.undertone === 'WARM' ? <IconSun size={24} color={colors.warning} /> : data.undertone === 'COOL' ? <IconSnowflake size={24} color={colors.primaryDark} /> : <IconScissors size={24} color={colors.textMuted} />}
+              </View>
               <Text style={styles.undertoneCardTitle}>Sous-ton</Text>
               <Text style={styles.undertoneCardLabel}>
                 {data.undertone === 'WARM' ? 'Chaud' : data.undertone === 'COOL' ? 'Froid' : 'Neutre'}
@@ -371,7 +383,7 @@ export default function SkinResultsScreen() {
 
             {/* Find provider CTA */}
             <View style={styles.providerCta}>
-              <Text style={styles.providerCtaEmoji}>💆</Text>
+              <IconLeaf size={32} color={colors.primary} />
               <Text style={styles.providerCtaTitle}>Besoin d'un soin professionnel ?</Text>
               <Text style={styles.providerCtaDesc}>Trouvez un spécialiste adapté à votre type de peau</Text>
               <Pressable style={styles.providerCtaButton} onPress={() => router.push('/(tabs)')}>
@@ -395,7 +407,10 @@ export default function SkinResultsScreen() {
                 <Text style={styles.recoProviderName}>{p.name}</Text>
                 <Text style={styles.recoProviderSpecialty}>{p.specialty}</Text>
               </View>
-              <Text style={styles.recoProviderRating}>★ {p.rating}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <IconStar size={14} color={colors.star} fill={colors.star} />
+                <Text style={styles.recoProviderRating}>{p.rating}</Text>
+              </View>
             </Pressable>
           ))}
 
@@ -408,7 +423,7 @@ export default function SkinResultsScreen() {
           <Text style={styles.recoTitle}>Conseils pour toi</Text>
           {getPersonalizedTips(data).map((tip, i) => (
             <View key={i} style={styles.recoTipCard}>
-              <Text style={styles.recoTipIcon}>{tip.icon}</Text>
+              <tip.icon size={20} color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.recoTipTitle}>{tip.title}</Text>
                 <Text style={styles.recoTipText}>{tip.tip}</Text>
@@ -436,7 +451,7 @@ export default function SkinResultsScreen() {
                   .slice(0, 3)
                   .map(c => `${c.label} : ${c.value}%`)
                   .join('\n');
-                const message = `🌸 Mon analyse de peau Karysm\n\nTeint Monk : ${data.monkTone ?? '-'}/10 — ${monkLabel}\nSous-ton : ${undertoneLabel}\nScore global : ${data.overallScore ?? '-'}/100\n\n${top3}\n\nDécouvre ton type de peau sur Karysm ! 👉 https://karysm.com`;
+                const message = `Mon analyse de peau Karysm\n\nTeint Monk : ${data.monkTone ?? '-'}/10 — ${monkLabel}\nSous-ton : ${undertoneLabel}\nScore global : ${data.overallScore ?? '-'}/100\n\n${top3}\n\nDécouvre ton type de peau sur Karysm ! https://karysm.com`;
                 await Share.share({ message, title: 'Mon analyse de peau Karysm' });
               } catch {}
             }}
@@ -444,7 +459,7 @@ export default function SkinResultsScreen() {
             <Text style={styles.shareBtnText}>Partager mes résultats</Text>
           </Pressable>
           <Pressable style={styles.newAnalysisBtn} onPress={() => router.push('/ai/skin-capture')}>
-            <Text style={styles.newAnalysisBtnText}>🔄 Nouvelle analyse</Text>
+            <Text style={styles.newAnalysisBtnText}>Nouvelle analyse</Text>
           </Pressable>
         </View>
 
@@ -524,7 +539,7 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.card, borderRadius: 24, padding: 14,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  undertoneEmoji: { fontSize: 28, marginBottom: 4 },
+  undertoneIcon: { marginBottom: 4 },
   undertoneCardTitle: { fontSize: 10, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 1 },
   undertoneCardLabel: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.accent, marginTop: 2 },
 
@@ -606,7 +621,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost, borderRadius: 24, padding: 24,
     alignItems: 'center', borderWidth: 1, borderColor: colors.primaryBorder, marginTop: 8,
   },
-  providerCtaEmoji: { fontSize: 36, marginBottom: 8 },
   providerCtaTitle: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
   providerCtaDesc: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', marginBottom: 16 },
   providerCtaButton: {
@@ -651,7 +665,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', padding: 14, backgroundColor: colors.card,
     borderRadius: 16, marginBottom: 10, gap: 12,
   },
-  recoTipIcon: { fontSize: 24 },
   recoTipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   recoTipText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 18, marginTop: 4 },
   recoCta: {

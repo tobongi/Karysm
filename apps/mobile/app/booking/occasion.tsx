@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,28 +13,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
 import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconBuilding from '@tabler/icons-react-native/dist/esm/icons/IconBuilding.mjs';
+import IconConfetti from '@tabler/icons-react-native/dist/esm/icons/IconConfetti.mjs';
+import IconBabyCarriage from '@tabler/icons-react-native/dist/esm/icons/IconBabyCarriage.mjs';
+import IconCertificate from '@tabler/icons-react-native/dist/esm/icons/IconCertificate.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconEye from '@tabler/icons-react-native/dist/esm/icons/IconEye.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
+import IconActivity from '@tabler/icons-react-native/dist/esm/icons/IconActivity.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const OCCASIONS = [
-  { id: 'mariage', emoji: '💒', label: 'Mariage' },
-  { id: 'eglise', emoji: '⛪', label: 'Église' },
-  { id: 'fete', emoji: '🎉', label: 'Fête' },
-  { id: 'baby-shower', emoji: '👶', label: 'Baby Shower' },
-  { id: 'diplome', emoji: '🎓', label: 'Diplôme' },
-  { id: 'shooting', emoji: '📸', label: 'Shooting Photo' },
-  { id: 'autre', emoji: '🌟', label: 'Autre' },
+const OCCASIONS: { id: string; icon: React.ComponentType<{ size: number; color: string }>; label: string }[] = [
+  { id: 'mariage', icon: IconHeart, label: 'Mariage' },
+  { id: 'eglise', icon: IconBuilding, label: 'Église' },
+  { id: 'fete', icon: IconConfetti, label: 'Fête' },
+  { id: 'baby-shower', icon: IconBabyCarriage, label: 'Baby Shower' },
+  { id: 'diplome', icon: IconCertificate, label: 'Diplôme' },
+  { id: 'shooting', icon: IconCamera, label: 'Shooting Photo' },
+  { id: 'autre', icon: IconStar, label: 'Autre' },
 ];
 
-const SERVICES = [
-  { id: 'coiffure', emoji: '✂️', label: 'Coiffure / Tresses', category: 'coiffure' },
-  { id: 'ongles', emoji: '💅', label: 'Ongles / Manucure', category: 'ongles' },
-  { id: 'maquillage', emoji: '💄', label: 'Maquillage', category: 'maquillage' },
-  { id: 'soin', emoji: '💆', label: 'Soin visage', category: 'soins' },
-  { id: 'massage', emoji: '💪', label: 'Massage', category: 'soins' },
+const SERVICES: { id: string; icon: React.ComponentType<{ size: number; color: string }>; label: string; category: string }[] = [
+  { id: 'coiffure', icon: IconScissors, label: 'Coiffure / Tresses', category: 'coiffure' },
+  { id: 'ongles', icon: IconSparkles, label: 'Ongles / Manucure', category: 'ongles' },
+  { id: 'maquillage', icon: IconEye, label: 'Maquillage', category: 'maquillage' },
+  { id: 'soin', icon: IconLeaf, label: 'Soin visage', category: 'soins' },
+  { id: 'massage', icon: IconActivity, label: 'Massage', category: 'soins' },
 ];
 
 const SERVICE_PLANNING: Record<string, { daysBefore: number; duration: string; label: string }> = {
@@ -168,7 +180,7 @@ export default function OccasionBookingScreen() {
                   style={[styles.occasionChip, isActive && styles.occasionChipActive]}
                   onPress={() => setOccasion(isActive ? null : o.id)}
                 >
-                  <Text style={styles.occasionEmoji}>{o.emoji}</Text>
+                  <o.icon size={24} color={isActive ? colors.white : colors.primary} />
                   <Text style={[styles.occasionLabel, isActive && styles.occasionLabelActive]}>
                     {o.label}
                   </Text>
@@ -223,7 +235,7 @@ export default function OccasionBookingScreen() {
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
                       {isSelected && <IconCheck size={14} color={colors.white} strokeWidth={3} />}
                     </View>
-                    <Text style={styles.serviceEmoji}>{svc.emoji}</Text>
+                    <svc.icon size={20} color={isSelected ? colors.accent : colors.primary} />
                     <Text style={[styles.serviceLabel, isSelected && styles.serviceLabelSelected]}>
                       {svc.label}
                     </Text>
@@ -440,9 +452,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
-  occasionEmoji: {
-    fontSize: 16,
-  },
   occasionLabel: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 13,
@@ -530,9 +539,6 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
-  },
-  serviceEmoji: {
-    fontSize: 18,
   },
   serviceLabel: {
     fontFamily: fonts.body,

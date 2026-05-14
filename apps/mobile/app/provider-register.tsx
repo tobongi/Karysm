@@ -20,6 +20,7 @@ import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
 import { pickAndUploadAvatar } from '../src/lib/upload';
 import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconConfetti from '@tabler/icons-react-native/dist/esm/icons/IconConfetti.mjs';
 
 const CITIES = [
   { name: 'Kinshasa', country: 'RDC', currency: 'CDF' },
@@ -345,7 +346,7 @@ export default function ProviderRegisterScreen() {
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalEmoji}>🎉</Text>
+            <IconConfetti size={56} color={colors.accent} />
             <Text style={styles.modalTitle}>Bienvenue !</Text>
             <Text style={styles.modalMessage}>
               Votre profil prestataire a ete cree. Ajoutez vos services pour commencer a recevoir des
@@ -652,10 +653,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
-  },
-  modalEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
   },
   modalTitle: {
     fontSize: 24,

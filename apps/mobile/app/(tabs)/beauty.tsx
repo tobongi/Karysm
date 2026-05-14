@@ -90,7 +90,7 @@ export default function BeautyTab() {
       <View style={styles.container}>
         <CurveHeader title="Beauté AI" height={160} />
         <View style={styles.centered}>
-          <Text style={styles.emptyIcon}>✨</Text>
+          <IconSparkles size={48} color={colors.primary} />
           <Text style={styles.emptyTitle}>Connectez-vous pour analyser votre peau et vos cheveux</Text>
           <Pressable style={styles.loginButton} onPress={() => router.push('/auth/login')}>
             <Text style={styles.loginButtonText}>Se connecter</Text>
@@ -420,7 +420,6 @@ const styles = StyleSheet.create({
   tipPreview: { fontSize: 12, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 18, marginTop: 4 },
 
   // Empty/Auth
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center', marginBottom: 20 },
   loginButton: { backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 25 },
   loginButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },

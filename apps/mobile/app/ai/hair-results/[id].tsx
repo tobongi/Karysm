@@ -4,6 +4,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconSnowflake from '@tabler/icons-react-native/dist/esm/icons/IconSnowflake.mjs';
+import IconAlertCircle from '@tabler/icons-react-native/dist/esm/icons/IconAlertCircle.mjs';
+import IconBulb from '@tabler/icons-react-native/dist/esm/icons/IconBulb.mjs';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
+import IconRefresh from '@tabler/icons-react-native/dist/esm/icons/IconRefresh.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
+import IconArrowsVertical from '@tabler/icons-react-native/dist/esm/icons/IconArrowsVertical.mjs';
 import { colors } from '../../../src/theme/colors';
 import { api } from '../../../src/lib/api';
 
@@ -30,13 +41,13 @@ const THICKNESS_INFO: Record<string, string> = {
   FINE: 'Fin', MEDIUM: 'Moyen', COARSE: 'Épais',
 };
 
-const SCALP_INFO: Record<string, { label: string; icon: string }> = {
-  HEALTHY:  { label: 'Sain',       icon: '✅' },
-  DRY:      { label: 'Sec',        icon: '🏜️' },
-  OILY:     { label: 'Gras',       icon: '💧' },
-  DANDRUFF: { label: 'Pellicules', icon: '❄️' },
-  FLAKY:    { label: 'Pellicules', icon: '❄️' }, // legacy alias
-  IRRITATED:{ label: 'Irrité',     icon: '🔴' },
+const SCALP_INFO: Record<string, { label: string; icon: React.ComponentType<{ size: number; color: string }> }> = {
+  HEALTHY:  { label: 'Sain',       icon: IconCheck },
+  DRY:      { label: 'Sec',        icon: IconSun },
+  OILY:     { label: 'Gras',       icon: IconDroplet },
+  DANDRUFF: { label: 'Pellicules', icon: IconSnowflake },
+  FLAKY:    { label: 'Pellicules', icon: IconSnowflake }, // legacy alias
+  IRRITATED:{ label: 'Irrité',     icon: IconAlertCircle },
 };
 
 const STYLE_LABELS: Record<string, string> = {
@@ -68,26 +79,26 @@ const HAIR_PROVIDERS = [
   { id: '3', slug: 'loc-specialist', name: 'Loc Specialist', specialty: 'Locs & twists tous types', rating: '4.7' },
 ];
 
-function getHairTips(analysis: any): Array<{icon: string, title: string, tip: string}> {
-  const tips: Array<{icon: string, title: string, tip: string}> = [];
+function getHairTips(analysis: any): Array<{icon: React.ComponentType<{ size: number; color: string }>, title: string, tip: string}> {
+  const tips: Array<{icon: React.ComponentType<{ size: number; color: string }>, title: string, tip: string}> = [];
 
   if (isLocStyle(analysis.currentStyle)) {
-    tips.push({ icon: '💧', title: 'Hydratation des locs', tip: 'Spray eau + aloe vera 3-4x/semaine. Les locs assèchent plus vite — les cuticules sont compressées et l\'humidité s\'échappe.' });
+    tips.push({ icon: IconDroplet, title: 'Hydratation des locs', tip: 'Spray eau + aloe vera 3-4x/semaine. Les locs assèchent plus vite — les cuticules sont compressées et l\'humidité s\'échappe.' });
     if (analysis.porosity === 'HIGH') {
-      tips.push({ icon: '🌿', title: 'Porosité élevée', tip: 'Tes locs absorbent vite mais perdent l\'hydratation. Scelle avec une huile légère (argan, jojoba) juste après avoir humidifié.' });
+      tips.push({ icon: IconLeaf, title: 'Porosité élevée', tip: 'Tes locs absorbent vite mais perdent l\'hydratation. Scelle avec une huile légère (argan, jojoba) juste après avoir humidifié.' });
     } else {
-      tips.push({ icon: '✂️', title: 'Retwist régulier', tip: 'Un retwist pro tous les 4-6 semaines maintient les locs nettes, prévient la fusion entre locs et favorise la croissance.' });
+      tips.push({ icon: IconScissors, title: 'Retwist régulier', tip: 'Un retwist pro tous les 4-6 semaines maintient les locs nettes, prévient la fusion entre locs et favorise la croissance.' });
     }
-    tips.push({ icon: '🌙', title: 'Protection nocturne', tip: 'Bonnet en satin obligatoire — il prévient la casse, le frisottis et l\'assèchement causé par les fibres des draps.' });
+    tips.push({ icon: IconBulb, title: 'Protection nocturne', tip: 'Bonnet en satin obligatoire — il prévient la casse, le frisottis et l\'assèchement causé par les fibres des draps.' });
     return tips;
   }
 
-  if (analysis.porosity === 'HIGH') tips.push({ icon: '💧', title: 'Porosité élevée', tip: 'Tes cheveux absorbent vite mais perdent l\'hydratation. Scelle avec une huile lourde (ricin, olive) après chaque hydratation.' });
-  if (analysis.porosity === 'LOW') tips.push({ icon: '🔒', title: 'Porosité faible', tip: 'L\'eau a du mal à pénétrer tes cheveux. Utilise un bonnet chauffant ou de la vapeur pour ouvrir les cuticules.' });
-  if (analysis.dryness != null && analysis.dryness > 50) tips.push({ icon: '🏜️', title: 'Sécheresse', tip: 'Hydrate avec la méthode LOC (Liquid-Oil-Cream). Dors avec un bonnet en satin pour préserver l\'hydratation.' });
-  if (analysis.shrinkage != null && analysis.shrinkage > 60) tips.push({ icon: '🌀', title: 'Shrinkage important', tip: 'C\'est le signe de cheveux en bonne santé ! Pour étirer, essaie le twist-out ou les bantu knots sur cheveux humides.' });
-  if (['4B', '4C'].includes(analysis.hairType)) tips.push({ icon: '👑', title: `Type ${analysis.hairType}`, tip: 'Démêle toujours sur cheveux mouillés avec un après-shampoing riche. Sectionne en 4 parts minimum.' });
-  if (tips.length === 0) tips.push({ icon: '✨', title: 'Beaux cheveux !', tip: 'Tes cheveux sont en bonne santé. Continue ta routine et protège-les la nuit avec du satin.' });
+  if (analysis.porosity === 'HIGH') tips.push({ icon: IconDroplet, title: 'Porosité élevée', tip: 'Tes cheveux absorbent vite mais perdent l\'hydratation. Scelle avec une huile lourde (ricin, olive) après chaque hydratation.' });
+  if (analysis.porosity === 'LOW') tips.push({ icon: IconScissors, title: 'Porosité faible', tip: 'L\'eau a du mal à pénétrer tes cheveux. Utilise un bonnet chauffant ou de la vapeur pour ouvrir les cuticules.' });
+  if (analysis.dryness != null && analysis.dryness > 50) tips.push({ icon: IconSun, title: 'Sécheresse', tip: 'Hydrate avec la méthode LOC (Liquid-Oil-Cream). Dors avec un bonnet en satin pour préserver l\'hydratation.' });
+  if (analysis.shrinkage != null && analysis.shrinkage > 60) tips.push({ icon: IconRefresh, title: 'Shrinkage important', tip: 'C\'est le signe de cheveux en bonne santé ! Pour étirer, essaie le twist-out ou les bantu knots sur cheveux humides.' });
+  if (['4B', '4C'].includes(analysis.hairType)) tips.push({ icon: IconScissors, title: `Type ${analysis.hairType}`, tip: 'Démêle toujours sur cheveux mouillés avec un après-shampoing riche. Sectionne en 4 parts minimum.' });
+  if (tips.length === 0) tips.push({ icon: IconStar, title: 'Beaux cheveux !', tip: 'Tes cheveux sont en bonne santé. Continue ta routine et protège-les la nuit avec du satin.' });
   return tips.slice(0, 3);
 }
 
@@ -166,7 +177,7 @@ export default function HairResultsScreen() {
         {/* Hair type badge */}
         {data.hairType && (
           <View style={styles.typeCard}>
-            <Text style={styles.typeEmoji}>{isLocStyle(data.currentStyle) ? '🔒' : '💇🏿‍♀️'}</Text>
+            {isLocStyle(data.currentStyle) ? <IconScissors size={36} color={colors.primary} /> : <IconScissors size={36} color={colors.primary} />}
             <View style={{ flex: 1 }}>
               {isLocStyle(data.currentStyle) ? (
                 <>
@@ -199,7 +210,7 @@ export default function HairResultsScreen() {
         {/* Locs information banner */}
         {isLocStyle(data.currentStyle) && (
           <View style={styles.locsBanner}>
-            <Text style={styles.locsBannerIcon}>💡</Text>
+            <IconBulb size={20} color={colors.warning} />
             <View style={{ flex: 1 }}>
               <Text style={styles.locsBannerTitle}>Style protecteur détecté</Text>
               <Text style={styles.locsBannerText}>
@@ -233,32 +244,37 @@ export default function HairResultsScreen() {
               <Text style={styles.charValue}>{THICKNESS_INFO[data.thickness] || data.thickness}</Text>
             </View>
           )}
-          {data.scalpCondition && (
-            <View style={styles.charCard}>
-              <Text style={styles.charLabel}>Cuir chevelu</Text>
-              <Text style={styles.charValue}>
-                {SCALP_INFO[data.scalpCondition]?.icon} {SCALP_INFO[data.scalpCondition]?.label || data.scalpCondition}
-              </Text>
-            </View>
-          )}
+          {data.scalpCondition && (() => {
+            const scalp = SCALP_INFO[data.scalpCondition!];
+            const ScalpIcon = scalp?.icon;
+            return (
+              <View style={styles.charCard}>
+                <Text style={styles.charLabel}>Cuir chevelu</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {ScalpIcon && <ScalpIcon size={14} color={colors.text} />}
+                  <Text style={styles.charValue}>{scalp?.label || data.scalpCondition}</Text>
+                </View>
+              </View>
+            );
+          })()}
         </View>
 
         {/* Metrics bars */}
         <View style={styles.metricsSection}>
           {data.dryness != null && (
-            <MetricBar label="Sécheresse" value={data.dryness} icon="🏜️" invert />
+            <MetricBar label="Sécheresse" value={data.dryness} Icon={IconSun} invert />
           )}
           {/* Elasticity: never measurable from a photo — requires physical wet strand stretch test */}
           <MetricBar
             label="Élasticité"
             value={null}
-            icon="🔄"
+            Icon={IconRefresh}
             naText="Test physique requis"
           />
           <MetricBar
             label="Shrinkage"
             value={displayShrinkage}
-            icon="📏"
+            Icon={IconArrowsVertical}
             neutral
             naText="Non mesurable — locs"
           />
@@ -300,7 +316,10 @@ export default function HairResultsScreen() {
                 <Text style={styles.recoProviderName}>{p.name}</Text>
                 <Text style={styles.recoProviderSpecialty}>{p.specialty}</Text>
               </View>
-              <Text style={styles.recoProviderRating}>★ {p.rating}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <IconStar size={12} color={colors.star} fill={colors.star} />
+                <Text style={styles.recoProviderRating}>{p.rating}</Text>
+              </View>
             </Pressable>
           ))}
 
@@ -313,7 +332,7 @@ export default function HairResultsScreen() {
           <Text style={styles.recoTitle}>Conseils pour toi</Text>
           {getHairTips(data).map((tip, i) => (
             <View key={i} style={styles.recoTipCard}>
-              <Text style={styles.recoTipIcon}>{tip.icon}</Text>
+              <tip.icon size={20} color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.recoTipTitle}>{tip.title}</Text>
                 <Text style={styles.recoTipText}>{tip.tip}</Text>
@@ -335,7 +354,7 @@ export default function HairResultsScreen() {
                 const hairTypeLabel = data.hairType && HAIR_TYPE_INFO[data.hairType] ? HAIR_TYPE_INFO[data.hairType].label : '';
                 const porosityLabel = data.porosity && POROSITY_INFO[data.porosity] ? POROSITY_INFO[data.porosity].label : (data.porosity || '');
                 const densityLabel = data.density ? (DENSITY_INFO[data.density] || data.density) : '';
-                const message = `💇🏿 Mon analyse capillaire Karysm\n\nType : ${data.hairType ?? '-'} — ${hairTypeLabel}\nPorosité : ${porosityLabel}\nDensité : ${densityLabel}\n\nDécouvre ton type de cheveux sur Karysm ! 👉 https://karysm.com`;
+                const message = `Mon analyse capillaire Karysm\n\nType : ${data.hairType ?? '-'} — ${hairTypeLabel}\nPorosité : ${porosityLabel}\nDensité : ${densityLabel}\n\nDécouvre ton type de cheveux sur Karysm ! https://karysm.com`;
                 await Share.share({ message, title: 'Mon analyse capillaire Karysm' });
               } catch {}
             }}
@@ -343,10 +362,10 @@ export default function HairResultsScreen() {
             <Text style={styles.shareBtnText}>Partager mes résultats</Text>
           </Pressable>
           <Pressable style={styles.newBtn} onPress={() => router.push('/ai/hair-capture')}>
-            <Text style={styles.newBtnText}>🔄 Nouvelle analyse</Text>
+            <Text style={styles.newBtnText}>Nouvelle analyse</Text>
           </Pressable>
           <Pressable style={styles.findBtn} onPress={() => router.push('/(tabs)')}>
-            <Text style={styles.findBtnText}>💇🏿 Trouver un coiffeur</Text>
+            <Text style={styles.findBtnText}>Trouver un coiffeur</Text>
           </Pressable>
         </View>
 
@@ -356,11 +375,11 @@ export default function HairResultsScreen() {
   );
 }
 
-function MetricBar({ label, value, icon, invert, neutral, naText }: { label: string; value: number | null; icon: string; invert?: boolean; neutral?: boolean; naText?: string }) {
+function MetricBar({ label, value, Icon, invert, neutral, naText }: { label: string; value: number | null; Icon: React.ComponentType<{size:number;color:string}>; invert?: boolean; neutral?: boolean; naText?: string }) {
   if (value === null) {
     return (
       <View style={styles.metricRow}>
-        <Text style={styles.metricIcon}>{icon}</Text>
+        <Icon size={18} color={colors.textMuted} />
         <Text style={styles.metricLabel}>{label}</Text>
         <Text style={styles.metricNa}>{naText ?? 'Non mesurable'}</Text>
       </View>
@@ -378,7 +397,7 @@ function MetricBar({ label, value, icon, invert, neutral, naText }: { label: str
 
   return (
     <View style={styles.metricRow}>
-      <Text style={styles.metricIcon}>{icon}</Text>
+      <Icon size={18} color={barColor} />
       <Text style={styles.metricLabel}>{label}</Text>
       <View style={styles.metricBar}>
         <View style={[styles.metricBarFill, { width: `${value}%`, backgroundColor: barColor }]} />
@@ -406,7 +425,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 24, padding: 16,
     borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
-  typeEmoji: { fontSize: 36 },
   typeLabel: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.primary, letterSpacing: 1 },
   typeName: { fontSize: 20, fontFamily: 'Poppins_700Bold', color: colors.accent },
   typeDesc: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 2 },
@@ -437,7 +455,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FCD34D',
     marginBottom: 24,
   },
-  locsBannerIcon: { fontSize: 20 },
   locsBannerTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: '#92400E', marginBottom: 4 },
   locsBannerText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: '#78350F', lineHeight: 18 },
 
@@ -448,7 +465,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 16, padding: 12,
     borderWidth: 1, borderColor: colors.border, marginBottom: 8,
   },
-  metricIcon: { fontSize: 18 },
   metricLabel: { width: 80, fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.text },
   metricBar: {
     flex: 1, height: 6, backgroundColor: colors.n300, borderRadius: 3, overflow: 'hidden',
@@ -516,7 +532,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', padding: 14, backgroundColor: colors.card,
     borderRadius: 16, marginBottom: 10, gap: 12,
   },
-  recoTipIcon: { fontSize: 24 },
   recoTipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   recoTipText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 18, marginTop: 4 },
   recoCta: {
