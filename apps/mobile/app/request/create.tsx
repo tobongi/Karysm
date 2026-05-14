@@ -41,6 +41,7 @@ export default function CreateRequestScreen() {
   const [locationType, setLocationType] = useState('CLIENT');
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [preferredDate, setPreferredDate] = useState('');
+  const [preferredTime, setPreferredTime] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [selfie, setSelfie] = useState<string | null>(null);
@@ -124,7 +125,9 @@ export default function CreateRequestScreen() {
         flexibleDate,
       };
       if (preferredDate && !flexibleDate) {
-        body.preferredDate = preferredDate;
+        // Combine date + time so the backend stores a real moment (not midnight)
+        const t = /^\d{2}:\d{2}$/.test(preferredTime.trim()) ? preferredTime.trim() : '00:00';
+        body.preferredDate = `${preferredDate}T${t}:00`;
       }
       if (photos.length > 0) body.photos = photos;
       if (selfie) body.selfieUrl = selfie;
@@ -287,13 +290,23 @@ export default function CreateRequestScreen() {
           />
         </View>
         {!flexibleDate && (
-          <TextInput
-            style={styles.input}
-            placeholder="AAAA-MM-JJ"
-            placeholderTextColor={colors.textMuted}
-            value={preferredDate}
-            onChangeText={setPreferredDate}
-          />
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TextInput
+              style={[styles.input, { flex: 2 }]}
+              placeholder="AAAA-MM-JJ"
+              placeholderTextColor={colors.textMuted}
+              value={preferredDate}
+              onChangeText={setPreferredDate}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="HH:MM"
+              placeholderTextColor={colors.textMuted}
+              value={preferredTime}
+              onChangeText={setPreferredTime}
+              maxLength={5}
+            />
+          </View>
         )}
 
         {/* City */}

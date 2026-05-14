@@ -64,7 +64,14 @@ function timeAgo(iso: string) {
 
 function fmtDate(iso?: string | null) {
   if (!iso) return null;
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const d = new Date(iso);
+  const date = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const h = d.getHours();
+  const m = d.getMinutes();
+  // Hide time if it's exactly midnight (i.e., client didn't specify a time)
+  if (h === 0 && m === 0) return date;
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `${date} · ${time}`;
 }
 
 function locationLabel(t: string) {
