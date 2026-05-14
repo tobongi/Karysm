@@ -10,6 +10,12 @@ import {
   Platform,
 } from 'react-native';
 import { IconChevronRight } from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import { IconDroplet } from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import { IconSun } from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import { IconLeaf } from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
+import { IconBottle } from '@tabler/icons-react-native/dist/esm/icons/IconBottle.mjs';
+import { IconBook } from '@tabler/icons-react-native/dist/esm/icons/IconBook.mjs';
+import React from 'react';
 import { router } from 'expo-router';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
@@ -17,11 +23,11 @@ import { useAuth } from '../../src/lib/auth-context';
 import Skeleton from '../../src/components/Skeleton';
 import CurveHeader from '../../src/components/CurveHeader';
 
-const BEAUTY_TIPS = [
-  { id: '1', icon: '\u{1F4A7}', title: 'Méthode LOC pour cheveux 4C', content: "Liquid, Oil, Cream \u2014 l'ordre d'application qui change tout pour l'hydratation des cheveux crépus." },
-  { id: '2', icon: '\u2600\uFE0F', title: 'SPF et peau foncée : le mythe', content: "Les peaux riches en mélanine ont aussi besoin de protection solaire. L'hyperpigmentation est plus visible sans SPF." },
-  { id: '3', icon: '\u{1F33F}', title: 'Beurre de karité : guide complet', content: 'Comment choisir, préparer et appliquer le karité pour cheveux et peau. Du brut au raffiné, tout savoir.' },
-  { id: '4', icon: '\u{1F9F4}', title: 'Routine night-time pour braids', content: 'Protège tes tresses la nuit avec un bonnet en satin et un spray hydratant léger pour éviter la sécheresse.' },
+const BEAUTY_TIPS: { id: string; Icon: React.ComponentType<{ size: number; color: string }>; title: string; content: string }[] = [
+  { id: '1', Icon: IconDroplet, title: 'Méthode LOC pour cheveux 4C', content: "Liquid, Oil, Cream — l'ordre d'application qui change tout pour l'hydratation des cheveux crépus." },
+  { id: '2', Icon: IconSun, title: 'SPF et peau foncée : le mythe', content: "Les peaux riches en mélanine ont aussi besoin de protection solaire. L'hyperpigmentation est plus visible sans SPF." },
+  { id: '3', Icon: IconLeaf, title: 'Beurre de karité : guide complet', content: 'Comment choisir, préparer et appliquer le karité pour cheveux et peau. Du brut au raffiné, tout savoir.' },
+  { id: '4', Icon: IconBottle, title: 'Routine night-time pour braids', content: 'Protège tes tresses la nuit avec un bonnet en satin et un spray hydratant léger pour éviter la sécheresse.' },
 ];
 
 interface SkinSummary {
@@ -249,7 +255,7 @@ export default function BeautyTab() {
         {/* -- Hair Journal Card -- */}
         <Pressable style={styles.journalCard} onPress={() => router.push('/hair-journal' as any)}>
           <View style={styles.journalIcon}>
-            <Text style={{ fontSize: 24 }}>{'\u{1F4D6}'}</Text>
+            <IconBook size={24} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.journalTitle}>Journal capillaire</Text>
@@ -263,7 +269,7 @@ export default function BeautyTab() {
 
         {BEAUTY_TIPS.map((tip) => (
           <View key={tip.id} style={styles.tipCard}>
-            <Text style={styles.tipEmoji}>{tip.icon}</Text>
+            <tip.Icon size={24} color={colors.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.tipTitle}>{tip.title}</Text>
               <Text style={styles.tipPreview} numberOfLines={2}>{tip.content}</Text>
