@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch, AsyncStorage, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Linking } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';

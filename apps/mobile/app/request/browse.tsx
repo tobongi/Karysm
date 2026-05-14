@@ -114,23 +114,6 @@ export default function BrowseRequestsScreen() {
     }
   }
 
-  function timeAgo(dateStr: string): string {
-    const now = new Date().getTime();
-    const then = new Date(dateStr).getTime();
-    const diffH = Math.floor((now - then) / 3600000);
-    if (diffH < 1) return 'Il y a moins d\'1h';
-    if (diffH < 24) return `Il y a ${diffH}h`;
-    const diffD = Math.floor(diffH / 24);
-    if (diffD === 1) return 'Hier';
-    return `Il y a ${diffD}j`;
-  }
-
-  function getCategoryName(catId: string): string {
-    const cat = categories.find((c) => c.id === catId);
-    return cat?.name || '';
-  }
-
-
   const NEW_WINDOW_HOURS = 6;
 
   function timeAgo(dateStr: string): string {
@@ -142,6 +125,11 @@ export default function BrowseRequestsScreen() {
     const diffD = Math.floor(diffH / 24);
     if (diffD === 1) return 'hier';
     return `il y a ${diffD}j`;
+  }
+
+  function getCategoryName(catId: string): string {
+    const cat = categories.find((c) => c.id === catId);
+    return cat?.name || '';
   }
 
   return (

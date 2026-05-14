@@ -393,35 +393,37 @@ function ProviderHome({ user }: { user: any }) {
               <Text style={pStyles.emptyText}>Aucun rendez-vous à venir</Text>
             </View>
           ) : (
-            <FadeInStagger>
-              {bookings.map(b => {
+            <View>
+              {bookings.map((b, idx) => {
                 const st = STATUS_LABEL[b.status] ?? { label: b.status, color: colors.textMuted };
                 return (
-                  <PressableScale key={b.id} style={pStyles.bookingCard} onPress={() => router.push(`/booking/detail/${b.id}` as any)}>
-                    <View style={pStyles.bookingLeft}>
-                      <View style={pStyles.bookingAvatar}>
-                        {b.client.avatar ? (
-                          <Image source={{ uri: b.client.avatar }} style={pStyles.bookingAvatarImg} />
-                        ) : (
-                          <Text style={pStyles.bookingAvatarInit}>{b.client.name[0]?.toUpperCase()}</Text>
-                        )}
+                  <FadeInStagger key={b.id} index={idx}>
+                    <PressableScale style={pStyles.bookingCard} onPress={() => router.push(`/booking/detail/${b.id}` as any)}>
+                      <View style={pStyles.bookingLeft}>
+                        <View style={pStyles.bookingAvatar}>
+                          {b.client.avatar ? (
+                            <Image source={{ uri: b.client.avatar }} style={pStyles.bookingAvatarImg} />
+                          ) : (
+                            <Text style={pStyles.bookingAvatarInit}>{b.client.name[0]?.toUpperCase()}</Text>
+                          )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={pStyles.bookingClient} numberOfLines={1}>{b.client.name}</Text>
+                          <Text style={pStyles.bookingService} numberOfLines={1}>{b.service.name}</Text>
+                          <Text style={pStyles.bookingDate}>{fmtDate(b.date)} · {b.startTime.slice(0, 5)}</Text>
+                        </View>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={pStyles.bookingClient} numberOfLines={1}>{b.client.name}</Text>
-                        <Text style={pStyles.bookingService} numberOfLines={1}>{b.service.name}</Text>
-                        <Text style={pStyles.bookingDate}>{fmtDate(b.date)} · {b.startTime.slice(0, 5)}</Text>
+                      <View style={pStyles.bookingRight}>
+                        <Text style={pStyles.bookingPrice}>{fmtAmount(b.agreedPrice, b.currency)}</Text>
+                        <View style={[pStyles.statusPill, { backgroundColor: `${st.color}18` }]}>
+                          <Text style={[pStyles.statusPillText, { color: st.color }]}>{st.label}</Text>
+                        </View>
                       </View>
-                    </View>
-                    <View style={pStyles.bookingRight}>
-                      <Text style={pStyles.bookingPrice}>{fmtAmount(b.agreedPrice, b.currency)}</Text>
-                      <View style={[pStyles.statusPill, { backgroundColor: `${st.color}18` }]}>
-                        <Text style={[pStyles.statusPillText, { color: st.color }]}>{st.label}</Text>
-                      </View>
-                    </View>
-                  </PressableScale>
+                    </PressableScale>
+                  </FadeInStagger>
                 );
               })}
-            </FadeInStagger>
+            </View>
           )}
         </View>
 
@@ -442,31 +444,33 @@ function ProviderHome({ user }: { user: any }) {
               <Text style={pStyles.emptyText}>Aucune demande ouverte pour l'instant</Text>
             </View>
           ) : (
-            <FadeInStagger>
-              {requests.map(r => (
-                <PressableScale key={r.id} style={pStyles.requestCard} onPress={() => router.push(`/request/${r.id}` as any)}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={pStyles.requestTitle} numberOfLines={1}>{r.title}</Text>
-                    <View style={pStyles.requestMeta}>
-                      <IconMapPin size={12} color={colors.textMuted} strokeWidth={1.8} />
-                      <Text style={pStyles.requestMetaText}>{r.city}</Text>
-                      <Text style={pStyles.requestMetaDot}>·</Text>
-                      <Text style={pStyles.requestMetaText}>
-                        {fmtAmount(r.budgetMin, r.currency)}
-                        {r.budgetMax > r.budgetMin ? ` – ${fmtAmount(r.budgetMax, r.currency)}` : ''}
-                      </Text>
+            <View>
+              {requests.map((r, idx) => (
+                <FadeInStagger key={r.id} index={idx}>
+                  <PressableScale style={pStyles.requestCard} onPress={() => router.push(`/request/${r.id}` as any)}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={pStyles.requestTitle} numberOfLines={1}>{r.title}</Text>
+                      <View style={pStyles.requestMeta}>
+                        <IconMapPin size={12} color={colors.textMuted} strokeWidth={1.8} />
+                        <Text style={pStyles.requestMetaText}>{r.city}</Text>
+                        <Text style={pStyles.requestMetaDot}>·</Text>
+                        <Text style={pStyles.requestMetaText}>
+                          {fmtAmount(r.budgetMin, r.currency)}
+                          {r.budgetMax > r.budgetMin ? ` – ${fmtAmount(r.budgetMax, r.currency)}` : ''}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                  <View style={pStyles.requestRight}>
-                    <View style={pStyles.proposalBadge}>
-                      <Text style={pStyles.proposalCount}>{r.proposalCount}</Text>
-                      <Text style={pStyles.proposalLabel}>offres</Text>
+                    <View style={pStyles.requestRight}>
+                      <View style={pStyles.proposalBadge}>
+                        <Text style={pStyles.proposalCount}>{r.proposalCount}</Text>
+                        <Text style={pStyles.proposalLabel}>offres</Text>
+                      </View>
+                      <IconChevronRight size={16} color={colors.textMuted} strokeWidth={2} />
                     </View>
-                    <IconChevronRight size={16} color={colors.textMuted} strokeWidth={2} />
-                  </View>
-                </PressableScale>
+                  </PressableScale>
+                </FadeInStagger>
               ))}
-            </FadeInStagger>
+            </View>
           )}
         </View>
 

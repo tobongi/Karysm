@@ -146,6 +146,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.accent,
   },
+  providerName: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',

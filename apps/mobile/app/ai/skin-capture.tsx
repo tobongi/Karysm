@@ -191,12 +191,12 @@ export default function SkinCaptureScreen() {
               />
               <DetectionBadge
                 label="Carnation" value="Analyse..."
-                position={{ top: '40%', left: -10 }} delay={600}
+                position={{ top: 40, left: -10 }} delay={600}
                 visible={scanPhase === 'detected' && !analyzing}
               />
               <DetectionBadge
                 label="Hydratation" value="Analyse..."
-                position={{ bottom: '20%', right: -10 }} delay={900}
+                position={{ bottom: 20, right: -10 }} delay={900}
                 visible={scanPhase === 'detected' && !analyzing}
               />
             </View>

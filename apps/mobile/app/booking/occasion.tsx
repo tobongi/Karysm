@@ -246,20 +246,6 @@ export default function OccasionBookingScreen() {
               );
             })}
           </View>
-                  {isSelected && (
-                    <TextInput
-                      style={styles.noteInput}
-                      placeholder="Précision (optionnel) — ex: tresses avec rajouts"
-                      placeholderTextColor={colors.textMuted}
-                      value={serviceNotes[svc.id] || ''}
-                      onChangeText={text =>
-                        setServiceNotes(prev => ({ ...prev, [svc.id]: text }))
-                      }
-                    />
-                  )}
-                </FadeInStagger>
-              );
-            })}
 
           {/* Section 4: Person count */}
           <Text style={styles.sectionLabel}>Pour combien de personnes ?</Text>

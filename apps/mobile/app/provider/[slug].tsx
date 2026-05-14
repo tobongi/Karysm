@@ -26,6 +26,7 @@ import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { addRecentlyViewed } from '../../src/lib/recently-viewed';
+import { showAlert } from '../../src/lib/alert';
 import Skeleton from '../../src/components/Skeleton';
 import BeforeAfter from '../../src/components/BeforeAfter';
 
