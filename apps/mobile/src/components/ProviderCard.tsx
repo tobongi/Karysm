@@ -72,7 +72,7 @@ export default function ProviderCard({
             <IconHeart
               size={18}
               color={colors.primary}
-              fill={isFavorite ? colors.primary : 'transparent'}
+              fill={isFavorite ? colors.primary : 'none'}
             />
           </Pressable>
         )}
