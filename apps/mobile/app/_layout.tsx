@@ -81,10 +81,10 @@ function AppContent() {
         <Stack.Screen name="settings/edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="kyc/index" options={{ title: 'Vérification KYC' }} />
         <Stack.Screen name="wallet/index" options={{ title: 'Portefeuille' }} />
-        <Stack.Screen name="ai/skin-capture" options={{ title: 'Analyse de peau', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="ai/skin-results/[id]" options={{ title: 'Résultats peau' }} />
-        <Stack.Screen name="ai/hair-capture" options={{ title: 'Analyse cheveux', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="ai/hair-results/[id]" options={{ title: 'Résultats cheveux' }} />
+        <Stack.Screen name="ai/skin-capture" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="ai/skin-results/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="ai/hair-capture" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="ai/hair-results/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="permissions/location" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="permissions/notification" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
@@ -99,6 +99,7 @@ function AppContent() {
         <Stack.Screen name="notifications" options={{ headerShown: false, animation: 'slide_from_right' }} />
         <Stack.Screen name="scan" options={{ title: 'Scanner un produit', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="ai/virtual-tryon" options={{ title: 'Miroir Virtuel', animation: 'slide_from_bottom', headerShown: false }} />
+        <Stack.Screen name="learn/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

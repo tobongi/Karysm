@@ -313,14 +313,21 @@ export default function BeautyTab() {
 
         <View style={styles.tipGrid}>
           {BEAUTY_TIPS.map((tip, i) => (
-            <FadeInStagger key={tip.id} index={7 + i} style={{ width: '100%' }}>
-              <View style={styles.tipCard}>
+            <FadeInStagger key={tip.id} index={7 + i} style={styles.tipCell}>
+              <PressableScale
+                onPress={() => router.push(`/learn/${tip.id}` as any)}
+                style={styles.tipCard}
+              >
                 <View style={styles.tipIconWrap}>
                   <tip.Icon size={24} color={colors.primary} />
                 </View>
                 <Text style={styles.tipTitle}>{tip.title}</Text>
                 <Text style={styles.tipPreview} numberOfLines={2}>{tip.content}</Text>
-              </View>
+                <View style={styles.tipReadMore}>
+                  <Text style={styles.tipReadMoreText}>Lire</Text>
+                  <IconChevronRight size={12} color={colors.primary} />
+                </View>
+              </PressableScale>
             </FadeInStagger>
           ))}
         </View>
@@ -547,8 +554,10 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 8,
   },
+  // Cell sits the FadeInStagger wrapper at 48% so two tips share a row with the 12px gap
+  tipCell: { width: '48%' },
   tipCard: {
-    width: '48%',
+    flex: 1,
     padding: 16,
     backgroundColor: colors.card,
     borderRadius: 16,
@@ -569,7 +578,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tipTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 6 },
-  tipPreview: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 16 },
+  tipPreview: { fontSize: 11, color: colors.textSecondary, fontFamily: 'Poppins_400Regular', lineHeight: 16, marginBottom: 10 },
+  tipReadMore: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 'auto' as any },
+  tipReadMoreText: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
 
   // Empty/Auth
   emptyTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center', marginBottom: 20 },

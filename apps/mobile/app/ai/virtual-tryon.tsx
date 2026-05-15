@@ -93,6 +93,13 @@ function hexToRgba(hex: string, a: number): string {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+function hexDark(hex: string, delta: number): string {
+  const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - delta);
+  const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - Math.round(delta * 0.75));
+  const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - Math.round(delta * 0.6));
+  return `rgba(${r},${g},${b},`;
+}
+
 function lmPt(lm: any[], idx: number, W: number, H: number): [number, number] {
   return [lm[idx].x * W, lm[idx].y * H];
 }
@@ -104,7 +111,6 @@ function centroid(lm: any[], idxs: number[], W: number, H: number): [number, num
 }
 
 // Smooth closed curve through pts using midpoint-anchored quadratic beziers.
-// Draws a subpath — caller must ctx.beginPath() first (or just moveTo from prior subpath).
 function smoothClosedCurve(ctx: CanvasRenderingContext2D, pts: [number, number][]) {
   const n = pts.length;
   if (n < 3) return;
@@ -119,6 +125,41 @@ function smoothClosedCurve(ctx: CanvasRenderingContext2D, pts: [number, number][
   }
 }
 
+// Smooth open curve through pts using midpoint quadratic beziers.
+function smoothOpenCurve(ctx: CanvasRenderingContext2D, pts: [number, number][]) {
+  if (pts.length < 2) return;
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 0; i < pts.length - 2; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+    const my = (pts[i][1] + pts[i + 1][1]) / 2;
+    ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+  }
+  ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+}
+
+// Composites an offscreen canvas onto ctx with blur and blend.
+function blitBlurred(
+  ctx: CanvasRenderingContext2D,
+  off: HTMLCanvasElement,
+  blurPx: number,
+  alpha: number,
+  composite: GlobalCompositeOperation = 'source-over',
+) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.globalCompositeOperation = composite;
+  (ctx as any).filter = `blur(${blurPx}px)`;
+  ctx.drawImage(off, 0, 0);
+  (ctx as any).filter = 'none';
+  ctx.restore();
+}
+
+function makeOff(W: number, H: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  return [c, c.getContext('2d')!];
+}
+
 function drawLips(
   ctx: CanvasRenderingContext2D,
   lm: any[],
@@ -128,47 +169,72 @@ function drawLips(
   W: number,
   H: number,
 ) {
-  // Build outer polygon (upper arc + lower arc, corners shared)
-  const outerPts = [
+  const outerPts: [number, number][] = [
     ...UPPER_LIP_OUTER.map(i => lmPt(lm, i, W, H)),
     ...LOWER_LIP_OUTER.slice(1, -1).map(i => lmPt(lm, i, W, H)),
   ];
-  // Build inner polygon (mouth opening) for evenodd hole
-  const innerPts = [
+  const innerPts: [number, number][] = [
     ...UPPER_LIP_INNER.map(i => lmPt(lm, i, W, H)),
     ...LOWER_LIP_INNER.slice(1, -1).map(i => lmPt(lm, i, W, H)),
   ];
 
-  // Fill lip color — evenodd rule punches inner opening as transparent
-  ctx.save();
-  ctx.globalAlpha = opacity;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  smoothClosedCurve(ctx, outerPts);
-  smoothClosedCurve(ctx, innerPts);
-  ctx.fill('evenodd');
-  ctx.restore();
+  // ── 1. Base color — drawn to offscreen, blurred onto main for feathered edges ──
+  const blurPx = finish === 'Matte' ? 1.2 : finish === 'Velvet' ? 2.8 : 2.0;
+  const [off1, c1] = makeOff(W, H);
+  c1.fillStyle = color;
+  c1.beginPath();
+  smoothClosedCurve(c1, outerPts);
+  smoothClosedCurve(c1, innerPts);
+  c1.fill('evenodd');
+  blitBlurred(ctx, off1, blurPx, opacity);
 
-  // Gloss / Satin highlight: linear gradient from upper lip down
+  // ── 2. Finish-specific specular highlight ──
+  const [cx, topY] = lmPt(lm, 0, W, H);
+  const [, botY]   = lmPt(lm, 17, W, H);
+  const lipH = Math.max(botY - topY, 4);
+
   if (finish === 'Gloss' || finish === 'Satin') {
-    const [cx, topY] = lmPt(lm, 0, W, H);  // Cupid's bow center
-    const [, botY]   = lmPt(lm, 17, W, H); // chin ridge center
-    const midY = topY + (botY - topY) * 0.45;
-    const grad = ctx.createLinearGradient(cx, topY - 2, cx, midY + 4);
-    grad.addColorStop(0,   'rgba(255,255,255,0.55)');
-    grad.addColorStop(0.5, 'rgba(255,255,255,0.18)');
-    grad.addColorStop(1,   'rgba(255,255,255,0)');
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    smoothClosedCurve(ctx, outerPts);
-    smoothClosedCurve(ctx, innerPts);
-    ctx.fill('evenodd');
-    ctx.restore();
+    // Oval specular centered on upper lip (authentic gloss look)
+    const hy  = topY + lipH * 0.25;
+    const hrx = lipH * 0.62;
+    const hry = lipH * (finish === 'Gloss' ? 0.22 : 0.13);
+    const hA  = finish === 'Gloss' ? 0.75 : 0.42;
+
+    const [off2, c2] = makeOff(W, H);
+    // Clip to lip outline so highlight can't bleed outside
+    c2.beginPath();
+    smoothClosedCurve(c2, outerPts);
+    smoothClosedCurve(c2, innerPts);
+    c2.clip('evenodd');
+    // Solid white ellipse — blur creates the soft radial falloff
+    c2.fillStyle = `rgba(255,255,255,${hA})`;
+    c2.beginPath();
+    c2.ellipse(cx, hy, hrx, hry, 0, 0, Math.PI * 2);
+    c2.fill();
+    blitBlurred(ctx, off2, finish === 'Gloss' ? 4 : 2.5, opacity);
   }
+
+  // ── 3. Corner depth shadows — small dark smudge at mouth corners ──
+  const faceW = Math.abs(lm[454].x - lm[234].x) * W;
+  const cr = faceW * 0.028;
+  const darkPfx = hexDark(color, 65);
+  const [off3, c3] = makeOff(W, H);
+  c3.beginPath();
+  smoothClosedCurve(c3, outerPts);
+  smoothClosedCurve(c3, innerPts);
+  c3.clip('evenodd');
+  for (const idx of [61, 291]) {
+    const [px, py] = lmPt(lm, idx, W, H);
+    const g = c3.createRadialGradient(px, py, 0, px, py, cr * 3);
+    g.addColorStop(0,   `${darkPfx}0.60)`);
+    g.addColorStop(0.5, `${darkPfx}0.20)`);
+    g.addColorStop(1,   `${darkPfx}0)`);
+    c3.fillStyle = g;
+    c3.beginPath();
+    c3.arc(px, py, cr * 3, 0, Math.PI * 2);
+    c3.fill();
+  }
+  blitBlurred(ctx, off3, 2.5, opacity);
 }
 
 function drawBlush(
@@ -176,33 +242,47 @@ function drawBlush(
   lm: any[],
   color: string,
   opacity: number,
+  finish: string,
   W: number,
   H: number,
 ) {
-  // Face width for radius scaling (cheekbone-to-cheekbone)
   const faceW = Math.abs(lm[454].x - lm[234].x) * W;
-  const rx = faceW * 0.13;
-  const ry = rx * 0.68;
-  // Slight diagonal tilt toward nose (~15°)
-  const tilt = -Math.PI / 12;
+  const rx = faceW * 0.145;
+  const ry = rx * 0.65;
+  const tilt = -Math.PI / 10; // ~18° cheekbone angle
 
-  ctx.save();
-  // soft-light blends beautifully on all skin tones without darkening dark skin
-  ctx.globalCompositeOperation = 'soft-light';
-
+  // ── 1. Base blush — heavy blur for powder-soft diffusion ──
+  const [off1, c1] = makeOff(W, H);
   for (const clusterIdxs of [LEFT_CHEEK_IDX, RIGHT_CHEEK_IDX]) {
     const [cx, cy] = centroid(lm, clusterIdxs, W, H);
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
-    grad.addColorStop(0,    hexToRgba(color, opacity));
-    grad.addColorStop(0.55, hexToRgba(color, opacity * 0.35));
+    const grad = c1.createRadialGradient(cx, cy, 0, cx, cy, rx);
+    grad.addColorStop(0,    hexToRgba(color, 1.0));
+    grad.addColorStop(0.42, hexToRgba(color, 0.55));
     grad.addColorStop(1,    hexToRgba(color, 0));
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, tilt, 0, Math.PI * 2);
-    ctx.fill();
+    c1.fillStyle = grad;
+    c1.beginPath();
+    c1.ellipse(cx, cy, rx, ry, tilt, 0, Math.PI * 2);
+    c1.fill();
   }
+  // Heavy blur is the key — it makes it look like actual powder on skin
+  blitBlurred(ctx, off1, Math.round(rx * 0.42), opacity, 'soft-light');
 
-  ctx.restore();
+  // ── 2. Shimmer finish — bright center highlight over cheekbone apex ──
+  if (finish === 'Shimmer') {
+    const [off2, c2] = makeOff(W, H);
+    for (const clusterIdxs of [LEFT_CHEEK_IDX, RIGHT_CHEEK_IDX]) {
+      const [cx, cy] = centroid(lm, clusterIdxs, W, H);
+      const sg = c2.createRadialGradient(cx, cy, 0, cx, cy, rx * 0.52);
+      sg.addColorStop(0,   'rgba(255,255,255,0.58)');
+      sg.addColorStop(0.4, 'rgba(255,255,255,0.18)');
+      sg.addColorStop(1,   'rgba(255,255,255,0)');
+      c2.fillStyle = sg;
+      c2.beginPath();
+      c2.ellipse(cx, cy, rx * 0.52, ry * 0.48, tilt, 0, Math.PI * 2);
+      c2.fill();
+    }
+    blitBlurred(ctx, off2, Math.round(rx * 0.22), 0.80, 'screen');
+  }
 }
 
 function drawEyeShadow(
@@ -210,42 +290,92 @@ function drawEyeShadow(
   lm: any[],
   color: string,
   opacity: number,
+  finish: string,
   W: number,
   H: number,
 ) {
-  // Shadow height scales with face height (~4.5%)
   const faceH = Math.abs(lm[10].y - lm[152].y) * H;
-  const shadowH = faceH * 0.045;
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-over';
+  const shadowH = faceH * 0.052;
 
   for (const eyeIdxs of [RIGHT_EYE_UPPER, LEFT_EYE_UPPER]) {
-    const lidPts = eyeIdxs.map(i => lmPt(lm, i, W, H));
-    // Shift each lid point upward to form the top edge of the shadow band
+    const lidPts = eyeIdxs.map(i => lmPt(lm, i, W, H)) as [number, number][];
     const upPts: [number, number][] = lidPts.map(([x, y]) => [x, y - shadowH]);
 
     const botY = Math.max(...lidPts.map(p => p[1]));
     const topY = Math.min(...upPts.map(p => p[1]));
     const cx   = lidPts.reduce((a, p) => a + p[0], 0) / lidPts.length;
+    const lidW = Math.abs(lidPts[0][0] - lidPts[lidPts.length - 1][0]);
 
-    // Gradient: opaque at lash line, transparent at top edge
-    const grad = ctx.createLinearGradient(cx, botY, cx, topY);
+    // ── 1. Main shadow band — smooth curves follow lid contour ──
+    const [off1, c1] = makeOff(W, H);
+    const grad = c1.createLinearGradient(cx, botY, cx, topY);
     grad.addColorStop(0,    hexToRgba(color, opacity));
-    grad.addColorStop(0.45, hexToRgba(color, opacity * 0.5));
+    grad.addColorStop(0.48, hexToRgba(color, opacity * 0.52));
     grad.addColorStop(1,    hexToRgba(color, 0));
-    ctx.fillStyle = grad;
+    c1.fillStyle = grad;
+    c1.beginPath();
+    smoothOpenCurve(c1, upPts);
+    smoothOpenCurve(c1, [...lidPts].reverse());
+    c1.closePath();
+    c1.fill();
+    blitBlurred(ctx, off1, 3.5, 1.0);
 
-    // Band shape: upper boundary → reversed lid points → close
-    ctx.beginPath();
-    ctx.moveTo(upPts[0][0], upPts[0][1]);
-    for (const p of upPts.slice(1)) ctx.lineTo(p[0], p[1]);
-    for (const p of [...lidPts].reverse()) ctx.lineTo(p[0], p[1]);
-    ctx.closePath();
-    ctx.fill();
+    // ── 2. Lash line accent — darker concentrated stripe at the base ──
+    const lashH = shadowH * 0.25;
+    const lashPts: [number, number][] = lidPts.map(([x, y]) => [x, y - lashH]);
+    const [off2, c2] = makeOff(W, H);
+    const lashGrad = c2.createLinearGradient(cx, botY, cx, botY - lashH);
+    lashGrad.addColorStop(0,   hexToRgba(color, Math.min(1, opacity * 1.55)));
+    lashGrad.addColorStop(1,   hexToRgba(color, 0));
+    c2.fillStyle = lashGrad;
+    c2.beginPath();
+    smoothOpenCurve(c2, lashPts);
+    smoothOpenCurve(c2, [...lidPts].reverse());
+    c2.closePath();
+    c2.fill();
+    blitBlurred(ctx, off2, 1.5, 1.0);
+
+    // ── 3. Shimmer — central lid highlight ──
+    if (finish === 'Shimmer') {
+      const lidCx = (lidPts[0][0] + lidPts[lidPts.length - 1][0]) / 2;
+      const lidCy = (botY + topY) / 2;
+      const [off3, c3] = makeOff(W, H);
+      const sg = c3.createRadialGradient(lidCx, lidCy, 0, lidCx, lidCy, lidW * 0.38);
+      sg.addColorStop(0,   'rgba(255,255,255,0.58)');
+      sg.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+      sg.addColorStop(1,   'rgba(255,255,255,0)');
+      c3.fillStyle = sg;
+      c3.beginPath();
+      c3.ellipse(lidCx, lidCy, lidW * 0.38, (botY - topY) * 0.38, 0, 0, Math.PI * 2);
+      c3.fill();
+      blitBlurred(ctx, off3, 4, 0.85, 'screen');
+    }
+
+    // ── 4. Glitter — deterministic golden-angle spiral of bright dots ──
+    if (finish === 'Glitter') {
+      const lidCx = (lidPts[0][0] + lidPts[lidPts.length - 1][0]) / 2;
+      const lidCy = (botY + topY) / 2;
+      const golden = 2.39996; // golden angle radians
+      const [off4, c4] = makeOff(W, H);
+      const dotCount = 48;
+      const maxR = Math.min(lidW * 0.46, shadowH * 0.85);
+      for (let d = 0; d < dotCount; d++) {
+        const r   = Math.sqrt((d + 0.5) / dotCount) * maxR;
+        const ang = d * golden;
+        const dx  = lidCx + r * Math.cos(ang);
+        const dy  = lidCy + r * Math.sin(ang) * 0.52;
+        // Vary alpha via deterministic hash
+        const h = ((d * 1664525 + 1013904223) >>> 0) & 0xFF;
+        const a = 0.35 + (h / 255) * 0.60;
+        const dr = 0.7 + ((h >> 5) & 3) * 0.45;
+        c4.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+        c4.beginPath();
+        c4.arc(dx, dy, dr, 0, Math.PI * 2);
+        c4.fill();
+      }
+      blitBlurred(ctx, off4, 0.6, 0.90, 'screen');
+    }
   }
-
-  ctx.restore();
 }
 
 function applyMakeup(
@@ -259,9 +389,9 @@ function applyMakeup(
   if (category === 'levres')
     drawLips(ctx, lm, product.color, product.opacity, product.finish, W, H);
   else if (category === 'joues')
-    drawBlush(ctx, lm, product.color, product.opacity, W, H);
+    drawBlush(ctx, lm, product.color, product.opacity, product.finish, W, H);
   else
-    drawEyeShadow(ctx, lm, product.color, product.opacity, W, H);
+    drawEyeShadow(ctx, lm, product.color, product.opacity, product.finish, W, H);
 }
 
 // ─── Script loader ─────────────────────────────────────────────────────────
