@@ -55,7 +55,7 @@ const headerStyles = StyleSheet.create({
   wordmark: {
     fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 44,
-    color: '#FFFFFF',
+    color: colors.white,
     fontStyle: 'italic',
     letterSpacing: -0.5,
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.white,
     letterSpacing: 0.3,
   },
 

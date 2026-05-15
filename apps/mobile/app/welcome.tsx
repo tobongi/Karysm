@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontFamily: 'Poppins_600SemiBold',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.white,
     letterSpacing: 0.3,
   },
 });
