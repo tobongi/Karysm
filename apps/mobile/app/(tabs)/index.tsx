@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from 'react-native-reanimated';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
@@ -26,6 +26,7 @@ import IconSortAscending from '@tabler/icons-react-native/dist/esm/icons/IconSor
 import IconSortDescending from '@tabler/icons-react-native/dist/esm/icons/IconSortDescending.mjs';
 import IconCalendarEvent from '@tabler/icons-react-native/dist/esm/icons/IconCalendarEvent.mjs';
 import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconChevronDown from '@tabler/icons-react-native/dist/esm/icons/IconChevronDown.mjs';
 import IconCash from '@tabler/icons-react-native/dist/esm/icons/IconCash.mjs';
 import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
 import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
@@ -39,7 +40,7 @@ import { shadows } from '../../src/theme/shadows';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import { getRecentlyViewed, RecentProvider } from '../../src/lib/recently-viewed';
-import { SearchBar, CategoryIcon, ProviderCardSkeleton, SectionHeader, SearchFilters } from '../../src/components';
+import { CategoryIcon, ProviderCardSkeleton, SectionHeader, SearchFilters } from '../../src/components';
 import { PressableScale, FadeInStagger } from '../../src/components/animations';
 import MapView from '../../src/components/MapView';
 
@@ -612,6 +613,25 @@ export default function ExplorerTab() {
   const [filterMaxDistance, setFilterMaxDistance] = useState<number | null>(null);
   const [filterMinRating, setFilterMinRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('rating');
+  const [occasionContext, setOccasionContext] = useState<string | null>(null);
+  const [stickyHeight, setStickyHeight] = useState(120);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [showQuartierDropdown, setShowQuartierDropdown] = useState(false);
+  const [filterBarBottom, setFilterBarBottom] = useState(0);
+
+  // Read params from occasion booking screen
+  const params = useLocalSearchParams<{ occasion?: string; categories?: string }>();
+  useEffect(() => {
+    if (params.occasion) {
+      setOccasionContext(params.occasion);
+      const firstCategory = params.categories?.split(',')[0] ?? null;
+      if (firstCategory) {
+        setSelectedCategory(firstCategory);
+        setSelectedSubcategory(null);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setHeroIndex(i => (i + 1) % HERO_SLIDES.length), 3500);
@@ -642,6 +662,8 @@ export default function ExplorerTab() {
       if (filterIsMobile) params.set('isMobile', 'true');
       if (filterMaxPrice) params.set('maxPrice', String(filterMaxPrice));
       if (filterMinRating) params.set('minRating', String(filterMinRating));
+      const quartier = QUARTIERS.find(q => q.name === selectedQuartier);
+      if (quartier) { params.set('lat', String(quartier.lat)); params.set('lng', String(quartier.lng)); }
       if (filterMaxDistance) params.set('radius', String(filterMaxDistance));
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
@@ -651,7 +673,7 @@ export default function ExplorerTab() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [debouncedSearch, selectedCategory, selectedSubcategory, sortBy, filterIsMobile, filterMaxPrice, filterMinRating, filterMaxDistance]);
+  }, [debouncedSearch, selectedCategory, selectedSubcategory, sortBy, filterIsMobile, filterMaxPrice, filterMinRating, filterMaxDistance, selectedQuartier]);
 
   const isInitialLoad = providers.length === 0 && loading;
   useEffect(() => {
@@ -689,36 +711,30 @@ export default function ExplorerTab() {
 
   if (isProvider) return <ProviderHome user={user} />;
 
+  // ─── Suggestions data ─────────────────────────────────────────────────────
+  const TRENDING = ['Tresses box braids', 'Maquillage mariée', 'Ongles gel UV', 'Massage relaxant'];
+  const q = search.toLowerCase().trim();
+  const allServices = SERVICE_CATEGORIES.flatMap(cat => [
+    { name: cat.name, slug: cat.slug, type: 'category' as const, parent: null as string | null },
+    ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug })),
+  ]);
+  const matchingServices = q
+    ? allServices.filter(s => s.name.toLowerCase().includes(q)).slice(0, 6)
+    : allServices.filter(s => s.type === 'category');
+  const matchingQuartiers = q ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q)) : QUARTIERS;
+
+  const catIconSmall = (slug: string | null) => {
+    const props = { size: 15, color: colors.primary, strokeWidth: 1.5 };
+    if (slug === 'ongles') return <IconDiamond {...props} />;
+    if (slug === 'maquillage') return <IconBrush {...props} />;
+    if (slug === 'soins') return <IconLeaf {...props} />;
+    if (slug === 'barber') return <IconRazor {...props} />;
+    if (slug === 'spa') return <IconDroplet {...props} />;
+    return <IconScissors {...props} />;
+  };
+
   const listHeader = (
     <>
-      {/* Greeting Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>
-            {firstName ? `${greeting}, ${firstName}` : greeting}
-          </Text>
-          <Text style={styles.headerSubtitle}>Kinshasa · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Pressable
-            style={styles.bellButton}
-            onPress={() => router.push('/notifications' as any)}
-          >
-            <IconBell size={22} color={colors.text} strokeWidth={1.8} />
-          </Pressable>
-          <Pressable
-            style={styles.viewToggle}
-            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
-          >
-            {viewMode === 'list' ? (
-              <IconMap size={18} color={colors.white} strokeWidth={2} />
-            ) : (
-              <IconList size={18} color={colors.white} strokeWidth={2} />
-            )}
-          </Pressable>
-        </View>
-      </View>
-
       {/* Hero Banner — animated crossfade carousel */}
       <HeroBanner slides={HERO_SLIDES} currentIndex={heroIndex} />
 
@@ -751,165 +767,29 @@ export default function ExplorerTab() {
         </>
       )}
 
-      {/* Search with smart suggestions */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          value={search}
-          onChangeText={(text) => {
-            setSearch(text);
-            setShowSuggestions(true);
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          placeholder="Prestation, quartier, prestataire..."
-        />
-        {showSuggestions && (() => {
-          const q = search.toLowerCase();
-          const matchingQuartiers = q
-            ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q))
-            : QUARTIERS;
-          const allServices = SERVICE_CATEGORIES.flatMap(cat =>
-            [{ name: cat.name, slug: cat.slug, type: 'category' as const },
-             ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug }))]
-          );
-          const matchingServices = q
-            ? allServices.filter(s => s.name.toLowerCase().includes(q))
-            : allServices.filter(s => s.type === 'category');
-          const hasResults = matchingQuartiers.length > 0 || matchingServices.length > 0;
-          if (!hasResults && q) return null;
-          return (
-            <Pressable style={styles.suggestions} onPress={() => {}}>
-              {matchingServices.length > 0 && (
-                <>
-                  <Text style={styles.suggestionsTitle}>Prestations</Text>
-                  {matchingServices.slice(0, 5).map((svc) => (
-                    <Pressable
-                      key={svc.slug}
-                      style={styles.suggestionRow}
-                      onPress={() => {
-                        if (svc.type === 'category') {
-                          setSelectedCategory(svc.slug);
-                          setSelectedSubcategory(null);
-                        } else {
-                          setSelectedCategory((svc as any).parent || null);
-                          setSelectedSubcategory(svc.slug);
-                        }
-                        setSearch('');
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      <IconScissors size={16} color={colors.primary} strokeWidth={1.5} />
-                      <Text style={styles.suggestionText}>{svc.name}</Text>
-                      {svc.type === 'subcategory' && (
-                        <Text style={styles.suggestionHint}>
-                          {SERVICE_CATEGORIES.find(c => c.slug === (svc as any).parent)?.name}
-                        </Text>
-                      )}
-                    </Pressable>
-                  ))}
-                </>
-              )}
-              {matchingQuartiers.length > 0 && (
-                <>
-                  <Text style={styles.suggestionsTitle}>Quartiers</Text>
-                  {matchingQuartiers.map((item) => (
-                    <Pressable
-                      key={item.name}
-                      style={styles.suggestionRow}
-                      onPress={() => {
-                        setSelectedQuartier(item.name);
-                        setSearch('');
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
-                      <Text style={styles.suggestionText}>{item.name}</Text>
-                      {selectedQuartier === item.name && (
-                        <IconCheck size={14} color={colors.white} strokeWidth={3} />
-                      )}
-                    </Pressable>
-                  ))}
-                </>
-              )}
-            </Pressable>
-          );
-        })()}
-      </View>
-
-      {/* Quick filter bar */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterBar}
-        contentContainerStyle={styles.filterBarContent}
-      >
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, styles.filterChipQuartier]}
-          onPress={() => {
-            const idx = QUARTIERS.findIndex(q => q.name === selectedQuartier);
-            const next = QUARTIERS[(idx + 1) % QUARTIERS.length];
-            setSelectedQuartier(next.name);
-          }}
-        >
-          <IconMapPin size={13} color={colors.accent} strokeWidth={2} />
-          <Text style={[styles.filterChipText, { color: colors.accent, fontFamily: fonts.bodySemiBold }]}>
-            {selectedQuartier}
-          </Text>
-        </PressableScale>
-
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
-          onPress={() => setFilterIsMobile(v => !v)}
-        >
-          <IconCar size={14} color={filterIsMobile ? colors.white : colors.text} strokeWidth={1.8} />
-          <Text style={[styles.filterChipText, filterIsMobile && styles.filterChipTextActive]}>
-            Se déplace
-          </Text>
-        </PressableScale>
-
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
-          onPress={() => {
-            if (sortBy === 'price_asc') setSortBy('price_desc');
-            else if (sortBy === 'price_desc') setSortBy('rating');
-            else setSortBy('price_asc');
-          }}
-        >
-          {sortBy === 'price_desc'
-            ? <IconSortDescending size={14} color={colors.white} strokeWidth={1.8} />
-            : <IconSortAscending size={14} color={sortBy === 'price_asc' ? colors.white : colors.text} strokeWidth={1.8} />
-          }
-          <Text style={[styles.filterChipText, sortBy.startsWith('price') && styles.filterChipTextActive]}>
-            {sortBy === 'price_asc' ? 'Prix ↑' : sortBy === 'price_desc' ? 'Prix ↓' : 'Prix'}
-          </Text>
-        </PressableScale>
-
-        {[3, 5, 10].map(km => (
-          <PressableScale
-            key={km}
-            scale={0.95}
-            style={[styles.filterChip, filterMaxDistance === km && styles.filterChipActive]}
-            onPress={() => setFilterMaxDistance(v => v === km ? null : km)}
-          >
-            <Text style={[styles.filterChipText, filterMaxDistance === km && styles.filterChipTextActive]}>
-              {km} km
+      {/* Occasion context banner */}
+      {occasionContext && (
+        <View style={styles.occasionContextBanner}>
+          <IconCalendarEvent size={14} color={colors.accent} strokeWidth={2} />
+          <Text style={styles.occasionContextText}>
+            {`Résultats pour `}
+            <Text style={styles.occasionContextBold}>
+              {occasionContext.charAt(0).toUpperCase() + occasionContext.slice(1)}
             </Text>
-          </PressableScale>
-        ))}
-
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, styles.filterChipOutline]}
-          onPress={() => setShowFilters(true)}
-        >
-          <IconAdjustments size={14} color={colors.primary} strokeWidth={1.8} />
-          <Text style={[styles.filterChipText, { color: colors.primary }]}>
-            Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
           </Text>
-        </PressableScale>
-      </ScrollView>
+          <Pressable
+            onPress={() => {
+              setOccasionContext(null);
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+            }}
+            hitSlop={8}
+            style={styles.occasionContextDismiss}
+          >
+            <IconX size={13} color={colors.accent} strokeWidth={2.5} />
+          </Pressable>
+        </View>
+      )}
 
       {/* Categories */}
       <SectionHeader title="Catégories" />
@@ -1015,6 +895,91 @@ export default function ExplorerTab() {
         <Text style={styles.occasionArrow}>›</Text>
       </Pressable>
 
+      {/* Quick filter bar — sits directly above provider results */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterBarContent}
+      >
+        {/* Quartier — Modal picker */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipQuartier]}
+          onPress={() => setShowQuartierDropdown(true)}
+        >
+          <IconMapPin size={13} color={colors.accent} strokeWidth={2} />
+          <Text style={[styles.filterChipText, styles.filterChipQuartierText]}>{selectedQuartier}</Text>
+          <IconChevronDown size={11} color={colors.accent} strokeWidth={2.5} />
+        </PressableScale>
+
+        {/* Se déplace */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
+          onPress={() => setFilterIsMobile(v => !v)}
+        >
+          <IconCar size={14} color={filterIsMobile ? colors.white : colors.textSecondary} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, filterIsMobile && styles.filterChipTextActive]}>Se déplace</Text>
+        </PressableScale>
+
+        {/* Prix sort */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
+          onPress={() => {
+            if (sortBy === 'price_asc') setSortBy('price_desc');
+            else if (sortBy === 'price_desc') setSortBy('rating');
+            else setSortBy('price_asc');
+          }}
+        >
+          <IconSortAscending
+            size={14}
+            color={sortBy.startsWith('price') ? colors.white : colors.textSecondary}
+            strokeWidth={1.8}
+            style={sortBy === 'price_desc' ? { transform: [{ scaleY: -1 }] } as any : undefined}
+          />
+          <Text style={[styles.filterChipText, sortBy.startsWith('price') && styles.filterChipTextActive]}>
+            {sortBy === 'price_asc' ? 'Prix ↑' : sortBy === 'price_desc' ? 'Prix ↓' : 'Prix'}
+          </Text>
+        </PressableScale>
+
+        {/* Distance — segmented control */}
+        <View style={styles.distanceGroup}>
+          {([3, 5, 10] as const).map((km, i) => (
+            <Pressable
+              key={km}
+              style={[
+                styles.distanceOption,
+                i === 0 && styles.distanceOptionFirst,
+                i === 2 && styles.distanceOptionLast,
+                filterMaxDistance === km && styles.distanceOptionActive,
+              ]}
+              onPress={() => setFilterMaxDistance(v => v === km ? null : km)}
+            >
+              <Text style={[styles.distanceOptionText, filterMaxDistance === km && styles.distanceOptionTextActive]}>
+                {km}km
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Advanced filters */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipOutline, activeFilterCount > 0 && styles.filterChipOutlineActive]}
+          onPress={() => setShowFilters(true)}
+        >
+          <IconAdjustments size={14} color={activeFilterCount > 0 ? colors.accent : colors.primary} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, { color: activeFilterCount > 0 ? colors.accent : colors.primary }]}>Filtres</Text>
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </PressableScale>
+      </ScrollView>
+
       {/* Providers section title */}
       <SectionHeader title="Recommandées" />
 
@@ -1052,13 +1017,142 @@ export default function ExplorerTab() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
+
+        {/* ── Sticky search header ── */}
+        <View style={styles.stickyTop} onLayout={e => setStickyHeight(e.nativeEvent.layout.height)}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>
+                {firstName ? `${greeting}, ${firstName}` : greeting}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                Kinshasa · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </Text>
+            </View>
+            <View style={styles.headerRight}>
+              <Pressable style={styles.bellButton} onPress={() => router.push('/notifications' as any)}>
+                <IconBell size={22} color={colors.text} strokeWidth={1.8} />
+              </Pressable>
+              <Pressable style={styles.viewToggle} onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}>
+                {viewMode === 'list'
+                  ? <IconMap size={18} color={colors.white} strokeWidth={2} />
+                  : <IconList size={18} color={colors.white} strokeWidth={2} />}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.searchBarWrap}>
+            <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
+              <IconSearch size={18} color={searchFocused ? colors.accent : colors.textMuted} strokeWidth={1.5} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Prestation, quartier, prestataire..."
+                placeholderTextColor={colors.textMuted}
+                value={search}
+                onChangeText={text => { setSearch(text); setShowSuggestions(true); }}
+                onFocus={() => { setSearchFocused(true); setShowSuggestions(true); }}
+                onBlur={() => setSearchFocused(false)}
+                returnKeyType="search"
+              />
+              {search ? (
+                <Pressable onPress={() => { setSearch(''); setDebouncedSearch(''); }} hitSlop={8}>
+                  <IconX size={16} color={colors.textMuted} strokeWidth={2} />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        </View>
+
+        {/* ── Quartier Modal picker ── */}
+        <Modal
+          visible={showQuartierDropdown}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowQuartierDropdown(false)}
+        >
+          <Pressable style={styles.quartierModalBackdrop} onPress={() => setShowQuartierDropdown(false)}>
+            <View style={styles.quartierModalSheet}>
+              <Text style={styles.quartierModalTitle}>Choisir un quartier</Text>
+              {QUARTIERS.map(q => (
+                <Pressable
+                  key={q.name}
+                  style={styles.quartierOption}
+                  onPress={() => { setSelectedQuartier(q.name); setShowQuartierDropdown(false); }}
+                >
+                  <IconMapPin size={14} color={selectedQuartier === q.name ? colors.accent : colors.textMuted} strokeWidth={1.8} />
+                  <Text style={[styles.quartierOptionText, selectedQuartier === q.name && styles.quartierOptionTextActive]}>{q.name}</Text>
+                  {selectedQuartier === q.name && <IconCheck size={14} color={colors.accent} strokeWidth={2.5} />}
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+
+        {/* ── Suggestions overlay (outside FlatList for correct z-index) ── */}
+        {showSuggestions && (
+          <>
+            <Pressable
+              style={[StyleSheet.absoluteFill, { top: stickyHeight, zIndex: 49 }] as any}
+              onPress={() => { setShowSuggestions(false); setSearchFocused(false); }}
+            />
+            <View style={[styles.suggestionsPanel, { top: stickyHeight + 6 }]}>
+              <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                {!q && (
+                  <>
+                    <Text style={styles.suggestionsTitle}>Tendances</Text>
+                    <View style={styles.trendingRow}>
+                      {TRENDING.map(term => (
+                        <Pressable key={term} style={styles.trendingChip} onPress={() => { setSearch(term); setDebouncedSearch(term); setShowSuggestions(false); }}>
+                          <Text style={styles.trendingChipText}>{term}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                    <Text style={styles.suggestionsTitle}>Prestations</Text>
+                  </>
+                )}
+                {matchingServices.map(svc => (
+                  <Pressable
+                    key={svc.slug}
+                    style={styles.suggestionRow}
+                    onPress={() => {
+                      if (svc.type === 'category') { setSelectedCategory(svc.slug); setSelectedSubcategory(null); }
+                      else { setSelectedCategory(svc.parent); setSelectedSubcategory(svc.slug); }
+                      setSearch(''); setShowSuggestions(false);
+                    }}
+                  >
+                    <View style={styles.suggestionIconWrap}>{catIconSmall(svc.type === 'subcategory' ? svc.parent : svc.slug)}</View>
+                    <Text style={styles.suggestionText}>{svc.name}</Text>
+                    {svc.type === 'subcategory' && (
+                      <Text style={styles.suggestionHint}>{SERVICE_CATEGORIES.find(c => c.slug === svc.parent)?.name}</Text>
+                    )}
+                  </Pressable>
+                ))}
+                {matchingQuartiers.length > 0 && (
+                  <>
+                    <Text style={styles.suggestionsTitle}>Quartiers</Text>
+                    {matchingQuartiers.map(item => (
+                      <Pressable key={item.name} style={styles.suggestionRow} onPress={() => { setSelectedQuartier(item.name); setSearch(''); setShowSuggestions(false); }}>
+                        <View style={styles.suggestionIconWrap}>
+                          <IconMapPin size={15} color={colors.textMuted} strokeWidth={1.5} />
+                        </View>
+                        <Text style={styles.suggestionText}>{item.name}</Text>
+                        {selectedQuartier === item.name && <IconCheck size={14} color={colors.accent} strokeWidth={3} />}
+                      </Pressable>
+                    ))}
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </>
+        )}
+
         {(
           <FlatList
             data={loading ? [] : (viewMode === 'map' ? [] : providers)}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             ListHeaderComponent={listHeader}
-            onScrollBeginDrag={() => setShowSuggestions(false)}
+            onScrollBeginDrag={() => { setShowSuggestions(false); setSearchFocused(false); }}
             removeClippedSubviews
             maxToRenderPerBatch={5}
             windowSize={10}
@@ -1330,18 +1424,19 @@ const styles = StyleSheet.create({
   },
   suggestionsTitle: {
     fontFamily: 'Poppins_600SemiBold',
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textMuted,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingTop: 12,
+    paddingBottom: 6,
     textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   suggestionRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     gap: 10,
   },
   suggestionText: {
@@ -1383,13 +1478,72 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(139,105,82,0.25)' } as any : {}),
   },
+  distanceGroup: {
+    flexDirection: 'row',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    overflow: 'hidden',
+  },
+  distanceOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRightWidth: 1,
+    borderRightColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  distanceOptionFirst: {
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  distanceOptionLast: {
+    borderRightWidth: 0,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  distanceOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  distanceOptionText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  distanceOptionTextActive: {
+    fontFamily: fonts.bodySemiBold,
+    color: colors.white,
+  },
   filterChipOutline: {
     borderColor: colors.primary,
     backgroundColor: 'rgba(139,105,82,0.06)',
   },
+  filterChipOutlineActive: {
+    borderColor: 'rgba(91,33,182,0.3)',
+    backgroundColor: 'rgba(91,33,182,0.06)',
+  },
   filterChipQuartier: {
     borderColor: 'rgba(91,33,182,0.2)',
     backgroundColor: 'rgba(91,33,182,0.06)',
+  },
+  filterChipQuartierText: {
+    color: colors.accent,
+    fontFamily: fonts.bodySemiBold,
+  },
+  filterBadge: {
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 3,
+  },
+  filterBadgeText: {
+    fontSize: 9,
+    fontFamily: fonts.bodyBold,
+    color: colors.white,
   },
   filterChipText: {
     fontFamily: fonts.body,
@@ -1483,6 +1637,33 @@ const styles = StyleSheet.create({
   },
 
   // Occasion banner
+  occasionContextBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: screenPadding.horizontal,
+    marginTop: 8,
+    marginBottom: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(91,33,182,0.18)',
+  } as ViewStyle,
+  occasionContextText: {
+    flex: 1,
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 12,
+    color: colors.accent,
+  },
+  occasionContextBold: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  occasionContextDismiss: {
+    padding: 2,
+  },
   occasionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1714,6 +1895,133 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
+  },
+
+  // Sticky search header
+  stickyTop: {
+    backgroundColor: colors.bg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 10,
+  },
+  searchBarWrap: {
+    paddingHorizontal: screenPadding.horizontal,
+    paddingTop: 6,
+    paddingBottom: 10,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(90,56,60,0.06)' } as any : {}),
+  },
+  searchBarFocused: {
+    borderColor: colors.accent,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(91,33,182,0.10), 0 2px 8px rgba(90,56,60,0.06)' } as any : {}),
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.text,
+    padding: 0,
+    ...(Platform.OS === 'web' ? { outline: 'none' } as any : {}),
+  },
+
+  // Quartier modal
+  quartierModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  quartierModalSheet: {
+    width: '100%',
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    paddingVertical: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 16px 48px rgba(0,0,0,0.18)' } as any
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 32, elevation: 16 }),
+  },
+  quartierModalTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: colors.textMuted,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.6,
+  },
+  quartierOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  quartierOptionText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.text,
+  },
+  quartierOptionTextActive: {
+    fontFamily: fonts.bodySemiBold,
+    color: colors.accent,
+  },
+
+  // Suggestions overlay
+  suggestionsPanel: {
+    position: 'absolute',
+    left: screenPadding.horizontal,
+    right: screenPadding.horizontal,
+    zIndex: 50,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxHeight: 360,
+    overflow: 'hidden',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 8px 32px rgba(90,56,60,0.14)' } as any
+      : { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 }),
+  },
+  trendingRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 14,
+    paddingBottom: 6,
+    gap: 8,
+  },
+  trendingChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.primaryGhost,
+    borderWidth: 1,
+    borderColor: 'rgba(139,105,82,0.15)',
+  },
+  trendingChipText: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 13,
+    color: colors.primary,
+  },
+  suggestionIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Hero carousel dots
