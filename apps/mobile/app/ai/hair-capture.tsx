@@ -5,15 +5,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconRuler from '@tabler/icons-react-native/dist/esm/icons/IconRuler.mjs';
+import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
+import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
 import { showAlert } from '../../src/lib/alert';
+import CurveHeader from '../../src/components/CurveHeader';
 
 const TIPS = [
-  { icon: '☀️', title: 'Lumière naturelle', desc: 'Éclairage uniforme, pas de flash' },
-  { icon: '📐', title: 'Texture visible', desc: 'Libres ou racines/pointes exposées' },
-  { icon: '🔍', title: 'Photo proche', desc: 'Cadrez la texture, pas le visage' },
+  { icon: IconSun, title: 'Lumière naturelle', desc: 'Éclairage uniforme, pas de flash' },
+  { icon: IconRuler, title: 'Texture visible', desc: 'Libres ou racines/pointes exposées' },
+  { icon: IconSearch, title: 'Photo proche', desc: 'Cadrez la texture, pas le visage' },
 ];
 
 export default function HairCaptureScreen() {
@@ -46,17 +51,26 @@ export default function HairCaptureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Analyse cheveux</Text>
-        <Text style={styles.subtitle}>
-          Photographiez vos cheveux naturels pour connaître votre type capillaire et recevoir des conseils adaptés.
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse cheveux" showBack>
+        <Text style={styles.headerSubtitle}>
+          Découvrez votre texture capillaire
         </Text>
+      </CurveHeader>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Intro card */}
+        <View style={styles.introCard}>
+          <Text style={styles.introTitle}>Prêt(e) ?</Text>
+          <Text style={styles.introSubtitle}>
+            Photographiez vos cheveux en lumière naturelle pour connaître votre type
+          </Text>
+        </View>
 
+        <Text style={styles.tipsLabel}>Conseils pour une analyse précise</Text>
         <View style={styles.tipsRow}>
           {TIPS.map((tip, i) => (
             <View key={i} style={styles.tipCard}>
-              <Text style={styles.tipIcon}>{tip.icon}</Text>
+              <tip.icon size={20} color={colors.primary} />
               <Text style={styles.tipTitle}>{tip.title}</Text>
               <Text style={styles.tipDesc}>{tip.desc}</Text>
             </View>
@@ -67,12 +81,12 @@ export default function HairCaptureScreen() {
           <View style={styles.previewContainer}>
             <Image source={{ uri: photoUri }} style={styles.preview} />
             <Pressable style={styles.retakeButton} onPress={handleTakePhoto}>
-              <Text style={styles.retakeText}>📷 Reprendre</Text>
+              <Text style={styles.retakeText}>Reprendre</Text>
             </Pressable>
           </View>
         ) : (
           <Pressable style={styles.captureButton} onPress={handleTakePhoto}>
-            <Text style={styles.captureIcon}>💇🏿‍♀️</Text>
+            <IconScissors size={48} color={colors.primary} />
             <Text style={styles.captureText}>Photographier mes cheveux</Text>
           </Pressable>
         )}
@@ -103,7 +117,7 @@ export default function HairCaptureScreen() {
                 <Text style={styles.analyzeText}>  Analyse en cours...</Text>
               </View>
             ) : (
-              <Text style={styles.analyzeText}>✨ Analyser mes cheveux</Text>
+              <Text style={styles.analyzeText}>Analyser mes cheveux</Text>
             )}
           </Pressable>
         )}
@@ -118,21 +132,33 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1 },
   content: { padding: 20 },
-  title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+
+  headerSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)' },
+
+  // Intro card
+  introCard: {
+    backgroundColor: `rgba(91, 33, 182, 0.08)`,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: `rgba(91, 33, 182, 0.15)`,
+  },
+  introTitle: { fontSize: 18, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  introSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 19 },
+
+  tipsLabel: { fontSize: 12, fontFamily: 'Poppins_700Bold', color: colors.textMuted, letterSpacing: 1, marginBottom: 12, textTransform: 'uppercase' },
   tipsRow: { flexDirection: 'row', gap: 8, marginBottom: 24 },
   tipCard: {
     flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  tipIcon: { fontSize: 24, marginBottom: 6 },
   tipTitle: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
   tipDesc: { fontSize: 10, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginTop: 2 },
   captureButton: {
     backgroundColor: colors.primaryGhost, borderRadius: 24, padding: 40,
     alignItems: 'center', borderWidth: 2, borderColor: colors.primaryBorder, borderStyle: 'dashed',
   },
-  captureIcon: { fontSize: 48, marginBottom: 12 },
   captureText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
   previewContainer: { alignItems: 'center', marginBottom: 16 },
   preview: { width: 240, height: 240, borderRadius: 24, marginBottom: 12 },

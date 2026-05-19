@@ -9,7 +9,8 @@
     "lint": "tsc --noEmit",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "web:clear": "expo start --web --clear"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.6",

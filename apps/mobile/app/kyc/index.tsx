@@ -13,6 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import IconRosetteDiscountCheck from '@tabler/icons-react-native/dist/esm/icons/IconRosetteDiscountCheck.mjs';
 import IconCircleCheck from '@tabler/icons-react-native/dist/esm/icons/IconCircleCheck.mjs';
+import IconId from '@tabler/icons-react-native/dist/esm/icons/IconId.mjs';
+import IconRefresh from '@tabler/icons-react-native/dist/esm/icons/IconRefresh.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
@@ -33,10 +36,10 @@ interface KycStatus {
   documents: Record<string, KycDoc>;
 }
 
-const DOC_CONFIG = [
-  { type: 'ID_FRONT', label: 'Recto de la pièce d\'identité', icon: '🪪', description: 'Photo claire du recto de votre carte d\'identité ou passeport' },
-  { type: 'ID_BACK', label: 'Verso de la pièce d\'identité', icon: '🔄', description: 'Photo claire du verso de votre carte d\'identité' },
-  { type: 'SELFIE_WITH_ID', label: 'Selfie avec pièce d\'identité', icon: '🤳', description: 'Prenez-vous en photo en tenant votre pièce d\'identité à côté de votre visage' },
+const DOC_CONFIG: Array<{ type: string; label: string; Icon: React.ComponentType<{size:number;color:string}>; description: string }> = [
+  { type: 'ID_FRONT', label: 'Recto de la pièce d\'identité', Icon: IconId, description: 'Photo claire du recto de votre carte d\'identité ou passeport' },
+  { type: 'ID_BACK', label: 'Verso de la pièce d\'identité', Icon: IconRefresh, description: 'Photo claire du verso de votre carte d\'identité' },
+  { type: 'SELFIE_WITH_ID', label: 'Selfie avec pièce d\'identité', Icon: IconCamera, description: 'Prenez-vous en photo en tenant votre pièce d\'identité à côté de votre visage' },
 ];
 
 const STATUS_DISPLAY: Record<string, { label: string; color: string; bg: string }> = {
@@ -75,12 +78,19 @@ export default function KycScreen() {
       const base64 = await pickImage();
       if (!base64) { setUploading(null); return; }
 
-      await api('/kyc/upload', {
+      const res: any = await api('/kyc/upload', {
         method: 'POST',
         body: JSON.stringify({ type, data: base64 }),
       });
 
-      showAlert('Document envoyé', 'Votre document est en cours de vérification.');
+      const v = res?.verification;
+      if (v?.decision === 'APPROVED') {
+        showAlert('Identité vérifiée ✓', v.reason || 'Vérification automatique réussie.');
+      } else if (v?.decision === 'REJECTED') {
+        showAlert('Vérification refusée', v.reason || 'Veuillez re-soumettre un document de meilleure qualité.');
+      } else {
+        showAlert('Document envoyé', 'Vérification automatique en cours…');
+      }
       fetchStatus();
     } catch (err: any) {
       showAlert('Erreur', err.message || 'Impossible d\'envoyer le document');
@@ -120,6 +130,16 @@ export default function KycScreen() {
           Soumettez vos documents pour obtenir le badge vérifié sur votre profil.
         </Text>
 
+        <View style={styles.aiBanner}>
+          <Text style={styles.aiBannerEmoji}>⚡</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiBannerTitle}>Vérification automatique par IA</Text>
+            <Text style={styles.aiBannerSub}>
+              Soumettez les 3 documents — décision en quelques secondes, plus de délais d'attente.
+            </Text>
+          </View>
+        </View>
+
         {/* Overall status */}
         <View style={[styles.statusCard, { borderColor: statusDisplay.color }]}>
           <View style={[styles.statusBadge, { backgroundColor: statusDisplay.bg }]}>
@@ -151,7 +171,9 @@ export default function KycScreen() {
           return (
             <View key={config.type} style={styles.docCard}>
               <View style={styles.docHeader}>
-                <Text style={styles.docIcon}>{config.icon}</Text>
+                <View style={styles.docIconWrap}>
+                  <config.Icon size={24} color={colors.primary} />
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.docLabel}>{config.label}</Text>
                   <Text style={styles.docDescription}>{config.description}</Text>
@@ -189,14 +211,14 @@ export default function KycScreen() {
                     <ActivityIndicator size="small" color={colors.white} />
                   ) : (
                     <Text style={styles.uploadText}>
-                      {docStatus === 'REJECTED' ? '🔄 Re-soumettre' : '📷 Prendre en photo'}
+                      {docStatus === 'REJECTED' ? 'Re-soumettre' : 'Prendre en photo'}
                     </Text>
                   )}
                 </Pressable>
               )}
 
               {docStatus === 'PENDING' && (
-                <Text style={styles.pendingHint}>⏳ En cours de vérification...</Text>
+                <Text style={styles.pendingHint}>En cours de vérification...</Text>
               )}
 
               {docStatus === 'APPROVED' && (
@@ -222,7 +244,19 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 
   title: { fontSize: 24, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 14 },
+
+  // AI banner
+  aiBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    borderRadius: 16, padding: 14,
+    marginBottom: 20,
+    borderWidth: 1, borderColor: 'rgba(91,33,182,0.18)',
+  },
+  aiBannerEmoji: { fontSize: 24 },
+  aiBannerTitle: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 2 },
+  aiBannerSub: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 15 },
 
   // Overall status
   statusCard: {
@@ -242,7 +276,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border, marginBottom: 16,
   },
   docHeader: { flexDirection: 'row', marginBottom: 12 },
-  docIcon: { fontSize: 28, marginRight: 12, marginTop: 2 },
+  docIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   docLabel: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 2 },
   docDescription: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, lineHeight: 16 },
 

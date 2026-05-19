@@ -10,6 +10,11 @@ import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
 import { pickAndUploadImage } from '../../src/lib/upload';
+import CurveHeader from '../../src/components/CurveHeader';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconCircleCheck from '@tabler/icons-react-native/dist/esm/icons/IconCircleCheck.mjs';
 
 const CITIES = ['Kinshasa', 'Douala', 'Libreville', 'Abidjan', 'Dakar'];
 
@@ -26,15 +31,6 @@ interface Category {
   icon?: string;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'Coiffure': '\uD83D\uDC87\u200D\u2640\uFE0F',
-  'Ongles': '\uD83D\uDC85',
-  'Maquillage': '\uD83D\uDC84',
-  'Soins': '\uD83D\uDC86\u200D\u2640\uFE0F',
-  'Barber': '\u2702\uFE0F',
-  'Spa': '\uD83E\uDDD6\u200D\u2640\uFE0F',
-};
-
 export default function CreateRequestScreen() {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
@@ -46,6 +42,7 @@ export default function CreateRequestScreen() {
   const [locationType, setLocationType] = useState('CLIENT');
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [preferredDate, setPreferredDate] = useState('');
+  const [preferredTime, setPreferredTime] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [selfie, setSelfie] = useState<string | null>(null);
@@ -129,7 +126,9 @@ export default function CreateRequestScreen() {
         flexibleDate,
       };
       if (preferredDate && !flexibleDate) {
-        body.preferredDate = preferredDate;
+        // Combine date + time so the backend stores a real moment (not midnight)
+        const t = /^\d{2}:\d{2}$/.test(preferredTime.trim()) ? preferredTime.trim() : '00:00';
+        body.preferredDate = `${preferredDate}T${t}:00`;
       }
       if (photos.length > 0) body.photos = photos;
       if (selfie) body.selfieUrl = selfie;
@@ -157,11 +156,14 @@ export default function CreateRequestScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <CurveHeader title="Nouvelle demande" showBack />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.sectionTitle}>Que recherchez-vous ?</Text>
+        {/* Section 1: Quoi */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Quoi</Text>
 
-        {/* Title */}
-        <Text style={styles.label}>Titre</Text>
+          {/* Title */}
+          <Text style={styles.label}>Titre</Text>
         <TextInput
           style={styles.input}
           placeholder="Ex: Tresses collées pour mariage"
@@ -171,49 +173,154 @@ export default function CreateRequestScreen() {
           maxLength={200}
         />
 
-        {/* Category */}
-        <Text style={styles.label}>Catégorie</Text>
-        {loadingCategories ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
-        ) : (
-          <View style={styles.categoryGrid}>
-            {categories.map((cat) => (
+          {/* Category */}
+          <Text style={styles.label}>Catégorie</Text>
+          {loadingCategories ? (
+            <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
+          ) : (
+            <View style={styles.categoryGrid}>
+              {categories.map((cat) => (
+                <Pressable
+                  key={cat.id}
+                  style={[styles.categoryChip, categoryId === cat.id && styles.categoryChipActive]}
+                  onPress={() => setCategoryId(cat.id)}
+                >
+                  <Text style={[styles.categoryText, categoryId === cat.id && styles.categoryTextActive]}>
+                    {cat.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {/* Description */}
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Décrivez le résultat souhaité, votre type de cheveux, toute info utile..."
+            placeholderTextColor={colors.textMuted}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+            maxLength={2000}
+          />
+        </View>
+
+        {/* Section 2: Quand */}
+        <View style={styles.section}>
+
+          <Text style={styles.sectionLabel}>Quand</Text>
+          <Text style={styles.label}>Date souhaitée</Text>
+          <View style={styles.flexRow}>
+            <Text style={styles.flexLabel}>Date flexible</Text>
+            <Switch
+              value={flexibleDate}
+              onValueChange={setFlexibleDate}
+              trackColor={{ true: colors.primary, false: colors.n300 }}
+              thumbColor={colors.white}
+            />
+          </View>
+          {!flexibleDate && (
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TextInput
+                style={[styles.input, { flex: 2 }]}
+                placeholder="AAAA-MM-JJ"
+                placeholderTextColor={colors.textMuted}
+                value={preferredDate}
+                onChangeText={setPreferredDate}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="HH:MM"
+                placeholderTextColor={colors.textMuted}
+                value={preferredTime}
+                onChangeText={setPreferredTime}
+                maxLength={5}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Section 3: Où */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Où</Text>
+
+          {/* City */}
+          <Text style={styles.label}>Ville</Text>
+          <View style={styles.cityRow}>
+            {CITIES.map((c) => (
               <Pressable
-                key={cat.id}
-                style={[styles.categoryChip, categoryId === cat.id && styles.categoryChipActive]}
-                onPress={() => setCategoryId(cat.id)}
+                key={c}
+                style={[styles.cityChip, city === c && styles.cityChipActive]}
+                onPress={() => setCity(c)}
               >
-                <Text style={styles.categoryIcon}>{CATEGORY_ICONS[cat.name] || '\u2728'}</Text>
-                <Text style={[styles.categoryText, categoryId === cat.id && styles.categoryTextActive]}>
-                  {cat.name}
+                <Text style={[styles.cityText, city === c && styles.cityTextActive]}>{c}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Location type */}
+          <Text style={styles.label}>Lieu de prestation</Text>
+          <View style={styles.cityRow}>
+            {LOCATION_TYPES.map((lt) => (
+              <Pressable
+                key={lt.value}
+                style={[styles.cityChip, locationType === lt.value && styles.cityChipActive]}
+                onPress={() => setLocationType(lt.value)}
+              >
+                <Text style={[styles.cityText, locationType === lt.value && styles.cityTextActive]}>
+                  {lt.label}
                 </Text>
               </Pressable>
             ))}
           </View>
-        )}
+        </View>
 
-        {/* Description */}
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Décrivez le résultat souhaité, votre type de cheveux, toute info utile..."
-          placeholderTextColor={colors.textMuted}
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={4}
-          maxLength={2000}
-        />
+        {/* Section 4: Combien */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Combien</Text>
 
-        {/* Photos d'inspiration */}
-        <Text style={styles.label}>Photos d'inspiration</Text>
+          {/* Budget */}
+          <Text style={styles.label}>Budget (FC)</Text>
+          <View style={styles.budgetRow}>
+            <View style={styles.budgetInputWrap}>
+              <Text style={styles.budgetLabel}>Min</Text>
+              <TextInput
+                style={styles.budgetInput}
+                placeholder="5 000"
+                placeholderTextColor={colors.textMuted}
+                value={budgetMin}
+                onChangeText={setBudgetMin}
+                keyboardType="numeric"
+              />
+            </View>
+            <Text style={styles.budgetSep}>—</Text>
+            <View style={styles.budgetInputWrap}>
+              <Text style={styles.budgetLabel}>Max</Text>
+              <TextInput
+                style={styles.budgetInput}
+                placeholder="20 000"
+                placeholderTextColor={colors.textMuted}
+                value={budgetMax}
+                onChangeText={setBudgetMax}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Section 5: Photos d'inspiration */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Medias</Text>
+          <Text style={styles.label}>Photos d'inspiration</Text>
         {photos.length > 0 && (
           <View style={styles.photoGrid}>
             {photos.map((uri, i) => (
               <View key={i} style={styles.photoThumb}>
                 <Image source={{ uri }} style={styles.photoThumbImage} />
                 <Pressable style={styles.photoRemove} onPress={() => handleRemovePhoto(i)}>
-                  <Text style={styles.photoRemoveText}>{'\u2715'}</Text>
+                  <IconX size={14} color={colors.white} />
                 </Pressable>
               </View>
             ))}
@@ -224,7 +331,7 @@ export default function CreateRequestScreen() {
             {uploadingPhoto ? (
               <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
             ) : (
-              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF8'}</Text>
+              <IconPhoto size={20} color={colors.primary} />
             )}
             <Text style={styles.photoButtonText}>
               {photos.length === 0 ? "Ajouter des photos d'inspiration" : `Ajouter une photo (${photos.length}/5)`}
@@ -232,104 +339,26 @@ export default function CreateRequestScreen() {
           </Pressable>
         )}
 
-        {/* Selfie */}
-        <Text style={styles.label}>Selfie (optionnel)</Text>
-        {selfie ? (
-          <View style={styles.selfieContainer}>
-            <Image source={{ uri: selfie }} style={styles.selfieImage} />
-            <Pressable style={styles.selfieChange} onPress={handleAddSelfie}>
-              <Text style={styles.selfieChangeText}>Changer</Text>
+          {/* Selfie */}
+          <Text style={styles.label}>Selfie (optionnel)</Text>
+          {selfie ? (
+            <View style={styles.selfieContainer}>
+              <Image source={{ uri: selfie }} style={styles.selfieImage} />
+              <Pressable style={styles.selfieChange} onPress={handleAddSelfie}>
+                <Text style={styles.selfieChangeText}>Changer</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.photoButton} onPress={handleAddSelfie} disabled={uploadingSelfie}>
+              {uploadingSelfie ? (
+                <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
+              ) : (
+                <IconCamera size={20} color={colors.primary} />
+              )}
+              <Text style={styles.photoButtonText}>Ajouter un selfie</Text>
             </Pressable>
-          </View>
-        ) : (
-          <Pressable style={styles.photoButton} onPress={handleAddSelfie} disabled={uploadingSelfie}>
-            {uploadingSelfie ? (
-              <ActivityIndicator color={colors.primary} style={{ marginRight: 8 }} />
-            ) : (
-              <Text style={styles.photoButtonIcon}>{'\uD83D\uDCF7'}</Text>
-            )}
-            <Text style={styles.photoButtonText}>Ajouter un selfie</Text>
-          </Pressable>
-        )}
-        <Text style={styles.hint}>Aide les prestataires a mieux vous conseiller</Text>
-
-        {/* Budget */}
-        <Text style={styles.label}>Budget (FC)</Text>
-        <View style={styles.budgetRow}>
-          <View style={styles.budgetInputWrap}>
-            <Text style={styles.budgetLabel}>Min</Text>
-            <TextInput
-              style={styles.budgetInput}
-              placeholder="5 000"
-              placeholderTextColor={colors.textMuted}
-              value={budgetMin}
-              onChangeText={setBudgetMin}
-              keyboardType="numeric"
-            />
-          </View>
-          <Text style={styles.budgetSep}>—</Text>
-          <View style={styles.budgetInputWrap}>
-            <Text style={styles.budgetLabel}>Max</Text>
-            <TextInput
-              style={styles.budgetInput}
-              placeholder="20 000"
-              placeholderTextColor={colors.textMuted}
-              value={budgetMax}
-              onChangeText={setBudgetMax}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
-
-        {/* Date */}
-        <Text style={styles.label}>Date souhaitée</Text>
-        <View style={styles.flexRow}>
-          <Text style={styles.flexLabel}>Date flexible</Text>
-          <Switch
-            value={flexibleDate}
-            onValueChange={setFlexibleDate}
-            trackColor={{ true: colors.primary, false: colors.n300 }}
-            thumbColor={colors.white}
-          />
-        </View>
-        {!flexibleDate && (
-          <TextInput
-            style={styles.input}
-            placeholder="AAAA-MM-JJ"
-            placeholderTextColor={colors.textMuted}
-            value={preferredDate}
-            onChangeText={setPreferredDate}
-          />
-        )}
-
-        {/* City */}
-        <Text style={styles.label}>Ville</Text>
-        <View style={styles.cityRow}>
-          {CITIES.map((c) => (
-            <Pressable
-              key={c}
-              style={[styles.cityChip, city === c && styles.cityChipActive]}
-              onPress={() => setCity(c)}
-            >
-              <Text style={[styles.cityText, city === c && styles.cityTextActive]}>{c}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Location type */}
-        <Text style={styles.label}>Lieu de prestation</Text>
-        <View style={styles.cityRow}>
-          {LOCATION_TYPES.map((lt) => (
-            <Pressable
-              key={lt.value}
-              style={[styles.cityChip, locationType === lt.value && styles.cityChipActive]}
-              onPress={() => setLocationType(lt.value)}
-            >
-              <Text style={[styles.cityText, locationType === lt.value && styles.cityTextActive]}>
-                {lt.label}
-              </Text>
-            </Pressable>
-          ))}
+          )}
+          <Text style={styles.hint}>Aide les prestataires a mieux vous conseiller</Text>
         </View>
 
         {/* Submit */}
@@ -350,7 +379,7 @@ export default function CreateRequestScreen() {
       <Modal visible={showSuccess} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalEmoji}>{'\u2705'}</Text>
+            <IconCircleCheck size={48} color={colors.success} style={{ marginBottom: 12 }} />
             <Text style={styles.modalTitle}>Demande publiée !</Text>
             <Text style={styles.modalText}>
               Les prestataires de votre ville vont pouvoir vous envoyer des propositions.
@@ -384,8 +413,23 @@ export default function CreateRequestScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
-  sectionTitle: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 20 },
-  label: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginTop: 16, marginBottom: 8 },
+  section: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 14,
+  },
+  label: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginTop: 12, marginBottom: 8 },
   hint: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 4 },
   input: {
     backgroundColor: colors.card,
@@ -421,7 +465,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryGhost,
     borderColor: colors.primary,
   },
-  categoryIcon: { fontSize: 16, marginRight: 6 },
   categoryText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
   categoryTextActive: { color: colors.primary, fontFamily: 'Poppins_700Bold' },
   photoButton: {
@@ -435,7 +478,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderStyle: 'dashed',
   },
-  photoButtonIcon: { fontSize: 20, marginRight: 8 },
   photoButtonText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.textSecondary },
   photoGrid: {
     flexDirection: 'row',
@@ -465,11 +507,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  photoRemoveText: {
-    color: colors.white,
-    fontSize: 12,
-    fontFamily: 'Poppins_700Bold',
   },
   selfieContainer: {
     flexDirection: 'row',
@@ -563,7 +600,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     alignItems: 'center',
   },
-  modalEmoji: { fontSize: 48, marginBottom: 12 },
   modalTitle: { fontSize: 20, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 8 },
   modalText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
   modalBtn: {

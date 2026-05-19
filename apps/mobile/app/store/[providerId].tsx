@@ -9,14 +9,15 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
-import IconFilter from '@tabler/icons-react-native/dist/esm/icons/IconFilter.mjs';
 import IconSearch from '@tabler/icons-react-native/dist/esm/icons/IconSearch.mjs';
 import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import { colors } from '../../src/theme/colors';
+import { PressableScale } from '../../src/components/animations';
 
 const CATEGORIES = ['Tout', 'Soins', 'Cheveux', 'Huiles', 'Accessoires'];
 
@@ -51,15 +52,15 @@ export default function StoreScreen() {
   }, [activeCategory, search]);
 
   const renderProduct = ({ item, index }: { item: typeof MOCK_PRODUCTS[0]; index: number }) => (
-    <Pressable
+    <PressableScale
       style={[styles.productCard, index % 2 === 0 ? { marginRight: CARD_GAP } : null]}
       onPress={() => router.push(`/store/product/${item.id}`)}
     >
       {/* Image placeholder */}
       <View style={styles.productImage}>
-        <Pressable style={styles.heartButton}>
-          <IconHeart size={20} color={colors.white} />
-        </Pressable>
+        <PressableScale style={styles.heartButton}>
+          <IconHeart size={20} color={colors.accent} fill={colors.accent} />
+        </PressableScale>
       </View>
 
       {/* Info */}
@@ -67,7 +68,6 @@ export default function StoreScreen() {
         <Text style={styles.productName} numberOfLines={2}>
           {item.name}
         </Text>
-        <Text style={styles.productProvider}>{item.provider}</Text>
         <View style={styles.priceRow}>
           <Text style={styles.productPrice}>{item.price.toLocaleString()} FC</Text>
           {item.oldPrice && (
@@ -75,25 +75,23 @@ export default function StoreScreen() {
           )}
         </View>
         <View style={styles.ratingRow}>
-          <IconStar size={12} color={colors.star} fill={colors.star} />
+          <IconStar size={13} color={colors.star} fill={colors.star} />
           <Text style={styles.ratingText}>{item.rating}</Text>
           <Text style={styles.reviewCount}>({item.reviews})</Text>
         </View>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <PressableScale onPress={() => router.back()} hitSlop={8}>
           <IconArrowLeft size={24} color={colors.accent} />
-        </Pressable>
+        </PressableScale>
         <Text style={styles.headerTitle}>Boutique</Text>
-        <Pressable hitSlop={8}>
-          <IconFilter size={22} color={colors.accent} />
-        </Pressable>
+        <View style={{ width: 24 }} />
       </View>
 
       {/* Search bar */}
@@ -115,7 +113,7 @@ export default function StoreScreen() {
         contentContainerStyle={styles.chipsContainer}
       >
         {CATEGORIES.map((cat) => (
-          <Pressable
+          <PressableScale
             key={cat}
             style={[
               styles.chip,
@@ -131,7 +129,7 @@ export default function StoreScreen() {
             >
               {cat}
             </Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </ScrollView>
 
@@ -197,15 +195,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipInactive: {
     backgroundColor: colors.card,
   },
   chipText: {
-    fontFamily: 'Poppins_500Medium',
+    fontFamily: 'Poppins_600SemiBold',
     fontSize: 13,
   },
   chipTextActive: {
@@ -241,15 +242,10 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   productName: {
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 13,
-    color: colors.text,
-  },
-  productProvider: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
+    color: colors.accent,
+    lineHeight: 16,
   },
   priceRow: {
     flexDirection: 'row',

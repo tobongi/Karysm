@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 
 type RatingSize = 'sm' | 'md';
 
@@ -15,7 +16,7 @@ export default function Rating({ rating, reviewCount, size = 'md' }: RatingProps
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.star, { fontSize: isSm ? 14 : 16 }]}>{'\u2605'}</Text>
+      <IconStar size={isSm ? 14 : 16} color={colors.star} fill={colors.star} />
       <Text style={[styles.rating, { fontSize: isSm ? 12 : 14 }]}>
         {rating.toFixed(1)}
       </Text>
@@ -33,9 +34,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  star: {
-    color: colors.star,
   },
   rating: {
     fontFamily: fonts.bodyBold,

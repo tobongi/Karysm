@@ -19,9 +19,12 @@ import { radius, spacing, screenPadding } from '../../src/theme/spacing';
 import { shadows } from '../../src/theme/shadows';
 import Skeleton from '../../src/components/Skeleton';
 import CurveHeader from '../../src/components/CurveHeader';
-import { PressableScale } from '../../src/components/animations';
+import { PressableScale, BounceScale } from '../../src/components/animations';
 import { api } from '../../src/lib/api';
+import { useAuth } from '../../src/lib/auth-context';
 import { imgUrl } from '../../src/lib/image';
+import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 
 interface FeedProvider {
   id: string;
@@ -44,28 +47,6 @@ interface FeedItem {
   provider: FeedProvider;
 }
 
-const LOOKBOOK_IMAGES = [
-  require('../../assets/images/lookbook/look_tresses.webp'),
-  require('../../assets/images/lookbook/look_ongles.webp'),
-  require('../../assets/images/lookbook/look_mariee.webp'),
-  require('../../assets/images/lookbook/look_fade.webp'),
-  require('../../assets/images/lookbook/look_braids.webp'),
-  require('../../assets/images/lookbook/look_soins.webp'),
-  require('../../assets/images/lookbook/look_stiletto.webp'),
-  require('../../assets/images/lookbook/look_cornrows.webp'),
-];
-
-const MOCK_FEED: FeedItem[] = [
-  { id: 'm1', imageUrl: null, caption: 'Tresses coll\u00e9es avec perles dor\u00e9es \u2728', serviceTag: 'coiffure', savedCount: 24, createdAt: '2026-04-01', provider: { id: 'p1', slug: 'amina-beauty', displayName: 'Amina Beauty', city: 'Kinshasa', avgRating: 4.8, avatar: null, instagramHandle: '@amina.beauty', tiktokHandle: null } },
-  { id: 'm2', imageUrl: null, caption: 'Gel UV effet marbre rose', serviceTag: 'ongles', savedCount: 18, createdAt: '2026-04-01', provider: { id: 'p2', slug: 'nails-by-grace', displayName: 'Nails by Grace', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@nailsbygrace', tiktokHandle: '@nailsbygrace' } },
-  { id: 'm3', imageUrl: null, caption: 'Maquillage mari\u00e9e \u2014 teint lumineux Monk 7', serviceTag: 'maquillage', savedCount: 42, createdAt: '2026-03-30', provider: { id: 'p3', slug: 'glam-by-sarah', displayName: 'Glam by Sarah', city: 'Kinshasa', avgRating: 4.7, avatar: null, instagramHandle: '@glambysarah', tiktokHandle: null } },
-  { id: 'm4', imageUrl: null, caption: 'Fade d\u00e9grad\u00e9 + barbe sculpt\u00e9e', serviceTag: 'barber', savedCount: 31, createdAt: '2026-03-29', provider: { id: 'p4', slug: 'king-barber', displayName: 'King Barber', city: 'Kinshasa', avgRating: 4.6, avatar: null, instagramHandle: null, tiktokHandle: '@kingbarber243' } },
-  { id: 'm5', imageUrl: null, caption: 'Box braids mi-longueur couleur caramel \ud83e\udd0e', serviceTag: 'coiffure', savedCount: 56, createdAt: '2026-03-28', provider: { id: 'p1', slug: 'amina-beauty', displayName: 'Amina Beauty', city: 'Kinshasa', avgRating: 4.8, avatar: null, instagramHandle: '@amina.beauty', tiktokHandle: null } },
-  { id: 'm6', imageUrl: null, caption: 'Soin visage hydratant \u2014 peau \u00e9clatante', serviceTag: 'soins', savedCount: 15, createdAt: '2026-03-27', provider: { id: 'p5', slug: 'zen-beauty-spa', displayName: 'Zen Beauty Spa', city: 'Kinshasa', avgRating: 4.5, avatar: null, instagramHandle: '@zenbeautyspa', tiktokHandle: null } },
-  { id: 'm7', imageUrl: null, caption: 'Extension ongles stiletto noir mat + strass', serviceTag: 'ongles', savedCount: 37, createdAt: '2026-03-26', provider: { id: 'p2', slug: 'nails-by-grace', displayName: 'Nails by Grace', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@nailsbygrace', tiktokHandle: '@nailsbygrace' } },
-  { id: 'm8', imageUrl: null, caption: 'Cornrows avec fils dor\u00e9s \u2014 style Fulani', serviceTag: 'coiffure', savedCount: 63, createdAt: '2026-03-25', provider: { id: 'p6', slug: 'tresses-de-mama', displayName: 'Tresses de Mama', city: 'Kinshasa', avgRating: 4.9, avatar: null, instagramHandle: '@tressesdemama', tiktokHandle: '@tressesdemama' } },
-];
-
 const CATEGORY_FILTERS = [
   { key: null, label: 'Tout' },
   { key: 'coiffure', label: 'Coiffure' },
@@ -76,16 +57,17 @@ const CATEGORY_FILTERS = [
   { key: 'spa', label: 'Spa' },
 ];
 
+
 function LookCardSkeleton({ index }: { index: number }) {
   const h = index % 3 === 0 ? 240 : 180;
   return (
     <View style={styles.cardWrapper}>
       <View style={styles.card}>
-        <Skeleton width="100%" height={h} borderRadius={0} style={{ borderTopLeftRadius: 18, borderTopRightRadius: 18 }} />
-        <View style={{ padding: 10 }}>
+        <Skeleton width="100%" height={h} borderRadius={0} style={{ borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md }} />
+        <View style={{ padding: spacing.sm }}>
           <Skeleton width="80%" height={12} borderRadius={6} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <Skeleton width={22} height={22} borderRadius={11} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm }}>
+            <Skeleton width={20} height={20} borderRadius={10} />
             <Skeleton width="50%" height={11} borderRadius={6} />
           </View>
         </View>
@@ -95,6 +77,7 @@ function LookCardSkeleton({ index }: { index: number }) {
 }
 
 export default function LookbookTabScreen() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<'discover' | 'saved'>('discover');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [savedItems, setSavedItems] = useState<FeedItem[]>([]);
@@ -105,6 +88,7 @@ export default function LookbookTabScreen() {
   const [category, setCategory] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [bounceId, setBounceId] = useState<string | null>(null);
 
   const fetchFeed = useCallback(
     async (pageNum = 1, append = false) => {
@@ -131,7 +115,6 @@ export default function LookbookTabScreen() {
         setHasMore(newItems.length === 20);
         setPage(pageNum);
       } catch {
-        // API failed/timed out — stop pagination, fall back to mock on initial load
         setHasMore(false);
         if (!append) setItems([]);
       } finally {
@@ -144,8 +127,8 @@ export default function LookbookTabScreen() {
   );
 
   const fetchSaved = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res: any = await api('/feed/saved');
       const data: FeedItem[] = res.data || [];
       setSavedItems(data);
@@ -157,7 +140,22 @@ export default function LookbookTabScreen() {
     }
   }, []);
 
+  // Pre-populate heart state on mount from DB
+  useEffect(() => {
+    if (!user) return;
+    api('/feed/saved').then((res: any) => {
+      const data: FeedItem[] = res.data || [];
+      setSavedIds(new Set(data.map((d) => d.id)));
+    }).catch(() => {});
+  }, [user]);
+
   const toggleSave = useCallback(async (itemId: string) => {
+    if (!user) {
+      router.push('/auth/login' as any);
+      return;
+    }
+    // Trigger bounce animation
+    setBounceId(itemId);
     // Optimistic update
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -165,7 +163,6 @@ export default function LookbookTabScreen() {
       else next.add(itemId);
       return next;
     });
-
     try {
       await api(`/feed/${itemId}/save`, { method: 'POST' });
     } catch {
@@ -177,7 +174,7 @@ export default function LookbookTabScreen() {
         return next;
       });
     }
-  }, []);
+  }, [user]);
 
   // Fetch feed when category changes or tab switches to discover
   useEffect(() => {
@@ -215,13 +212,11 @@ export default function LookbookTabScreen() {
     setHasMore(true);
   }, []);
 
-  const currentData = tab === 'discover'
-    ? (items.length > 0 ? items : (loading ? [] : MOCK_FEED))
-    : savedItems;
+  const currentData = tab === 'discover' ? items : savedItems;
 
   const renderCard = useCallback(
     ({ item, index }: { item: FeedItem; index: number }) => {
-      const imageHeight = index % 3 === 0 ? 240 : 180;
+      const imageHeight = index % 3 === 0 ? 260 : 200;
       const isSaved = savedIds.has(item.id);
 
       return (
@@ -230,48 +225,63 @@ export default function LookbookTabScreen() {
             style={styles.card}
             onPress={() => router.push(`/provider/${item.provider.slug}` as any)}
           >
-            {/* Image */}
-            {item.imageUrl ? (
+            {/* Image container with overlays */}
+            <View style={[styles.imageContainer, { height: imageHeight }]}>
               <Image
-                source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl }}
-                style={[styles.lookImage, { height: imageHeight }]}
+                source={{ uri: imgUrl(item.imageUrl, 400) || item.imageUrl || '' }}
+                style={styles.lookImage}
                 resizeMode="cover"
               />
-            ) : (
-              <Image
-                source={LOOKBOOK_IMAGES[index % 8]}
-                style={[styles.lookImage, { height: imageHeight }]}
-                resizeMode="cover"
-              />
-            )}
 
-            {/* Save button overlay */}
-            <Pressable
-              style={styles.saveButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                toggleSave(item.id);
-              }}
-              hitSlop={8}
-            >
-              <Text style={styles.saveIcon}>{isSaved ? '🔖' : '☆'}</Text>
-            </Pressable>
+              {/* TOP-LEFT: service tag badge */}
+              {item.serviceTag && (
+                <View style={styles.serviceTagBadge}>
+                  <Text style={styles.serviceTagText}>{item.serviceTag}</Text>
+                </View>
+              )}
 
-            {/* Service tag overlay */}
-            {item.serviceTag && (
-              <View style={styles.serviceTagBadge}>
-                <Text style={styles.serviceTagText}>{item.serviceTag}</Text>
-              </View>
-            )}
+              {/* TOP-RIGHT: heart save button with bounce */}
+              <BounceScale trigger={bounceId === item.id} style={styles.saveButtonWrapper}>
+                <Pressable
+                  style={styles.saveButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleSave(item.id);
+                  }}
+                  hitSlop={8}
+                >
+                  <IconHeart
+                    size={16}
+                    color={isSaved ? colors.error : colors.white}
+                    fill={isSaved ? colors.error : 'none'}
+                  />
+                </Pressable>
+              </BounceScale>
 
-            {/* Bottom info */}
+              {/* BOTTOM gradient overlay */}
+              <View style={styles.lookInfoGradient} pointerEvents="none" />
+            </View>
+
+            {/* Info section below image */}
             <View style={styles.lookInfo}>
+              {/* Star rating */}
+              <View style={styles.ratingRow}>
+                <IconStar size={11} color={colors.star} fill={colors.star} />
+                <Text style={styles.ratingText}>
+                  {item.provider.avgRating.toFixed(1)}
+                </Text>
+                <Text style={styles.savedCount}>({item.savedCount})</Text>
+              </View>
+
+              {/* Caption / title */}
               {item.caption && (
                 <Text style={styles.lookCaption} numberOfLines={2}>
                   {item.caption}
                 </Text>
               )}
-              <View style={styles.lookProviderRow}>
+
+              {/* Provider row */}
+              <View style={styles.lookBottomRow}>
                 <View style={styles.lookProviderAvatar}>
                   <Text style={styles.lookProviderInitial}>
                     {item.provider.displayName?.[0] || '?'}
@@ -280,29 +290,26 @@ export default function LookbookTabScreen() {
                 <Text style={styles.lookProviderName} numberOfLines={1}>
                   {item.provider.displayName}
                 </Text>
-                {item.provider.instagramHandle && (
-                  <Text style={styles.lookSocial}>📷</Text>
-                )}
               </View>
-            </View>
 
-            {/* "Je veux ça" mini button */}
-            <Pressable
-              style={styles.wantButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                router.push(
-                  `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
-                );
-              }}
-            >
-              <Text style={styles.wantButtonText}>Je veux ça</Text>
-            </Pressable>
+              {/* "Je veux ça" button */}
+              <Pressable
+                style={styles.wantButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push(
+                    `/request/create?inspiration=${encodeURIComponent(item.caption || '')}&category=${item.serviceTag || ''}` as any
+                  );
+                }}
+              >
+                <Text style={styles.wantButtonText}>Je veux ça</Text>
+              </Pressable>
+            </View>
           </PressableScale>
         </View>
       );
     },
-    [savedIds, toggleSave]
+    [savedIds, toggleSave, bounceId]
   );
 
   const renderSkeletons = () => (
@@ -317,15 +324,30 @@ export default function LookbookTabScreen() {
     if (loading) return renderSkeletons();
 
     if (tab === 'saved') {
+      if (!user) {
+        return (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Connectez-vous pour sauvegarder</Text>
+            <Text style={styles.emptySubtitle}>
+              Créez un compte pour retrouver vos looks préférés à tout moment
+            </Text>
+            <Pressable style={styles.emptyCta} onPress={() => router.push('/auth/login' as any)}>
+              <Text style={styles.emptyCtaText}>Se connecter</Text>
+            </Pressable>
+          </View>
+        );
+      }
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🔖</Text>
+          <View style={styles.emptyHeartIcon}>
+            <IconHeart size={32} color={colors.accent} stroke={1.5} />
+          </View>
           <Text style={styles.emptyTitle}>Aucun look sauvegardé</Text>
           <Text style={styles.emptySubtitle}>
-            Parcourez les réalisations et sauvegardez vos préférés
+            Touchez le ♥ sur un look pour le retrouver ici
           </Text>
           <Pressable style={styles.emptyCta} onPress={() => setTab('discover')}>
-            <Text style={styles.emptyCtaText}>Découvrir</Text>
+            <Text style={styles.emptyCtaText}>Explorer le feed</Text>
           </Pressable>
         </View>
       );
@@ -333,7 +355,6 @@ export default function LookbookTabScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>✨</Text>
         <Text style={styles.emptyTitle}>Les réalisations arrivent bientôt</Text>
         <Text style={styles.emptySubtitle}>
           Nos prestataires ajoutent leurs meilleures créations. Revenez vite !
@@ -359,28 +380,30 @@ export default function LookbookTabScreen() {
       {/* CurveHeader */}
       <CurveHeader
         title="Inspiration"
-        subtitle="Les réalisations de la communauté"
+        subtitle="Les plus beaux looks à votre image"
         height={160}
       />
 
-      {/* Tab toggle */}
-      <View style={styles.tabRow}>
-        <Pressable
-          style={[styles.tabItem, tab === 'discover' && styles.tabItemActive]}
-          onPress={() => setTab('discover')}
-        >
-          <Text style={[styles.tabText, tab === 'discover' && styles.tabTextActive]}>
-            Découvrir
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tabItem, tab === 'saved' && styles.tabItemActive]}
-          onPress={() => setTab('saved')}
-        >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>
-            Sauvegardés
-          </Text>
-        </Pressable>
+      {/* Segment control tab toggle */}
+      <View style={styles.segmentContainer}>
+        <View style={styles.segmentBackground}>
+          <Pressable
+            style={[styles.segmentButton, tab === 'discover' && styles.segmentButtonActive]}
+            onPress={() => setTab('discover')}
+          >
+            <Text style={[styles.segmentText, tab === 'discover' && styles.segmentTextActive]}>
+              Découvrir
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.segmentButton, tab === 'saved' && styles.segmentButtonActive]}
+            onPress={() => setTab('saved')}
+          >
+            <Text style={[styles.segmentText, tab === 'saved' && styles.segmentTextActive]}>
+              Sauvegardés
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Category filter chips — only on discover tab */}
@@ -455,33 +478,37 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 
-  // Tab toggle
-  tabRow: {
-    flexDirection: 'row',
-    marginHorizontal: screenPadding.horizontal,
+  // Segment control tab toggle
+  segmentContainer: {
+    paddingHorizontal: screenPadding.horizontal,
     marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  tabItem: {
+  segmentBackground: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: radius.full,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...(shadows.card as any),
+  },
+  segmentButton: {
     flex: 1,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderRadius: radius.full - 4,
   },
-  tabItemActive: {
-    borderBottomColor: colors.accent,
+  segmentButtonActive: {
+    backgroundColor: colors.accent,
   },
-  tabText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
+  segmentText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.textMuted,
   },
-  tabTextActive: {
-    fontFamily: fonts.bodySemiBold,
-    fontWeight: '600',
-    color: colors.accent,
+  segmentTextActive: {
+    color: colors.white,
   },
 
   // Filters
@@ -530,56 +557,40 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
     maxWidth: '48%' as any,
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 18,
+    borderRadius: radius.md,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
     ...(shadows.card as any),
   },
 
-  // Image
+  // Image container with overlays
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'hidden',
+  },
+
+  // Image fills container
   lookImage: {
     width: '100%',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
-  lookPlaceholder: {
-    backgroundColor: colors.n300,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderEmoji: {
-    fontSize: 32,
+    height: '100%',
   },
 
-  // Save button overlay
-  saveButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveIcon: {
-    fontSize: 16,
-    color: colors.white,
-  },
-
-  // Service tag overlay
+  // TOP-LEFT: service tag badge
   serviceTagBadge: {
     position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(124,58,237,0.85)',
-    borderRadius: 6,
+    top: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: colors.accent,
+    borderRadius: radius.xs,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
+    zIndex: 2,
   },
   serviceTagText: {
     fontSize: 9,
@@ -590,32 +601,87 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // Look info
-  lookInfo: {
-    padding: 10,
+  // TOP-RIGHT: heart save button with bounce wrapper
+  saveButtonWrapper: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    zIndex: 3,
   },
+  saveButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // BOTTOM: gradient overlay for text readability
+  lookInfoGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 140,
+    backgroundColor: 'rgba(0,0,0,0)',
+    ...(Platform.OS === 'web' ? {
+      background: 'linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.35))',
+    } : {}),
+  },
+
+  // Info section below image (white card background)
+  lookInfo: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.card,
+    flexDirection: 'column',
+  },
+
+  // Star rating row
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginBottom: 4,
+  },
+  ratingText: {
+    fontSize: 11,
+    color: colors.text,
+    fontFamily: fonts.bodySemiBold,
+    fontWeight: '600',
+  },
+  savedCount: {
+    fontSize: 10,
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+  },
+
   lookCaption: {
     fontSize: 12,
     fontFamily: fonts.bodySemiBold,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 8,
+    lineHeight: 17,
   },
-  lookProviderRow: {
+
+  lookBottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 8,
   },
   lookProviderAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   lookProviderInitial: {
-    fontSize: 10,
+    fontSize: 9,
     color: colors.white,
     fontFamily: fonts.bodyBold,
     fontWeight: '700',
@@ -626,37 +692,39 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     flex: 1,
   },
-  lookSocial: {
-    fontSize: 12,
-  },
 
-  // "Je veux ça" button
+  // "Je veux ça" button — full width at bottom of card
   wantButton: {
-    position: 'absolute',
-    bottom: 50,
-    right: 8,
     backgroundColor: colors.accent,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: radius.lg,
+    paddingVertical: 8,
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    width: '100%' as any,
+    marginTop: spacing.xs,
   },
   wantButtonText: {
-    fontSize: 9,
+    fontSize: 12,
     color: colors.white,
-    fontFamily: fonts.bodyBold,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontFamily: fonts.bodySemiBold,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
   // Empty state
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 80,
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xl,
   },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
+  emptyHeartIcon: {
+    marginBottom: spacing.md,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyTitle: {
     fontFamily: fonts.bodySemiBold,
@@ -669,16 +737,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 13,
     color: colors.textMuted,
-    marginTop: 8,
+    marginTop: spacing.xs,
     textAlign: 'center',
     lineHeight: 20,
   },
   emptyCta: {
-    marginTop: 24,
+    marginTop: spacing.xl,
     backgroundColor: colors.accent,
     borderRadius: radius.full,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
   },
   emptyCtaText: {
     fontFamily: fonts.bodySemiBold,

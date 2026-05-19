@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Pressable, ScrollView,
-  ActivityIndicator, Switch,
+  ActivityIndicator, Switch, Platform,
 } from 'react-native';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { showAlert } from '../../src/lib/alert';
+import CurveHeader from '../../src/components/CurveHeader';
+import { PressableScale, FadeInStagger } from '../../src/components/animations';
 
 interface AvailabilitySlot {
   dayOfWeek: string;
@@ -136,116 +138,130 @@ export default function AvailabilityScreen() {
   }
 
   const getDayLabel = (key: string) => DAYS.find(d => d.key === key)?.label || key;
+  const getDayShort = (key: string) => {
+    const map: Record<string, string> = {
+      MON: 'L', TUE: 'M', WED: 'M', THU: 'J', FRI: 'V', SAT: 'S', SUN: 'D',
+    };
+    return map[key] || key;
+  };
 
   return (
     <View style={styles.container}>
+      <CurveHeader title="Disponibilités" showBack height={160} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Vos disponibilités</Text>
-        <Text style={styles.subtitle}>
-          Définissez vos horaires pour chaque jour de la semaine.
+        <Text style={styles.helperText}>
+          Vos clientes verront uniquement les créneaux libres.
         </Text>
 
-        {schedule.map(slot => {
-          const isExpanded = expandedDay === slot.dayOfWeek;
-          return (
-            <View key={slot.dayOfWeek}>
-              <View style={[styles.row, !slot.isActive && styles.rowInactive]}>
-                <View style={styles.dayInfo}>
-                  <Text style={styles.day}>{getDayLabel(slot.dayOfWeek)}</Text>
-                  {slot.isActive ? (
-                    <View style={styles.timesRow}>
-                      <Pressable
-                        style={[
-                          styles.timeChip,
-                          isExpanded && pickingField === 'start' && styles.timeChipActive,
-                        ]}
-                        onPress={() => openTimePicker(slot.dayOfWeek, 'start')}
-                      >
-                        <Text
-                          style={[
-                            styles.timeChipText,
-                            isExpanded && pickingField === 'start' && styles.timeChipTextActive,
-                          ]}
-                        >
-                          {slot.startTime}
-                        </Text>
-                      </Pressable>
-                      <Text style={styles.timeSeparator}>—</Text>
-                      <Pressable
-                        style={[
-                          styles.timeChip,
-                          isExpanded && pickingField === 'end' && styles.timeChipActive,
-                        ]}
-                        onPress={() => openTimePicker(slot.dayOfWeek, 'end')}
-                      >
-                        <Text
-                          style={[
-                            styles.timeChipText,
-                            isExpanded && pickingField === 'end' && styles.timeChipTextActive,
-                          ]}
-                        >
-                          {slot.endTime}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  ) : (
-                    <Text style={styles.closedText}>Fermé</Text>
-                  )}
-                </View>
-                <Switch
-                  value={slot.isActive}
-                  onValueChange={() => toggleDay(slot.dayOfWeek)}
-                  trackColor={{ false: colors.n300, true: colors.primaryLight }}
-                  thumbColor={slot.isActive ? colors.primary : colors.textMuted}
-                />
-              </View>
+        <View style={styles.daysRow}>
+          {DAYS.map((day, idx) => {
+            const slot = schedule.find(s => s.dayOfWeek === day.key);
+            if (!slot) return null;
+            return (
+              <PressableScale
+                key={day.key}
+                style={[styles.dayPill, slot.isActive && styles.dayPillActive]}
+                onPress={() => toggleDay(day.key)}
+              >
+                <Text style={[styles.dayPillText, slot.isActive && styles.dayPillTextActive]}>
+                  {getDayShort(day.key)}
+                </Text>
+              </PressableScale>
+            );
+          })}
+        </View>
 
-              {isExpanded && pickingField && slot.isActive && (
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>
-                    {pickingField === 'start' ? 'Heure de début' : 'Heure de fin'}
-                  </Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.pickerScroll}
+        <View style={styles.slotsContainer}>
+          {schedule.map(slot => {
+            const isExpanded = expandedDay === slot.dayOfWeek;
+            if (!slot.isActive) return null;
+            return (
+              <View key={slot.dayOfWeek} style={styles.daySection}>
+                <Text style={styles.daySectionTitle}>{getDayLabel(slot.dayOfWeek)}</Text>
+
+                <View style={styles.timesRow}>
+                  <PressableScale
+                    style={[
+                      styles.timeChip,
+                      isExpanded && pickingField === 'start' && styles.timeChipActive,
+                    ]}
+                    onPress={() => openTimePicker(slot.dayOfWeek, 'start')}
                   >
-                    {TIME_SLOTS.map(time => {
-                      const currentValue =
-                        pickingField === 'start' ? slot.startTime : slot.endTime;
-                      const isSelected = time === currentValue;
-                      return (
-                        <Pressable
-                          key={time}
-                          style={[
-                            styles.pickerChip,
-                            isSelected && styles.pickerChipActive,
-                          ]}
-                          onPress={() =>
-                            selectTime(slot.dayOfWeek, pickingField, time)
-                          }
-                        >
-                          <Text
-                            style={[
-                              styles.pickerChipText,
-                              isSelected && styles.pickerChipTextActive,
-                            ]}
-                          >
-                            {time}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
+                    <Text
+                      style={[
+                        styles.timeChipText,
+                        isExpanded && pickingField === 'start' && styles.timeChipTextActive,
+                      ]}
+                    >
+                      {slot.startTime}
+                    </Text>
+                  </PressableScale>
+                  <Text style={styles.timeSeparator}>—</Text>
+                  <PressableScale
+                    style={[
+                      styles.timeChip,
+                      isExpanded && pickingField === 'end' && styles.timeChipActive,
+                    ]}
+                    onPress={() => openTimePicker(slot.dayOfWeek, 'end')}
+                  >
+                    <Text
+                      style={[
+                        styles.timeChipText,
+                        isExpanded && pickingField === 'end' && styles.timeChipTextActive,
+                      ]}
+                    >
+                      {slot.endTime}
+                    </Text>
+                  </PressableScale>
                 </View>
-              )}
-            </View>
-          );
-        })}
+
+                {isExpanded && pickingField && (
+                  <View style={styles.pickerContainer}>
+                    <Text style={styles.pickerLabel}>
+                      {pickingField === 'start' ? 'Heure de début' : 'Heure de fin'}
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.pickerScroll}
+                    >
+                      {TIME_SLOTS.map(time => {
+                        const currentValue =
+                          pickingField === 'start' ? slot.startTime : slot.endTime;
+                        const isSelected = time === currentValue;
+                        return (
+                          <PressableScale
+                            key={time}
+                            style={[
+                              styles.pickerChip,
+                              isSelected && styles.pickerChipActive,
+                            ]}
+                            onPress={() =>
+                              selectTime(slot.dayOfWeek, pickingField, time)
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.pickerChipText,
+                                isSelected && styles.pickerChipTextActive,
+                              ]}
+                            >
+                              {time}
+                            </Text>
+                          </PressableScale>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
+        <PressableScale
           style={[styles.saveButton, saving && styles.buttonDisabled]}
           onPress={saveAvailability}
           disabled={saving}
@@ -253,9 +269,9 @@ export default function AvailabilityScreen() {
           {saving ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+            <Text style={styles.saveButtonText}>Appliquer et enregistrer</Text>
           )}
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );
@@ -265,44 +281,54 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
   scrollContent: { padding: 20, paddingBottom: 100 },
-  title: { fontSize: 22, fontFamily: 'Poppins_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+  helperText: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 20, lineHeight: 20 },
 
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  // Days row with pills
+  daysRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
+  dayPill: {
+    flex: 1,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.card,
-    padding: 16,
-    borderRadius: 24,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  rowInactive: { opacity: 0.6 },
-  dayInfo: { flex: 1 },
-  day: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 4 },
-  timesRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dayPillActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  dayPillText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.textSecondary },
+  dayPillTextActive: { color: colors.white },
+
+  // Slots container
+  slotsContainer: { marginBottom: 24 },
+  daySection: { marginBottom: 20 },
+  daySectionTitle: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 10 },
+
+  timesRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   timeChip: {
-    backgroundColor: colors.primaryGhost,
+    flex: 1,
+    backgroundColor: colors.card,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: colors.border,
+    alignItems: 'center',
   },
   timeChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryGhost,
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
   },
-  timeChipText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
-  timeChipTextActive: { color: colors.primary },
+  timeChipText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text },
+  timeChipTextActive: { color: colors.white },
   timeSeparator: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
-  closedText: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted, fontStyle: 'italic' },
 
   pickerContainer: {
     backgroundColor: colors.card,
-    marginBottom: 8,
+    marginTop: 12,
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
@@ -314,10 +340,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: colors.primaryGhost,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  pickerChipActive: { backgroundColor: colors.primary },
-  pickerChipText: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.primary },
+  pickerChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  pickerChipText: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.text },
   pickerChipTextActive: { color: colors.white },
 
   footer: { padding: 20, paddingBottom: 32, backgroundColor: colors.bg },
@@ -326,7 +354,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 22,
     alignItems: 'center',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 16px rgba(139,105,82,0.25)' }
+      : {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+        }
+    ) as any,
   },
-  saveButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_600SemiBold' },
+  saveButtonText: { color: colors.white, fontSize: 16, fontFamily: 'Poppins_700Bold' },
   buttonDisabled: { opacity: 0.6 },
 });

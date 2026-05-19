@@ -9,6 +9,11 @@ import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { showAlert, showConfirm } from '../../src/lib/alert';
 import { useAuth } from '../../src/lib/auth-context';
+import CurveHeader from '../../src/components/CurveHeader';
+import IconPhoto from '@tabler/icons-react-native/dist/esm/icons/IconPhoto.mjs';
+import IconClock from '@tabler/icons-react-native/dist/esm/icons/IconClock.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import { PressableScale, FadeInStagger } from '../../src/components/animations';
 
 interface Proposal {
   id: string;
@@ -208,6 +213,7 @@ export default function RequestDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <CurveHeader title="Demande" showBack />
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -263,7 +269,7 @@ export default function RequestDetailScreen() {
             <View style={styles.photosRow}>
               {request.photos.map((url, i) => (
                 <View key={i} style={styles.photoThumb}>
-                  <Text style={styles.photoThumbText}>{'\uD83D\uDCF7'}</Text>
+                  <IconPhoto size={32} color={colors.textMuted} strokeWidth={1.5} />
                 </View>
               ))}
             </View>
@@ -278,7 +284,9 @@ export default function RequestDetailScreen() {
             </Text>
             {request.proposals.length === 0 ? (
               <View style={styles.emptyProposals}>
-                <Text style={styles.emptyEmoji}>{'\uD83D\uDD50'}</Text>
+                <View style={styles.emptyIconWrap}>
+                <IconClock size={32} color={colors.textMuted} strokeWidth={1.5} />
+              </View>
                 <Text style={styles.emptyText}>Aucune proposition pour le moment</Text>
                 <Text style={styles.emptySubtext}>Les prestataires verront votre demande bientôt</Text>
               </View>
@@ -298,7 +306,7 @@ export default function RequestDetailScreen() {
                     <View style={styles.proposalInfo}>
                       <Text style={styles.proposalName}>{p.provider?.displayName || 'Prestataire'}</Text>
                       <View style={styles.proposalRating}>
-                        <Text style={styles.ratingStar}>{'\u2605'}</Text>
+                        <IconStar size={14} color={colors.terracotta} fill={colors.terracotta} strokeWidth={1.5} />
                         <Text style={styles.ratingValue}>{(p.provider?.avgRating || 0).toFixed(1)}</Text>
                         <Text style={styles.reviewCount}>({p.provider?.totalReviews || 0})</Text>
                       </View>
@@ -310,9 +318,10 @@ export default function RequestDetailScreen() {
                   <Text style={styles.proposalMessage}>{p.message}</Text>
 
                   {/* Duration */}
-                  <Text style={styles.proposalDuration}>
-                    {'\u23F1'} Durée estimée: {p.estimatedDuration} min
-                  </Text>
+                  <View style={styles.proposalDurationRow}>
+                    <IconClock size={13} color={colors.textSecondary} strokeWidth={1.8} />
+                    <Text style={styles.proposalDuration}>Durée estimée: {p.estimatedDuration} min</Text>
+                  </View>
 
                   {/* Actions */}
                   {p.status === 'PENDING' && request.status !== 'ACCEPTED' && (
@@ -483,42 +492,46 @@ const styles = StyleSheet.create({
   photoThumbText: { fontSize: 24 },
   // Empty proposals
   emptyProposals: { alignItems: 'center', paddingVertical: 24 },
-  emptyEmoji: { fontSize: 36, marginBottom: 8 },
+  emptyIconWrap: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   emptyText: { fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   emptySubtext: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginTop: 4 },
   // Proposal card
   proposalCard: {
     backgroundColor: colors.card,
-    borderRadius: 24,
+    borderRadius: 22,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(90,56,60,0.06)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    }) as any,
   },
   proposalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   proposalAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center', marginRight: 10,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent,
+    justifyContent: 'center', alignItems: 'center', marginRight: 12,
   },
-  proposalAvatarText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.white },
+  proposalAvatarText: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.white },
   proposalInfo: { flex: 1 },
-  proposalName: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.accent },
-  proposalRating: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
-  ratingStar: { fontSize: 12, color: colors.terracotta, marginRight: 3 },
-  ratingValue: { fontSize: 12, fontFamily: 'Poppins_600SemiBold', color: colors.terracotta, marginRight: 3 },
-  reviewCount: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
-  proposalPrice: { fontSize: 17, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  proposalName: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text },
+  proposalRating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
+  ratingValue: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.terracotta, marginRight: 4 },
+  reviewCount: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  proposalPrice: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.terracotta },
   proposalMessage: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text, lineHeight: 20, marginBottom: 8 },
+  proposalDurationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   proposalDuration: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
   // Proposal actions
   proposalActions: { flexDirection: 'row', marginTop: 12, gap: 8 },
   acceptBtn: {
     flex: 1,
-    backgroundColor: colors.success,
+    backgroundColor: colors.accent,
     borderRadius: 20,
     paddingVertical: 12,
     alignItems: 'center',

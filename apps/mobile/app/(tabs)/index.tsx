@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, FlatList, RefreshControl, Platform, ViewStyle, Image, ScrollView, useWindowDimensions, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from 'react-native-reanimated';
 import IconScissors from '@tabler/icons-react-native/dist/esm/icons/IconScissors.mjs';
 import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
 import IconBrush from '@tabler/icons-react-native/dist/esm/icons/IconBrush.mjs';
-import IconHandGrab from '@tabler/icons-react-native/dist/esm/icons/IconHandGrab.mjs';
+import IconLeaf from '@tabler/icons-react-native/dist/esm/icons/IconLeaf.mjs';
 import IconRazor from '@tabler/icons-react-native/dist/esm/icons/IconRazor.mjs';
 import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
 import IconMapPin from '@tabler/icons-react-native/dist/esm/icons/IconMapPin.mjs';
@@ -15,6 +16,7 @@ import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
 import IconMap from '@tabler/icons-react-native/dist/esm/icons/IconMap.mjs';
 import IconList from '@tabler/icons-react-native/dist/esm/icons/IconList.mjs';
 import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
 import IconDiamond from '@tabler/icons-react-native/dist/esm/icons/IconDiamond.mjs';
 import IconAward from '@tabler/icons-react-native/dist/esm/icons/IconAward.mjs';
 import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
@@ -22,6 +24,15 @@ import IconAdjustments from '@tabler/icons-react-native/dist/esm/icons/IconAdjus
 import IconCar from '@tabler/icons-react-native/dist/esm/icons/IconCar.mjs';
 import IconSortAscending from '@tabler/icons-react-native/dist/esm/icons/IconSortAscending.mjs';
 import IconSortDescending from '@tabler/icons-react-native/dist/esm/icons/IconSortDescending.mjs';
+import IconCalendarEvent from '@tabler/icons-react-native/dist/esm/icons/IconCalendarEvent.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconChevronDown from '@tabler/icons-react-native/dist/esm/icons/IconChevronDown.mjs';
+import IconCash from '@tabler/icons-react-native/dist/esm/icons/IconCash.mjs';
+import IconClipboardList from '@tabler/icons-react-native/dist/esm/icons/IconClipboardList.mjs';
+import IconChevronRight from '@tabler/icons-react-native/dist/esm/icons/IconChevronRight.mjs';
+import IconPlus from '@tabler/icons-react-native/dist/esm/icons/IconPlus.mjs';
+import IconRosetteDiscountCheck from '@tabler/icons-react-native/dist/esm/icons/IconRosetteDiscountCheck.mjs';
+import IconTrendingUp from '@tabler/icons-react-native/dist/esm/icons/IconTrendingUp.mjs';
 import { colors } from '../../src/theme/colors';
 import { fonts } from '../../src/theme/typography';
 import { radius, spacing, screenPadding } from '../../src/theme/spacing';
@@ -29,7 +40,7 @@ import { shadows } from '../../src/theme/shadows';
 import { api } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth-context';
 import { getRecentlyViewed, RecentProvider } from '../../src/lib/recently-viewed';
-import { SearchBar, CategoryIcon, ProviderCardSkeleton, SectionHeader, SearchFilters } from '../../src/components';
+import { CategoryIcon, ProviderCardSkeleton, SectionHeader, SearchFilters } from '../../src/components';
 import { PressableScale, FadeInStagger } from '../../src/components/animations';
 import MapView from '../../src/components/MapView';
 
@@ -41,6 +52,13 @@ const PLACEHOLDER_IMAGES = [
   require('../../assets/images/providers/provider_5.jpg'),
   require('../../assets/images/providers/provider_6.jpg'),
   require('../../assets/images/providers/provider_7.jpg'),
+];
+
+const LOOKBOOK_THUMBS = [
+  require('../../assets/images/lookbook/look_tresses.webp'),
+  require('../../assets/images/lookbook/look_ongles.webp'),
+  require('../../assets/images/lookbook/look_maq_smoky_violet.webp'),
+  require('../../assets/images/lookbook/look_mariee.webp'),
 ];
 
 const QUARTIERS = [
@@ -56,7 +74,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.terracotta} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.terracotta} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.terracotta} strokeWidth={1.5} />,
-  soins: <IconHandGrab size={28} color={colors.terracotta} strokeWidth={1.5} />,
+  soins: <IconLeaf size={28} color={colors.terracotta} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.terracotta} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.terracotta} strokeWidth={1.5} />,
 };
@@ -65,7 +83,7 @@ const CATEGORY_ICONS_ACTIVE: Record<string, React.ReactNode> = {
   coiffure: <IconScissors size={28} color={colors.white} strokeWidth={1.5} />,
   ongles: <IconDiamond size={28} color={colors.white} strokeWidth={1.5} />,
   maquillage: <IconBrush size={28} color={colors.white} strokeWidth={1.5} />,
-  soins: <IconHandGrab size={28} color={colors.white} strokeWidth={1.5} />,
+  soins: <IconLeaf size={28} color={colors.white} strokeWidth={1.5} />,
   barber: <IconRazor size={28} color={colors.white} strokeWidth={1.5} />,
   spa: <IconDroplet size={28} color={colors.white} strokeWidth={1.5} />,
 };
@@ -156,6 +174,13 @@ interface ProviderResult {
   user: { name: string; avatar?: string | null };
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bonjour';
+  if (hour < 18) return 'Salut';
+  return 'Bonsoir';
+}
+
 function CardGallery({ images, cardWidth }: { images: any[]; cardWidth: number }) {
   const [idx, setIdx] = useState(0);
   return (
@@ -183,8 +208,390 @@ function CardGallery({ images, cardWidth }: { images: any[]; cardWidth: number }
   );
 }
 
+function HeroBanner({ slides, currentIndex }: { slides: typeof HERO_SLIDES; currentIndex: number }) {
+  const prevIndex = useRef(currentIndex);
+  const fadeAnim = useSharedValue(1);
+
+  useEffect(() => {
+    if (prevIndex.current !== currentIndex) {
+      fadeAnim.value = 0;
+      fadeAnim.value = withTiming(1, { duration: 500 });
+      prevIndex.current = currentIndex;
+    }
+  }, [currentIndex]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+  }));
+
+  const slide = slides[currentIndex];
+
+  return (
+    <View style={styles.heroBanner}>
+      <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+        <Image source={slide.image} style={styles.heroImage} resizeMode="cover" />
+      </Animated.View>
+      <View style={styles.heroOverlay} />
+      <Animated.View style={[styles.heroContent, animatedStyle]}>
+        <Text style={styles.heroLabel}>{slide.label}</Text>
+        <Text style={styles.heroTitle}>{slide.title}</Text>
+        <Text style={styles.heroSubtitle}>{slide.sub}</Text>
+      </Animated.View>
+      <View style={styles.heroDots}>
+        {slides.map((_, i) => (
+          <View key={i} style={[styles.heroDot, i === currentIndex && styles.heroDotActive]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─── Provider interfaces ────────────────────────────────────────────────────
+
+interface ProviderBooking {
+  id: string;
+  ref: string;
+  date: string;
+  startTime: string;
+  status: string;
+  agreedPrice: number;
+  currency: string;
+  service: { name: string };
+  client: { name: string; avatar?: string | null };
+}
+
+interface ProviderWallet {
+  availableBalance: number;
+  pendingBalance: number;
+  currency: string;
+}
+
+interface OpenRequest {
+  id: string;
+  title: string;
+  budgetMin: number;
+  budgetMax: number;
+  currency: string;
+  city: string;
+  proposalCount: number;
+  createdAt: string;
+  client?: { name: string; avatar?: string | null };
+}
+
+// ─── ProviderHome ────────────────────────────────────────────────────────────
+
+function ProviderHome({ user }: { user: any }) {
+  const [wallet, setWallet] = useState<ProviderWallet | null>(null);
+  const [bookings, setBookings] = useState<ProviderBooking[]>([]);
+  const [requests, setRequests] = useState<OpenRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const firstName = user?.name?.split(' ')[0];
+  const greeting = getGreeting();
+
+  const load = useCallback(async () => {
+    try {
+      const [wRes, bRes, rRes] = await Promise.allSettled([
+        api('/wallet') as Promise<any>,
+        api('/bookings/mine?role=provider&status=upcoming&pageSize=3') as Promise<any>,
+        api('/requests?pageSize=4') as Promise<any>,
+      ]);
+      if (wRes.status === 'fulfilled') setWallet(wRes.value?.data ?? null);
+      if (bRes.status === 'fulfilled') setBookings(bRes.value?.data?.items ?? []);
+      if (rRes.status === 'fulfilled') setRequests(rRes.value?.data?.items ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const fmtAmount = (n: number, currency: string) =>
+    `${n.toLocaleString('fr-FR')} ${currency === 'CDF' ? 'FC' : 'FCFA'}`;
+
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+    REQUESTED:  { label: 'Demande',   color: colors.warning },
+    CONFIRMED:  { label: 'Confirmé',  color: colors.primary },
+    DEPOSIT_PAID: { label: 'Acompte', color: colors.success },
+    IN_PROGRESS: { label: 'En cours', color: colors.accent },
+    COMPLETED:  { label: 'Terminé',   color: colors.textMuted },
+  };
+
+  return (
+    <SafeAreaView style={pStyles.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={pStyles.scroll}>
+
+        {/* ── Header ── */}
+        <View style={pStyles.header}>
+          <View style={pStyles.headerTop}>
+            <View>
+              <Text style={pStyles.greeting}>{greeting}</Text>
+              <Text style={pStyles.name}>{firstName || 'Prestataire'}</Text>
+            </View>
+            <Pressable onPress={() => router.push('/notifications' as any)} style={pStyles.bellBtn}>
+              <IconBell size={22} color={colors.white} strokeWidth={1.8} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Wallet card ── */}
+        <Pressable style={pStyles.walletCard} onPress={() => router.push('/wallet/index' as any)}>
+          <View style={pStyles.walletRow}>
+            <View>
+              <Text style={pStyles.walletLabel}>Solde disponible</Text>
+              {loading ? (
+                <View style={pStyles.walletSkeleton} />
+              ) : (
+                <Text style={pStyles.walletAmount}>
+                  {wallet ? fmtAmount(wallet.availableBalance, wallet.currency) : '—'}
+                </Text>
+              )}
+            </View>
+            <View style={pStyles.walletIconCircle}>
+              <IconCash size={26} color={colors.accent} strokeWidth={1.6} />
+            </View>
+          </View>
+          {wallet && wallet.pendingBalance > 0 && (
+            <View style={pStyles.walletPending}>
+              <Text style={pStyles.walletPendingText}>
+                {fmtAmount(wallet.pendingBalance, wallet.currency)} en attente de validation
+              </Text>
+            </View>
+          )}
+        </Pressable>
+
+        {/* ── Quick actions ── */}
+        <View style={pStyles.actionsRow}>
+          {[
+            { label: 'Services', icon: <IconPlus size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/services' },
+            { label: 'Disponibilités', icon: <IconCalendarEvent size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/availability' },
+            { label: 'Revenus', icon: <IconTrendingUp size={22} color={colors.accent} strokeWidth={1.8} />, route: '/provider-dashboard/earnings' },
+            { label: 'Demandes', icon: <IconClipboardList size={22} color={colors.accent} strokeWidth={1.8} />, route: '/request/browse' },
+          ].map(a => (
+            <PressableScale key={a.label} style={pStyles.actionBtn} onPress={() => router.push(a.route as any)}>
+              <View style={pStyles.actionIcon}>{a.icon}</View>
+              <Text style={pStyles.actionLabel}>{a.label}</Text>
+            </PressableScale>
+          ))}
+        </View>
+
+        {/* ── Upcoming bookings ── */}
+        <View style={pStyles.section}>
+          <View style={pStyles.sectionRow}>
+            <Text style={pStyles.sectionTitle}>Rendez-vous à venir</Text>
+            <Pressable onPress={() => router.push('/(tabs)/bookings' as any)}>
+              <Text style={pStyles.sectionLink}>Voir tout</Text>
+            </Pressable>
+          </View>
+
+          {loading ? (
+            [0, 1].map(i => <View key={i} style={pStyles.bookingSkeleton} />)
+          ) : bookings.length === 0 ? (
+            <View style={pStyles.emptyCard}>
+              <IconCalendarEvent size={32} color={colors.textMuted} strokeWidth={1.4} />
+              <Text style={pStyles.emptyText}>Aucun rendez-vous à venir</Text>
+            </View>
+          ) : (
+            <View>
+              {bookings.map((b, idx) => {
+                const st = STATUS_LABEL[b.status] ?? { label: b.status, color: colors.textMuted };
+                return (
+                  <FadeInStagger key={b.id} index={idx} style={{ width: '100%' }}>
+                    <PressableScale style={pStyles.bookingCard} onPress={() => router.push(`/booking/detail/${b.id}` as any)}>
+                      <View style={pStyles.bookingLeft}>
+                        <View style={pStyles.bookingAvatar}>
+                          {b.client.avatar ? (
+                            <Image source={{ uri: b.client.avatar }} style={pStyles.bookingAvatarImg} />
+                          ) : (
+                            <Text style={pStyles.bookingAvatarInit}>{b.client.name[0]?.toUpperCase()}</Text>
+                          )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={pStyles.bookingClient} numberOfLines={1}>{b.client.name}</Text>
+                          <Text style={pStyles.bookingService} numberOfLines={1}>{b.service.name}</Text>
+                          <Text style={pStyles.bookingDate}>{fmtDate(b.date)} · {b.startTime.slice(0, 5)}</Text>
+                        </View>
+                      </View>
+                      <View style={pStyles.bookingRight}>
+                        <Text style={pStyles.bookingPrice}>{fmtAmount(b.agreedPrice, b.currency)}</Text>
+                        <View style={[pStyles.statusPill, { backgroundColor: `${st.color}18` }]}>
+                          <Text style={[pStyles.statusPillText, { color: st.color }]}>{st.label}</Text>
+                        </View>
+                      </View>
+                    </PressableScale>
+                  </FadeInStagger>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        {/* ── Open requests ── */}
+        <View style={pStyles.section}>
+          <View style={pStyles.sectionRow}>
+            <Text style={pStyles.sectionTitle}>Demandes ouvertes</Text>
+            <Pressable onPress={() => router.push('/request/browse' as any)}>
+              <Text style={pStyles.sectionLink}>Voir tout</Text>
+            </Pressable>
+          </View>
+
+          {loading ? (
+            [0, 1].map(i => <View key={i} style={pStyles.requestSkeleton} />)
+          ) : requests.length === 0 ? (
+            <View style={pStyles.emptyCard}>
+              <IconClipboardList size={32} color={colors.textMuted} strokeWidth={1.4} />
+              <Text style={pStyles.emptyText}>Aucune demande ouverte pour l'instant</Text>
+            </View>
+          ) : (
+            <View>
+              {requests.map((r, idx) => (
+                <FadeInStagger key={r.id} index={idx} style={{ width: '100%' }}>
+                  <PressableScale style={pStyles.requestCard} onPress={() => router.push(`/request/${r.id}` as any)}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={pStyles.requestTitle} numberOfLines={1}>{r.title}</Text>
+                      <View style={pStyles.requestMeta}>
+                        <IconMapPin size={12} color={colors.textMuted} strokeWidth={1.8} />
+                        <Text style={pStyles.requestMetaText}>{r.city}</Text>
+                        <Text style={pStyles.requestMetaDot}>·</Text>
+                        <Text style={pStyles.requestMetaText}>
+                          {fmtAmount(r.budgetMin, r.currency)}
+                          {r.budgetMax > r.budgetMin ? ` – ${fmtAmount(r.budgetMax, r.currency)}` : ''}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={pStyles.requestRight}>
+                      <View style={pStyles.proposalBadge}>
+                        <Text style={pStyles.proposalCount}>{r.proposalCount}</Text>
+                        <Text style={pStyles.proposalLabel}>offres</Text>
+                      </View>
+                      <IconChevronRight size={16} color={colors.textMuted} strokeWidth={2} />
+                    </View>
+                  </PressableScale>
+                </FadeInStagger>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* ── KYC nudge ── */}
+        {user && !user.idVerified && (
+          <PressableScale style={pStyles.kycNudge} onPress={() => router.push('/kyc/index' as any)}>
+            <IconRosetteDiscountCheck size={24} color={colors.warning} strokeWidth={1.6} />
+            <View style={{ flex: 1 }}>
+              <Text style={pStyles.kycNudgeTitle}>Obtenez le badge vérifié</Text>
+              <Text style={pStyles.kycNudgeSub}>Soumettez vos documents pour rassurer vos clientes</Text>
+            </View>
+            <IconChevronRight size={16} color={colors.warning} strokeWidth={2} />
+          </PressableScale>
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const pStyles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingBottom: 24 },
+
+  header: {
+    backgroundColor: colors.headerDark,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginBottom: 16,
+  },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  greeting: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.65)', marginBottom: 2 },
+  name: { fontSize: 26, fontFamily: 'PlayfairDisplay_700Bold', color: colors.white },
+  bellBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', justifyContent: 'center', alignItems: 'center' },
+
+  walletCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 20px rgba(90,56,60,0.10)' },
+      default: { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 16, elevation: 3 },
+    }) as any,
+  },
+  walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  walletLabel: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginBottom: 6 },
+  walletAmount: { fontSize: 26, fontFamily: 'Poppins_700Bold', color: colors.accent, letterSpacing: -0.5 },
+  walletSkeleton: { height: 30, width: 160, borderRadius: 8, backgroundColor: colors.n300, marginBottom: 4 },
+  walletIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(91,33,182,0.10)', justifyContent: 'center', alignItems: 'center' },
+  walletPending: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderLight },
+  walletPendingText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.warning },
+
+  actionsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 24 },
+  actionBtn: { flex: 1, backgroundColor: colors.card, borderRadius: 16, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  actionIcon: { marginBottom: 6 },
+  actionLabel: { fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
+
+  section: { marginHorizontal: 20, marginBottom: 24 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
+  sectionLink: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: colors.primary },
+
+  bookingCard: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: colors.card, borderRadius: 16, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  bookingLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  bookingAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryGhost, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  bookingAvatarImg: { width: 44, height: 44 },
+  bookingAvatarInit: { fontSize: 18, fontFamily: 'Poppins_600SemiBold', color: colors.primary },
+  bookingClient: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 2 },
+  bookingService: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, marginBottom: 2 },
+  bookingDate: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  bookingRight: { alignItems: 'flex-end', gap: 6 },
+  bookingPrice: { fontSize: 13, fontFamily: 'Poppins_700Bold', color: colors.text },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  statusPillText: { fontSize: 10, fontFamily: 'Poppins_600SemiBold' },
+  bookingSkeleton: { height: 72, borderRadius: 16, backgroundColor: colors.n300, marginBottom: 10 },
+
+  requestCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.card, borderRadius: 16, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  requestTitle: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text, marginBottom: 6 },
+  requestMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  requestMetaText: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
+  requestMetaDot: { fontSize: 12, color: colors.textMuted },
+  requestRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proposalBadge: { alignItems: 'center', backgroundColor: colors.primaryGhost, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  proposalCount: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.primary },
+  proposalLabel: { fontSize: 9, fontFamily: 'Poppins_400Regular', color: colors.primary },
+  requestSkeleton: { height: 64, borderRadius: 16, backgroundColor: colors.n300, marginBottom: 10 },
+
+  emptyCard: { backgroundColor: colors.card, borderRadius: 16, padding: 28, alignItems: 'center', borderWidth: 1, borderColor: colors.border, gap: 10 },
+  emptyText: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center' },
+
+  kycNudge: {
+    marginHorizontal: 20, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(230,138,0,0.08)', borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(230,138,0,0.20)',
+  },
+  kycNudgeTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.warning, marginBottom: 2 },
+  kycNudgeSub: { fontSize: 12, fontFamily: 'Poppins_400Regular', color: colors.textSecondary },
+});
+
+// ─── ExplorerTab (client home) ────────────────────────────────────────────────
+
 export default function ExplorerTab() {
-  const { user } = useAuth();
+  const { user, isProvider } = useAuth();
   const { width: winWidth } = useWindowDimensions();
   const cardImgWidth = Math.min(winWidth, 480) - 40;
   const [heroIndex, setHeroIndex] = useState(0);
@@ -206,13 +613,31 @@ export default function ExplorerTab() {
   const [filterMaxDistance, setFilterMaxDistance] = useState<number | null>(null);
   const [filterMinRating, setFilterMinRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('rating');
+  const [occasionContext, setOccasionContext] = useState<string | null>(null);
+  const [stickyHeight, setStickyHeight] = useState(120);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [showQuartierDropdown, setShowQuartierDropdown] = useState(false);
+  const [filterBarBottom, setFilterBarBottom] = useState(0);
+
+  // Read params from occasion booking screen
+  const params = useLocalSearchParams<{ occasion?: string; categories?: string }>();
+  useEffect(() => {
+    if (params.occasion) {
+      setOccasionContext(params.occasion);
+      const firstCategory = params.categories?.split(',')[0] ?? null;
+      if (firstCategory) {
+        setSelectedCategory(firstCategory);
+        setSelectedSubcategory(null);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setHeroIndex(i => (i + 1) % HERO_SLIDES.length), 3500);
     return () => clearInterval(t);
   }, []);
 
-  // Debounce search input — only update API query after 500ms idle
   useEffect(() => {
     if (!search) { setDebouncedSearch(''); return; }
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -237,16 +662,18 @@ export default function ExplorerTab() {
       if (filterIsMobile) params.set('isMobile', 'true');
       if (filterMaxPrice) params.set('maxPrice', String(filterMaxPrice));
       if (filterMinRating) params.set('minRating', String(filterMinRating));
+      const quartier = QUARTIERS.find(q => q.name === selectedQuartier);
+      if (quartier) { params.set('lat', String(quartier.lat)); params.set('lng', String(quartier.lng)); }
       if (filterMaxDistance) params.set('radius', String(filterMaxDistance));
       const res: any = await api(`/search?${params.toString()}`);
       setProviders(res.data?.items || []);
     } catch (e) {
-      // console.error('Search error:', e);
+      // silent
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [debouncedSearch, selectedCategory, selectedSubcategory, sortBy, filterIsMobile, filterMaxPrice, filterMinRating, filterMaxDistance]);
+  }, [debouncedSearch, selectedCategory, selectedSubcategory, sortBy, filterIsMobile, filterMaxPrice, filterMinRating, filterMaxDistance, selectedQuartier]);
 
   const isInitialLoad = providers.length === 0 && loading;
   useEffect(() => {
@@ -264,7 +691,6 @@ export default function ExplorerTab() {
     try {
       await api(`/favorites/${providerId}`, { method: 'POST' });
     } catch (_e) {
-      // Revert on error
       setFavoriteIds(prev => {
         const next = new Set(prev);
         if (next.has(providerId)) next.delete(providerId);
@@ -280,74 +706,43 @@ export default function ExplorerTab() {
   }
 
   const activeFilterCount = [filterIsMobile, filterMaxPrice, filterMaxDistance, filterMinRating, sortBy !== 'rating'].filter(Boolean).length;
+  const greeting = getGreeting();
+  const firstName = user?.name?.split(' ')[0];
+
+  if (isProvider) return <ProviderHome user={user} />;
+
+  // ─── Suggestions data ─────────────────────────────────────────────────────
+  const TRENDING = ['Tresses box braids', 'Maquillage mariée', 'Ongles gel UV', 'Massage relaxant'];
+  const q = search.toLowerCase().trim();
+  const allServices = SERVICE_CATEGORIES.flatMap(cat => [
+    { name: cat.name, slug: cat.slug, type: 'category' as const, parent: null as string | null },
+    ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug })),
+  ]);
+  const matchingServices = q
+    ? allServices.filter(s => s.name.toLowerCase().includes(q)).slice(0, 6)
+    : allServices.filter(s => s.type === 'category');
+  const matchingQuartiers = q ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q)) : QUARTIERS;
+
+  const catIconSmall = (slug: string | null) => {
+    const props = { size: 15, color: colors.primary, strokeWidth: 1.5 };
+    if (slug === 'ongles') return <IconDiamond {...props} />;
+    if (slug === 'maquillage') return <IconBrush {...props} />;
+    if (slug === 'soins') return <IconLeaf {...props} />;
+    if (slug === 'barber') return <IconRazor {...props} />;
+    if (slug === 'spa') return <IconDroplet {...props} />;
+    return <IconScissors {...props} />;
+  };
 
   const listHeader = (
     <>
-      {/* Greeting Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>
-            {user?.name ? `Salut, ${user.name.split(' ')[0]}` : 'Salut'} {'\uD83D\uDC4B'}
-          </Text>
-          <Text style={styles.headerSubtitle}>Kinshasa</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Pressable
-            style={styles.bellButton}
-            onPress={() => router.push('/(tabs)/messages' as any)}
-          >
-            <IconBell size={22} color={colors.text} strokeWidth={1.8} />
-          </Pressable>
-          <Pressable
-            style={styles.viewToggle}
-            onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}
-          >
-            {viewMode === 'list' ? (
-              <IconMap size={18} color={colors.white} strokeWidth={2} />
-            ) : (
-              <IconList size={18} color={colors.white} strokeWidth={2} />
-            )}
-          </Pressable>
-        </View>
-      </View>
+      {/* Hero Banner — animated crossfade carousel */}
+      <HeroBanner slides={HERO_SLIDES} currentIndex={heroIndex} />
 
-      {/* Hero Banner — auto-scroll carousel */}
-      <View style={styles.heroBanner}>
-        <Image
-          source={HERO_SLIDES[heroIndex].image}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-        <View style={styles.heroOverlay} />
-        <View style={styles.heroContent}>
-          <Text style={styles.heroLabel}>{HERO_SLIDES[heroIndex].label}</Text>
-          <Text style={styles.heroTitle}>{HERO_SLIDES[heroIndex].title}</Text>
-          <Text style={styles.heroSubtitle}>{HERO_SLIDES[heroIndex].sub}</Text>
-        </View>
-        <View style={styles.heroDots}>
-          {HERO_SLIDES.map((_, i) => (
-            <View key={i} style={[styles.heroDot, i === heroIndex && styles.heroDotActive]} />
-          ))}
-        </View>
-      </View>
-
-      {/* Scanner strip */}
-      <PressableScale onPress={() => router.push('/scan' as any)}>
-        <View style={styles.scannerStrip}>
-          <Text style={styles.scannerStripIcon}>🔬</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.scannerStripTitle}>Scanner un produit</Text>
-            <Text style={styles.scannerStripSub}>Ingrédients INCI · Open Beauty Facts</Text>
-          </View>
-          <Text style={styles.scannerStripArrow}>›</Text>
-        </View>
-      </PressableScale>
-
-      {/* Mes Favorites — horizontal avatar scroll */}
+      {/* Vu récemment — horizontal avatar scroll */}
       {recentlyViewed.length > 0 && (
         <>
           <SectionHeader
-            title="Mes Favorites"
+            title="Vu récemment"
             onSeeAll={() => router.push('/favorites' as any)}
           />
           <ScrollView
@@ -372,178 +767,33 @@ export default function ExplorerTab() {
         </>
       )}
 
-      {/* Search with smart suggestions */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          value={search}
-          onChangeText={(text) => {
-            setSearch(text);
-            setShowSuggestions(true);
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          placeholder="Prestation, quartier, prestataire..."
-        />
-        {showSuggestions && (() => {
-          const q = search.toLowerCase();
-          const matchingQuartiers = q
-            ? QUARTIERS.filter(item => item.name.toLowerCase().includes(q))
-            : QUARTIERS;
-          // Flatten all services for suggestions
-          const allServices = SERVICE_CATEGORIES.flatMap(cat =>
-            [{ name: cat.name, slug: cat.slug, type: 'category' as const },
-             ...(SUBCATEGORIES[cat.slug] || []).map(sub => ({ name: sub.name, slug: sub.slug, type: 'subcategory' as const, parent: cat.slug }))]
-          );
-          const matchingServices = q
-            ? allServices.filter(s => s.name.toLowerCase().includes(q))
-            : allServices.filter(s => s.type === 'category');
-          const hasResults = matchingQuartiers.length > 0 || matchingServices.length > 0;
-          if (!hasResults && q) return null;
-          return (
-            <Pressable style={styles.suggestions} onPress={() => {}}>
-              {/* Service suggestions */}
-              {matchingServices.length > 0 && (
-                <>
-                  <Text style={styles.suggestionsTitle}>Prestations</Text>
-                  {matchingServices.slice(0, 5).map((svc) => (
-                    <Pressable
-                      key={svc.slug}
-                      style={styles.suggestionRow}
-                      onPress={() => {
-                        if (svc.type === 'category') {
-                          setSelectedCategory(svc.slug);
-                          setSelectedSubcategory(null);
-                        } else {
-                          setSelectedCategory((svc as any).parent || null);
-                          setSelectedSubcategory(svc.slug);
-                        }
-                        setSearch('');
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      <IconScissors size={16} color={colors.primary} strokeWidth={1.5} />
-                      <Text style={styles.suggestionText}>{svc.name}</Text>
-                      {svc.type === 'subcategory' && (
-                        <Text style={styles.suggestionHint}>
-                          {SERVICE_CATEGORIES.find(c => c.slug === (svc as any).parent)?.name}
-                        </Text>
-                      )}
-                    </Pressable>
-                  ))}
-                </>
-              )}
-              {/* Quartier suggestions */}
-              {matchingQuartiers.length > 0 && (
-                <>
-                  <Text style={styles.suggestionsTitle}>Quartiers</Text>
-                  {matchingQuartiers.map((item) => (
-                    <Pressable
-                      key={item.name}
-                      style={styles.suggestionRow}
-                      onPress={() => {
-                        setSelectedQuartier(item.name);
-                        setSearch('');
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      <IconMapPin size={16} color={colors.textMuted} strokeWidth={1.5} />
-                      <Text style={styles.suggestionText}>{item.name}</Text>
-                      {selectedQuartier === item.name && (
-                        <Text style={styles.suggestionActive}>✓</Text>
-                      )}
-                    </Pressable>
-                  ))}
-                </>
-              )}
-            </Pressable>
-          );
-        })()}
-      </View>
-
-      {/* Quick filter bar */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterBar}
-        contentContainerStyle={styles.filterBarContent}
-      >
-        {/* Quartier selector (inline) */}
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, styles.filterChipQuartier]}
-          onPress={() => {
-            const idx = QUARTIERS.findIndex(q => q.name === selectedQuartier);
-            const next = QUARTIERS[(idx + 1) % QUARTIERS.length];
-            setSelectedQuartier(next.name);
-          }}
-        >
-          <IconMapPin size={13} color={colors.accent} strokeWidth={2} />
-          <Text style={[styles.filterChipText, { color: colors.accent, fontFamily: fonts.bodySemiBold }]}>
-            {selectedQuartier}
-          </Text>
-        </PressableScale>
-
-        {/* Se déplace toggle */}
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
-          onPress={() => setFilterIsMobile(v => !v)}
-        >
-          <IconCar size={14} color={filterIsMobile ? colors.white : colors.text} strokeWidth={1.8} />
-          <Text style={[styles.filterChipText, filterIsMobile && styles.filterChipTextActive]}>
-            Se déplace
-          </Text>
-        </PressableScale>
-
-        {/* Sort toggle */}
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
-          onPress={() => {
-            if (sortBy === 'price_asc') setSortBy('price_desc');
-            else if (sortBy === 'price_desc') setSortBy('rating');
-            else setSortBy('price_asc');
-          }}
-        >
-          {sortBy === 'price_desc'
-            ? <IconSortDescending size={14} color={colors.white} strokeWidth={1.8} />
-            : <IconSortAscending size={14} color={sortBy === 'price_asc' ? colors.white : colors.text} strokeWidth={1.8} />
-          }
-          <Text style={[styles.filterChipText, sortBy.startsWith('price') && styles.filterChipTextActive]}>
-            {sortBy === 'price_asc' ? 'Prix ↑' : sortBy === 'price_desc' ? 'Prix ↓' : 'Prix'}
-          </Text>
-        </PressableScale>
-
-        {/* Distance chips */}
-        {[3, 5, 10].map(km => (
-          <PressableScale
-            key={km}
-            scale={0.95}
-            style={[styles.filterChip, filterMaxDistance === km && styles.filterChipActive]}
-            onPress={() => setFilterMaxDistance(v => v === km ? null : km)}
-          >
-            <Text style={[styles.filterChipText, filterMaxDistance === km && styles.filterChipTextActive]}>
-              {km} km
+      {/* Occasion context banner */}
+      {occasionContext && (
+        <View style={styles.occasionContextBanner}>
+          <IconCalendarEvent size={14} color={colors.accent} strokeWidth={2} />
+          <Text style={styles.occasionContextText}>
+            {`Résultats pour `}
+            <Text style={styles.occasionContextBold}>
+              {occasionContext.charAt(0).toUpperCase() + occasionContext.slice(1)}
             </Text>
-          </PressableScale>
-        ))}
-
-        {/* All filters button */}
-        <PressableScale
-          scale={0.95}
-          style={[styles.filterChip, styles.filterChipOutline]}
-          onPress={() => setShowFilters(true)}
-        >
-          <IconAdjustments size={14} color={colors.primary} strokeWidth={1.8} />
-          <Text style={[styles.filterChipText, { color: colors.primary }]}>
-            Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
           </Text>
-        </PressableScale>
-      </ScrollView>
+          <Pressable
+            onPress={() => {
+              setOccasionContext(null);
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+            }}
+            hitSlop={8}
+            style={styles.occasionContextDismiss}
+          >
+            <IconX size={13} color={colors.accent} strokeWidth={2.5} />
+          </Pressable>
+        </View>
+      )}
 
-      {/* Section title: Categories */}
+      {/* Categories */}
       <SectionHeader title="Catégories" />
 
-      {/* Categories — 3x2 grid with Tabler icons */}
       <View style={styles.categoriesGrid}>
         {SERVICE_CATEGORIES.map((cat, catIndex) => {
           const isActive = selectedCategory === cat.slug;
@@ -594,7 +844,7 @@ export default function ExplorerTab() {
         </ScrollView>
       )}
 
-      {/* Inspiration banner */}
+      {/* Inspiration banner — real lookbook thumbnails */}
       <Pressable
         style={styles.inspirationBanner}
         onPress={() => router.push('/lookbook' as any)}
@@ -605,10 +855,14 @@ export default function ExplorerTab() {
           <Text style={styles.inspirationCta}>Explorer →</Text>
         </View>
         <View style={styles.inspirationImageGrid}>
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.primary }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.accent }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.terracotta }]} />
-          <View style={[styles.inspirationThumb, { backgroundColor: colors.primaryLight }]} />
+          {LOOKBOOK_THUMBS.map((src, i) => (
+            <Image
+              key={i}
+              source={src}
+              style={styles.inspirationThumb}
+              resizeMode="cover"
+            />
+          ))}
         </View>
       </Pressable>
 
@@ -631,7 +885,9 @@ export default function ExplorerTab() {
         style={styles.occasionBanner}
         onPress={() => router.push('/booking/occasion' as any)}
       >
-        <Text style={styles.occasionEmoji}>💒</Text>
+        <View style={styles.occasionIconWrap}>
+          <IconCalendarEvent size={20} color={colors.accent} strokeWidth={1.8} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.occasionTitle}>Un événement à préparer ?</Text>
           <Text style={styles.occasionSubtitle}>Mariage, fête, shooting — planifiez tout en une fois</Text>
@@ -639,36 +895,92 @@ export default function ExplorerTab() {
         <Text style={styles.occasionArrow}>›</Text>
       </Pressable>
 
-      {/* Recently viewed */}
-      {recentlyViewed.length > 0 && (
-        <>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Vu récemment</Text>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: screenPadding.horizontal, gap: 12 }}
-            style={{ marginBottom: 8 }}
-          >
-            {recentlyViewed.slice(0, 5).map((p) => (
-              <Pressable
-                key={p.id}
-                style={styles.recentCard}
-                onPress={() => router.push(`/provider/${p.slug}`)}
-              >
-                <View style={styles.recentAvatar}>
-                  <Text style={styles.recentAvatarText}>{p.displayName[0]}</Text>
-                </View>
-                <Text style={styles.recentName} numberOfLines={1}>{p.displayName}</Text>
-                <Text style={styles.recentRating}>{'\u2605'} {p.avgRating.toFixed(1)}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </>
-      )}
+      {/* Quick filter bar — sits directly above provider results */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterBarContent}
+      >
+        {/* Quartier — Modal picker */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipQuartier]}
+          onPress={() => setShowQuartierDropdown(true)}
+        >
+          <IconMapPin size={13} color={colors.accent} strokeWidth={2} />
+          <Text style={[styles.filterChipText, styles.filterChipQuartierText]}>{selectedQuartier}</Text>
+          <IconChevronDown size={11} color={colors.accent} strokeWidth={2.5} />
+        </PressableScale>
 
-      {/* Section title: Providers */}
+        {/* Se déplace */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, filterIsMobile && styles.filterChipActive]}
+          onPress={() => setFilterIsMobile(v => !v)}
+        >
+          <IconCar size={14} color={filterIsMobile ? colors.white : colors.textSecondary} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, filterIsMobile && styles.filterChipTextActive]}>Se déplace</Text>
+        </PressableScale>
+
+        {/* Prix sort */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, sortBy.startsWith('price') && styles.filterChipActive]}
+          onPress={() => {
+            if (sortBy === 'price_asc') setSortBy('price_desc');
+            else if (sortBy === 'price_desc') setSortBy('rating');
+            else setSortBy('price_asc');
+          }}
+        >
+          <IconSortAscending
+            size={14}
+            color={sortBy.startsWith('price') ? colors.white : colors.textSecondary}
+            strokeWidth={1.8}
+            style={sortBy === 'price_desc' ? { transform: [{ scaleY: -1 }] } as any : undefined}
+          />
+          <Text style={[styles.filterChipText, sortBy.startsWith('price') && styles.filterChipTextActive]}>
+            {sortBy === 'price_asc' ? 'Prix ↑' : sortBy === 'price_desc' ? 'Prix ↓' : 'Prix'}
+          </Text>
+        </PressableScale>
+
+        {/* Distance — segmented control */}
+        <View style={styles.distanceGroup}>
+          {([3, 5, 10] as const).map((km, i) => (
+            <Pressable
+              key={km}
+              style={[
+                styles.distanceOption,
+                i === 0 && styles.distanceOptionFirst,
+                i === 2 && styles.distanceOptionLast,
+                filterMaxDistance === km && styles.distanceOptionActive,
+              ]}
+              onPress={() => setFilterMaxDistance(v => v === km ? null : km)}
+            >
+              <Text style={[styles.distanceOptionText, filterMaxDistance === km && styles.distanceOptionTextActive]}>
+                {km}km
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Advanced filters */}
+        <PressableScale
+          scale={0.95}
+          style={[styles.filterChip, styles.filterChipOutline, activeFilterCount > 0 && styles.filterChipOutlineActive]}
+          onPress={() => setShowFilters(true)}
+        >
+          <IconAdjustments size={14} color={activeFilterCount > 0 ? colors.accent : colors.primary} strokeWidth={1.8} />
+          <Text style={[styles.filterChipText, { color: activeFilterCount > 0 ? colors.accent : colors.primary }]}>Filtres</Text>
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </PressableScale>
+      </ScrollView>
+
+      {/* Providers section title */}
       <SectionHeader title="Recommandées" />
 
       {/* Map view inline */}
@@ -705,13 +1017,142 @@ export default function ExplorerTab() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.webWrapper}>
+
+        {/* ── Sticky search header ── */}
+        <View style={styles.stickyTop} onLayout={e => setStickyHeight(e.nativeEvent.layout.height)}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>
+                {firstName ? `${greeting}, ${firstName}` : greeting}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                Kinshasa · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </Text>
+            </View>
+            <View style={styles.headerRight}>
+              <Pressable style={styles.bellButton} onPress={() => router.push('/notifications' as any)}>
+                <IconBell size={22} color={colors.text} strokeWidth={1.8} />
+              </Pressable>
+              <Pressable style={styles.viewToggle} onPress={() => setViewMode(v => v === 'list' ? 'map' : 'list')}>
+                {viewMode === 'list'
+                  ? <IconMap size={18} color={colors.white} strokeWidth={2} />
+                  : <IconList size={18} color={colors.white} strokeWidth={2} />}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.searchBarWrap}>
+            <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
+              <IconSearch size={18} color={searchFocused ? colors.accent : colors.textMuted} strokeWidth={1.5} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Prestation, quartier, prestataire..."
+                placeholderTextColor={colors.textMuted}
+                value={search}
+                onChangeText={text => { setSearch(text); setShowSuggestions(true); }}
+                onFocus={() => { setSearchFocused(true); setShowSuggestions(true); }}
+                onBlur={() => setSearchFocused(false)}
+                returnKeyType="search"
+              />
+              {search ? (
+                <Pressable onPress={() => { setSearch(''); setDebouncedSearch(''); }} hitSlop={8}>
+                  <IconX size={16} color={colors.textMuted} strokeWidth={2} />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        </View>
+
+        {/* ── Quartier Modal picker ── */}
+        <Modal
+          visible={showQuartierDropdown}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowQuartierDropdown(false)}
+        >
+          <Pressable style={styles.quartierModalBackdrop} onPress={() => setShowQuartierDropdown(false)}>
+            <View style={styles.quartierModalSheet}>
+              <Text style={styles.quartierModalTitle}>Choisir un quartier</Text>
+              {QUARTIERS.map(q => (
+                <Pressable
+                  key={q.name}
+                  style={styles.quartierOption}
+                  onPress={() => { setSelectedQuartier(q.name); setShowQuartierDropdown(false); }}
+                >
+                  <IconMapPin size={14} color={selectedQuartier === q.name ? colors.accent : colors.textMuted} strokeWidth={1.8} />
+                  <Text style={[styles.quartierOptionText, selectedQuartier === q.name && styles.quartierOptionTextActive]}>{q.name}</Text>
+                  {selectedQuartier === q.name && <IconCheck size={14} color={colors.accent} strokeWidth={2.5} />}
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+
+        {/* ── Suggestions overlay (outside FlatList for correct z-index) ── */}
+        {showSuggestions && (
+          <>
+            <Pressable
+              style={[StyleSheet.absoluteFill, { top: stickyHeight, zIndex: 49 }] as any}
+              onPress={() => { setShowSuggestions(false); setSearchFocused(false); }}
+            />
+            <View style={[styles.suggestionsPanel, { top: stickyHeight + 6 }]}>
+              <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                {!q && (
+                  <>
+                    <Text style={styles.suggestionsTitle}>Tendances</Text>
+                    <View style={styles.trendingRow}>
+                      {TRENDING.map(term => (
+                        <Pressable key={term} style={styles.trendingChip} onPress={() => { setSearch(term); setDebouncedSearch(term); setShowSuggestions(false); }}>
+                          <Text style={styles.trendingChipText}>{term}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                    <Text style={styles.suggestionsTitle}>Prestations</Text>
+                  </>
+                )}
+                {matchingServices.map(svc => (
+                  <Pressable
+                    key={svc.slug}
+                    style={styles.suggestionRow}
+                    onPress={() => {
+                      if (svc.type === 'category') { setSelectedCategory(svc.slug); setSelectedSubcategory(null); }
+                      else { setSelectedCategory(svc.parent); setSelectedSubcategory(svc.slug); }
+                      setSearch(''); setShowSuggestions(false);
+                    }}
+                  >
+                    <View style={styles.suggestionIconWrap}>{catIconSmall(svc.type === 'subcategory' ? svc.parent : svc.slug)}</View>
+                    <Text style={styles.suggestionText}>{svc.name}</Text>
+                    {svc.type === 'subcategory' && (
+                      <Text style={styles.suggestionHint}>{SERVICE_CATEGORIES.find(c => c.slug === svc.parent)?.name}</Text>
+                    )}
+                  </Pressable>
+                ))}
+                {matchingQuartiers.length > 0 && (
+                  <>
+                    <Text style={styles.suggestionsTitle}>Quartiers</Text>
+                    {matchingQuartiers.map(item => (
+                      <Pressable key={item.name} style={styles.suggestionRow} onPress={() => { setSelectedQuartier(item.name); setSearch(''); setShowSuggestions(false); }}>
+                        <View style={styles.suggestionIconWrap}>
+                          <IconMapPin size={15} color={colors.textMuted} strokeWidth={1.5} />
+                        </View>
+                        <Text style={styles.suggestionText}>{item.name}</Text>
+                        {selectedQuartier === item.name && <IconCheck size={14} color={colors.accent} strokeWidth={3} />}
+                      </Pressable>
+                    ))}
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </>
+        )}
+
         {(
           <FlatList
             data={loading ? [] : (viewMode === 'map' ? [] : providers)}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             ListHeaderComponent={listHeader}
-            onScrollBeginDrag={() => setShowSuggestions(false)}
+            onScrollBeginDrag={() => { setShowSuggestions(false); setSearchFocused(false); }}
             removeClippedSubviews
             maxToRenderPerBatch={5}
             windowSize={10}
@@ -732,7 +1173,7 @@ export default function ExplorerTab() {
               )
             }
             renderItem={({ item, index }) => (
-              <FadeInStagger index={index}>
+              <FadeInStagger index={index} style={{ width: '100%' }}>
                 <PressableScale style={styles.card} onPress={() => router.push(`/provider/${item.slug}`)}>
                   {/* Gallery */}
                   <View style={styles.cardGallery}>
@@ -740,14 +1181,12 @@ export default function ExplorerTab() {
                       images={[PLACEHOLDER_IMAGES[index % 7], PLACEHOLDER_IMAGES[(index + 2) % 7]]}
                       cardWidth={cardImgWidth}
                     />
-                    {/* TOP PRO badge */}
                     {item.avgRating >= 4.5 && (
                       <View style={styles.topProBadge}>
                         <IconAward size={12} color="#FFFFFF" strokeWidth={2} />
                         <Text style={styles.topProText}>TOP PRO</Text>
                       </View>
                     )}
-                    {/* Favorite heart overlay */}
                     <Pressable
                       style={styles.heartOverlay}
                       onPress={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
@@ -768,7 +1207,7 @@ export default function ExplorerTab() {
                     <View style={styles.cardRow}>
                       <Text style={styles.cardName} numberOfLines={1}>{item.displayName}</Text>
                       <View style={styles.ratingBadge}>
-                        <Text style={styles.ratingStar}>{'\u2605'}</Text>
+                        <IconStar size={13} color={colors.star} fill={colors.star} />
                         <Text style={styles.ratingText}>{(item.avgRating || 0).toFixed(1)}</Text>
                         <Text style={styles.reviewCount}>({item.totalReviews})</Text>
                       </View>
@@ -799,9 +1238,16 @@ export default function ExplorerTab() {
                         <View style={styles.tag}><Text style={styles.tagText}>Se déplace</Text></View>
                       )}
                       {item.minPrice != null && (
-                        <View style={styles.tagPrice}><Text style={styles.tagPriceText}>des {formatPrice(item.minPrice, item.currency)}</Text></View>
+                        <View style={styles.tagPrice}><Text style={styles.tagPriceText}>dès {formatPrice(item.minPrice, item.currency)}</Text></View>
                       )}
                     </View>
+
+                    <Pressable
+                      style={styles.reserverButton}
+                      onPress={(e) => { e.stopPropagation(); router.push({ pathname: '/booking/[providerId]', params: { providerId: item.id, slug: item.slug } } as any); }}
+                    >
+                      <Text style={styles.reserverButtonText}>Réserver</Text>
+                    </Pressable>
                   </View>
                 </PressableScale>
               </FadeInStagger>
@@ -878,7 +1324,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
 
-  // Favorites horizontal avatars
+  // Favorites / recently viewed horizontal avatars
   favoriteAvatarCard: {
     alignItems: 'center',
     width: 64,
@@ -961,25 +1407,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // Scanner strip
-  scannerStrip: {
-    marginHorizontal: screenPadding.horizontal,
-    marginBottom: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  scannerStripIcon: { fontSize: 22 },
-  scannerStripTitle: { fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: colors.accent },
-  scannerStripSub: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.textMuted, marginTop: 1 },
-  scannerStripArrow: { fontSize: 20, color: colors.textMuted },
-
   // Search
   searchContainer: {
     paddingHorizontal: screenPadding.horizontal,
@@ -997,18 +1424,19 @@ const styles = StyleSheet.create({
   },
   suggestionsTitle: {
     fontFamily: 'Poppins_600SemiBold',
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textMuted,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingTop: 12,
+    paddingBottom: 6,
     textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   suggestionRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     gap: 10,
   },
   suggestionText: {
@@ -1016,11 +1444,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     flex: 1,
-  },
-  suggestionActive: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 14,
-    color: colors.primary,
   },
   suggestionHint: {
     fontFamily: 'Poppins_400Regular',
@@ -1037,6 +1460,7 @@ const styles = StyleSheet.create({
   filterBarContent: {
     paddingHorizontal: screenPadding.horizontal,
     gap: 8,
+    paddingBottom: spacing.sm,
   },
   filterChip: {
     flexDirection: 'row',
@@ -1054,13 +1478,72 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(139,105,82,0.25)' } as any : {}),
   },
+  distanceGroup: {
+    flexDirection: 'row',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    overflow: 'hidden',
+  },
+  distanceOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRightWidth: 1,
+    borderRightColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  distanceOptionFirst: {
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  distanceOptionLast: {
+    borderRightWidth: 0,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  distanceOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  distanceOptionText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  distanceOptionTextActive: {
+    fontFamily: fonts.bodySemiBold,
+    color: colors.white,
+  },
   filterChipOutline: {
     borderColor: colors.primary,
     backgroundColor: 'rgba(139,105,82,0.06)',
   },
+  filterChipOutlineActive: {
+    borderColor: 'rgba(91,33,182,0.3)',
+    backgroundColor: 'rgba(91,33,182,0.06)',
+  },
   filterChipQuartier: {
     borderColor: 'rgba(91,33,182,0.2)',
     backgroundColor: 'rgba(91,33,182,0.06)',
+  },
+  filterChipQuartierText: {
+    color: colors.accent,
+    fontFamily: fonts.bodySemiBold,
+  },
+  filterBadge: {
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 3,
+  },
+  filterBadgeText: {
+    fontSize: 9,
+    fontFamily: fonts.bodyBold,
+    color: colors.white,
   },
   filterChipText: {
     fontFamily: fonts.body,
@@ -1070,31 +1553,6 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: colors.white,
     fontFamily: fonts.bodySemiBold,
-  },
-
-  // Section headers
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: screenPadding.horizontal,
-    marginTop: 28,
-    marginBottom: spacing.xs,
-  },
-  sectionTitle: {
-    fontFamily: fonts.displayBold,
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.accent,
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  seeAll: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    color: colors.textSecondary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase' as const,
   },
 
   // Categories — 3x2 grid
@@ -1179,6 +1637,33 @@ const styles = StyleSheet.create({
   },
 
   // Occasion banner
+  occasionContextBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: screenPadding.horizontal,
+    marginTop: 8,
+    marginBottom: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(91,33,182,0.18)',
+  } as ViewStyle,
+  occasionContextText: {
+    flex: 1,
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 12,
+    color: colors.accent,
+  },
+  occasionContextBold: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontWeight: '600',
+  },
+  occasionContextDismiss: {
+    padding: 2,
+  },
   occasionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1189,10 +1674,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(124,58,237,0.15)',
+    borderColor: 'rgba(91,33,182,0.15)',
   } as ViewStyle,
-  occasionEmoji: {
-    fontSize: 28,
+  occasionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(91,33,182,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   occasionTitle: {
     fontFamily: fonts.bodySemiBold,
@@ -1291,7 +1781,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  ratingStar: { fontSize: 13, color: colors.terracotta },
   ratingText: {
     fontFamily: fonts.bodySemiBold,
     fontSize: 14,
@@ -1371,49 +1860,31 @@ const styles = StyleSheet.create({
     color: colors.terracotta,
   },
 
-  // View toggle
+  // Réserver CTA button on provider card
+  reserverButton: {
+    marginTop: spacing.sm,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    alignItems: 'center',
+  },
+  reserverButtonText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+    letterSpacing: 0.2,
+  },
+
+  // View toggle — accent violet
   viewToggle: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-
-  // Recently viewed
-  recentCard: {
-    width: 90,
-    alignItems: 'center',
-    paddingVertical: 8,
-  } as ViewStyle,
-  recentAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  } as ViewStyle,
-  recentAvatarText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontFamily: fonts.displayBold,
-    fontWeight: '700' as const,
-  },
-  recentName: {
-    fontSize: 11,
-    color: colors.text,
-    fontFamily: 'Poppins_500Medium',
-    marginTop: 6,
-    textAlign: 'center' as const,
-  },
-  recentRating: {
-    fontSize: 10,
-    color: colors.terracotta,
-    fontFamily: fonts.bodySemiBold,
-    fontWeight: '600' as const,
-    marginTop: 2,
   },
 
   // Map
@@ -1424,6 +1895,133 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
+  },
+
+  // Sticky search header
+  stickyTop: {
+    backgroundColor: colors.bg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 10,
+  },
+  searchBarWrap: {
+    paddingHorizontal: screenPadding.horizontal,
+    paddingTop: 6,
+    paddingBottom: 10,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 8px rgba(90,56,60,0.06)' } as any : {}),
+  },
+  searchBarFocused: {
+    borderColor: colors.accent,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 0 0 3px rgba(91,33,182,0.10), 0 2px 8px rgba(90,56,60,0.06)' } as any : {}),
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.text,
+    padding: 0,
+    ...(Platform.OS === 'web' ? { outline: 'none' } as any : {}),
+  },
+
+  // Quartier modal
+  quartierModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  quartierModalSheet: {
+    width: '100%',
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    paddingVertical: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 16px 48px rgba(0,0,0,0.18)' } as any
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 32, elevation: 16 }),
+  },
+  quartierModalTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: colors.textMuted,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.6,
+  },
+  quartierOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  quartierOptionText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.text,
+  },
+  quartierOptionTextActive: {
+    fontFamily: fonts.bodySemiBold,
+    color: colors.accent,
+  },
+
+  // Suggestions overlay
+  suggestionsPanel: {
+    position: 'absolute',
+    left: screenPadding.horizontal,
+    right: screenPadding.horizontal,
+    zIndex: 50,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxHeight: 360,
+    overflow: 'hidden',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 8px 32px rgba(90,56,60,0.14)' } as any
+      : { shadowColor: '#5A383C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 }),
+  },
+  trendingRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 14,
+    paddingBottom: 6,
+    gap: 8,
+  },
+  trendingChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.primaryGhost,
+    borderWidth: 1,
+    borderColor: 'rgba(139,105,82,0.15)',
+  },
+  trendingChipText: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 13,
+    color: colors.primary,
+  },
+  suggestionIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Hero carousel dots
@@ -1467,7 +2065,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
-  // Inspiration banner
+  // Inspiration banner — real thumbnails
   inspirationBanner: {
     flexDirection: 'row',
     marginHorizontal: screenPadding.horizontal,
@@ -1517,5 +2115,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
+    backgroundColor: colors.border,
   },
 });

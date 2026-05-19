@@ -11,6 +11,15 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
+import IconBell from '@tabler/icons-react-native/dist/esm/icons/IconBell.mjs';
+import IconCalendar from '@tabler/icons-react-native/dist/esm/icons/IconCalendar.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
+import IconPlayerPlay from '@tabler/icons-react-native/dist/esm/icons/IconPlayerPlay.mjs';
+import IconX from '@tabler/icons-react-native/dist/esm/icons/IconX.mjs';
+import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
+import IconShieldCheck from '@tabler/icons-react-native/dist/esm/icons/IconShieldCheck.mjs';
+import IconShieldX from '@tabler/icons-react-native/dist/esm/icons/IconShieldX.mjs';
+import IconLock from '@tabler/icons-react-native/dist/esm/icons/IconLock.mjs';
 import CurveHeader from '../src/components/CurveHeader';
 import { api } from '../src/lib/api';
 import { colors } from '../src/theme/colors';
@@ -30,7 +39,7 @@ interface DbNotification {
 
 interface DisplayNotification {
   id: string;
-  icon: string;
+  icon: React.ComponentType<{ size: number; color: string }>;
   title: string;
   description: string;
   time: string;
@@ -55,21 +64,21 @@ function timeAgo(dateStr: string): string {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  BOOKING_REQUESTED: '📣',
-  BOOKING_CONFIRMED: '✅',
-  BOOKING_IN_PROGRESS: '▶️',
-  BOOKING_COMPLETED: '🎉',
-  BOOKING_CANCELLED: '❌',
-  REVIEW_RECEIVED: '⭐',
-  KYC_APPROVED: '✅',
-  KYC_REJECTED: '❌',
+const TYPE_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
+  BOOKING_REQUESTED: IconCalendar,
+  BOOKING_CONFIRMED: IconCheck,
+  BOOKING_IN_PROGRESS: IconPlayerPlay,
+  BOOKING_COMPLETED: IconCheck,
+  BOOKING_CANCELLED: IconX,
+  REVIEW_RECEIVED: IconStar,
+  KYC_APPROVED: IconShieldCheck,
+  KYC_REJECTED: IconShieldX,
 };
 
 function mapDbNotification(n: DbNotification): DisplayNotification {
   return {
     id: n.id,
-    icon: TYPE_ICONS[n.type] || '🔔',
+    icon: TYPE_ICONS[n.type] || IconBell,
     title: n.title,
     description: n.body,
     time: timeAgo(n.createdAt),
@@ -146,9 +155,9 @@ export default function MessagesTab() {
   if (!authLoading && !user) {
     return (
       <View style={styles.container}>
-        <CurveHeader title="Activité" height={160} />
+        <CurveHeader title="Activité" height={160} showBack />
         <View style={styles.centerContent}>
-          <Text style={styles.emptyEmoji}>🔒</Text>
+          <IconLock size={48} color={colors.primary} />
           <Text style={styles.emptyTitle}>Connectez-vous pour voir votre activité</Text>
           <Text style={styles.emptyText}>Vos notifications apparaîtront ici</Text>
           <Pressable style={styles.loginButton} onPress={() => router.push('/auth/login')}>
@@ -163,7 +172,7 @@ export default function MessagesTab() {
   if (loading || authLoading) {
     return (
       <View style={styles.container}>
-        <CurveHeader title="Activité" height={160} />
+        <CurveHeader title="Activité" height={160} showBack />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -182,7 +191,7 @@ export default function MessagesTab() {
       onPress={() => handlePress(item)}
     >
       <View style={[styles.notifIcon, !item.isRead && styles.notifIconUnread]}>
-        <Text style={styles.notifIconText}>{item.icon}</Text>
+        <item.icon size={20} color={colors.primary} />
       </View>
       <View style={styles.notifContent}>
         <Text style={[styles.notifTitle, !item.isRead && styles.notifTitleUnread]}>
@@ -200,7 +209,7 @@ export default function MessagesTab() {
   // --- Empty state ---
   const renderEmpty = () => (
     <View style={styles.centerContent}>
-      <Text style={styles.emptyEmoji}>🔔</Text>
+      <IconBell size={48} color={colors.textMuted} />
       <Text style={styles.emptyTitle}>Aucune activité pour le moment</Text>
       <Text style={styles.emptyText}>Vos notifications apparaîtront ici</Text>
     </View>
@@ -208,7 +217,7 @@ export default function MessagesTab() {
 
   return (
     <View style={styles.container}>
-      <CurveHeader title="Activité" height={160} />
+      <CurveHeader title="Activité" height={160} showBack />
       {unreadCount > 0 && (
         <View style={styles.actionBar}>
           <Text style={styles.unreadLabel}>
@@ -313,9 +322,6 @@ const styles = StyleSheet.create({
   notifIconUnread: {
     backgroundColor: 'rgba(202,152,126,0.15)',
   },
-  notifIconText: {
-    fontSize: 20,
-  },
   notifContent: {
     flex: 1,
   },
@@ -346,10 +352,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.primary,
     marginLeft: 8,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 18,

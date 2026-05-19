@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
+import IconChevronLeft from '@tabler/icons-react-native/dist/esm/icons/IconChevronLeft.mjs';
 
 interface HeaderProps {
   title: string;
@@ -14,7 +15,7 @@ export default function Header({ title, subtitle, onBack, rightAction }: HeaderP
     <View style={styles.container}>
       {onBack ? (
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
-          <Text style={styles.backArrow}>{'\u2039'}</Text>
+          <IconChevronLeft size={24} color={colors.accent} />
         </Pressable>
       ) : (
         <View style={styles.backPlaceholder} />
@@ -46,11 +47,6 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backArrow: {
-    fontSize: 24,
-    color: colors.accent,
-    fontFamily: fonts.body,
   },
   backPlaceholder: {
     width: 32,

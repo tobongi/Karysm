@@ -6,15 +6,16 @@ import {
   Pressable,
   StyleSheet,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
 import IconHeart from '@tabler/icons-react-native/dist/esm/icons/IconHeart.mjs';
 import IconStar from '@tabler/icons-react-native/dist/esm/icons/IconStar.mjs';
-import IconShoppingBag from '@tabler/icons-react-native/dist/esm/icons/IconShoppingBag.mjs';
+import IconMessageCircle from '@tabler/icons-react-native/dist/esm/icons/IconMessageCircle.mjs';
 import { colors } from '../../../src/theme/colors';
-import Button from '../../../src/components/Button';
 import { showAlert } from '../../../src/lib/alert';
+import { PressableScale } from '../../../src/components/animations';
 
 const MOCK_PRODUCTS = [
   { id: '1', name: 'Huile de Coco Vierge', price: 8500, oldPrice: 12000, rating: 4.8, reviews: 24, category: 'Huiles', provider: 'Mama Beauty', weight: '250 ml', ingredients: 'Huile de coco vierge 100% pure, pressée à froid' },
@@ -42,12 +43,12 @@ export default function ProductDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Hero image */}
         <View style={styles.heroImage}>
-          <Pressable style={[styles.circleButton, styles.backButton]} onPress={() => router.back()}>
+          <PressableScale style={[styles.circleButton, styles.backButton]} onPress={() => router.back()}>
             <IconArrowLeft size={22} color={colors.accent} />
-          </Pressable>
-          <Pressable style={[styles.circleButton, styles.heartBtn]}>
-            <IconHeart size={22} color={colors.accent} />
-          </Pressable>
+          </PressableScale>
+          <PressableScale style={[styles.circleButton, styles.heartBtn]}>
+            <IconHeart size={22} color={colors.accent} fill={colors.accent} />
+          </PressableScale>
         </View>
 
         {/* Content */}
@@ -91,14 +92,17 @@ export default function ProductDetailScreen() {
 
       {/* Sticky bottom bar */}
       <View style={styles.bottomBar}>
-        <Text style={styles.bottomPrice}>{product.price.toLocaleString()} FC</Text>
-        <Button
-          title="Ajouter au panier"
-          variant="primary"
-          size="md"
-          icon={<IconShoppingBag size={18} color={colors.white} />}
-          onPress={() => showAlert('Ajouté au panier !')}
-        />
+        <View>
+          <Text style={styles.bottomPriceLabel}>Prix</Text>
+          <Text style={styles.bottomPrice}>{product.price.toLocaleString()} FC</Text>
+        </View>
+        <PressableScale
+          style={styles.ctaButton}
+          onPress={() => showAlert('WhatsApp', `Connectez-vous à WhatsApp pour commander "${product.name}"`)}
+        >
+          <IconMessageCircle size={18} color={colors.white} />
+          <Text style={styles.ctaButtonText}>Commander</Text>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
@@ -144,7 +148,7 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontFamily: 'Poppins_400Regular',
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     marginTop: 4,
   },
@@ -229,14 +233,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 14,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  bottomPriceLabel: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 2,
   },
   bottomPrice: {
     fontFamily: 'Poppins_700Bold',
     fontSize: 20,
     color: colors.terracotta,
+  },
+  ctaButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0 4px 12px rgba(139,105,82,0.2)' }
+      : {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+        }
+    ) as any,
+  },
+  ctaButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
   },
 });

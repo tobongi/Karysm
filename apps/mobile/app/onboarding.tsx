@@ -2,44 +2,51 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Dimensions, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { colors } from '../src/theme/colors';
+import { PressableScale } from '../src/components/animations';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const SLIDES = [
   {
     id: '1',
-    title: 'Trouvez votre\nprestataire',
-    subtitle: 'Coiffeuses, nail artists, maquilleuses près de chez vous.',
+    label: 'DÉCOUVREZ',
+    title: 'Votre beauté,\nsublimée',
+    subtitle: 'Trouvez les prestataires qui vous comprennent, près de chez vous.',
     image: require('../assets/images/onboarding_1.jpg'),
   },
   {
     id: '2',
-    title: 'Réservez\nen 30 secondes',
-    subtitle: 'Service, date et heure. Confirmé instantanément.',
+    label: 'À VOTRE IMAGE',
+    title: 'Analysez votre\nbeauté avec l\'IA',
+    subtitle: 'Peau et cheveux qui vous ressemblent. Conseils personnalisés.',
     image: require('../assets/images/onboarding_2.jpg'),
   },
   {
     id: '3',
-    title: 'Analysez votre\nbeauté avec l\'IA',
-    subtitle: 'Première IA pour les peaux et cheveux qui vous ressemblent.',
+    label: 'COMMUNAUTÉ',
+    title: 'Une vraie\ncommunauté',
+    subtitle: 'Réservez, partagez vos transformations, inspirez.',
     image: require('../assets/images/onboarding_3.jpg'),
   },
 ];
 
-// Faux gradient overlay: stacked Views with increasing opacity
+// Premium gradient overlay: dark gradient from transparent to opaque
 function GradientOverlay() {
   const steps = 12;
   return (
     <View style={overlayStyles.container} pointerEvents="none">
-      {Array.from({ length: steps }, (_, i) => (
-        <View
-          key={i}
-          style={[
-            overlayStyles.step,
-            { backgroundColor: colors.bg, opacity: (i / steps) * 0.95 },
-          ]}
-        />
-      ))}
+      {Array.from({ length: steps }, (_, i) => {
+        const opacity = (i / steps) * 0.92;
+        return (
+          <View
+            key={i}
+            style={[
+              overlayStyles.step,
+              { backgroundColor: colors.headerDark, opacity },
+            ]}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -50,7 +57,7 @@ const overlayStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '55%',
+    height: '60%',
     flexDirection: 'column',
   },
   step: {
@@ -71,6 +78,10 @@ export default function Onboarding() {
     }
   }
 
+  function handleSkip() {
+    router.replace('/auth/login');
+  }
+
   const inner = (
     <View style={styles.container}>
       {/* Full-screen background image */}
@@ -83,27 +94,49 @@ export default function Onboarding() {
       {/* Gradient overlay on bottom half */}
       <GradientOverlay />
 
+      {/* Top header: Karysm wordmark */}
+      <View style={styles.header}>
+        <Text style={styles.wordmark}>Karysm</Text>
+      </View>
+
       {/* Bottom content overlay */}
       <View style={styles.bottomContent}>
+        {/* Chip label */}
+        <Text style={styles.label}>{slide.label}</Text>
+
         {/* Title */}
         <Text style={styles.title}>{slide.title}</Text>
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>{slide.subtitle}</Text>
 
-        {/* Dot indicators */}
-        <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
-            <View key={i} style={[styles.dot, i === currentIndex && styles.dotActive]} />
-          ))}
-        </View>
+        {/* CTA buttons row */}
+        <View style={styles.ctaRow}>
+          {/* Skip button */}
+          <PressableScale onPress={handleSkip} style={styles.skipButton}>
+            <Text style={styles.skipText}>Passer</Text>
+          </PressableScale>
 
-        {/* Single CTA button */}
-        <Pressable style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>
-            {isLast ? 'Commencer' : 'Suivant'}
-          </Text>
-        </Pressable>
+          {/* Page indicators */}
+          <View style={styles.dots}>
+            {SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === currentIndex && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Continue button */}
+          <PressableScale onPress={handleNext} style={styles.continueButton}>
+            <Text style={styles.continueText}>
+              {isLast ? 'Commencer' : 'Continuer'}
+            </Text>
+          </PressableScale>
+        </View>
       </View>
     </View>
   );
@@ -141,23 +174,58 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
+  // Top header with Karysm wordmark
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+
+  wordmark: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 24,
+    color: colors.white,
+    fontStyle: 'italic',
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+  },
+
   // Bottom content area (overlays the image)
   bottomContent: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 28,
-    paddingBottom: 48,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 32,
+  },
+
+  // Chip label (uppercase, accent color)
+  label: {
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 11,
+    color: colors.accent,
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
   },
 
   title: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 31,
+    fontSize: 28,
     color: colors.white,
-    lineHeight: 40,
-    marginBottom: 10,
+    lineHeight: 36,
+    marginBottom: 12,
     letterSpacing: -0.3,
+    fontStyle: 'italic',
     textShadowColor: 'rgba(0,0,0,0.45)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
@@ -166,43 +234,68 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.90)',
     lineHeight: 22,
-    marginBottom: 28,
-    textShadowColor: 'rgba(0,0,0,0.4)',
+    marginBottom: 32,
+    textShadowColor: 'rgba(0,0,0,0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
 
-  // Dot indicators
+  // CTA row: skip | dots | continue
+  ctaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  // Skip button (ghost text)
+  skipButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+
+  skipText: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.70)',
+    letterSpacing: 0.2,
+  },
+
+  // Page indicator dots
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  dotActive: {
-    backgroundColor: colors.white,
-    width: 24,
+    gap: 6,
+    flex: 1,
   },
 
-  // CTA button
-  button: {
-    backgroundColor: colors.primaryLight,
-    height: 54,
-    borderRadius: 27,
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+
+  dotActive: {
+    backgroundColor: colors.accent,
+    width: 20,
+  },
+
+  // Continue button (violet pill)
+  continueButton: {
+    backgroundColor: colors.accent,
+    height: 44,
+    paddingHorizontal: 24,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
+
+  continueText: {
     fontFamily: 'Poppins_600SemiBold',
     color: colors.white,
-    fontSize: 17,
+    fontSize: 14,
+    letterSpacing: 0.3,
   },
 });

@@ -51,7 +51,11 @@ async function refreshToken(): Promise<string | null> {
 
 async function forceLogout() {
   authToken = null;
-  await AsyncStorage.multiRemove(['karysm_token', 'karysm_refresh', 'karysm_user']);
+  await Promise.all([
+    AsyncStorage.removeItem('karysm_token'),
+    AsyncStorage.removeItem('karysm_refresh'),
+    AsyncStorage.removeItem('karysm_user'),
+  ]);
   // Redirect to login on web and native
   try {
     router.replace('/auth/login');

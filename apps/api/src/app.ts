@@ -64,6 +64,11 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/feed', feedRoutes);
 
+// 404 handler
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
 // Error handler
 app.use(errorHandler);
 

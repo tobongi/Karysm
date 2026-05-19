@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '@karysm/db';
+import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler } from '../middleware/error';
 

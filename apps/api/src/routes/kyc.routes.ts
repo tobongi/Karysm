@@ -6,6 +6,7 @@ import { asyncHandler } from '../middleware/error';
 import { NotFoundError, ValidationError } from '../lib/errors';
 import { createNotification } from '../lib/notifications';
 import { uploadImage } from '../lib/cloudinary';
+import { runAutoKycVerification } from '../lib/kyc-ai';
 
 const router = Router();
 
@@ -53,7 +54,17 @@ router.post('/upload', authMiddleware, requireRole('PROVIDER'), asyncHandler(asy
     });
   }
 
-  res.status(201).json({ success: true, data: doc });
+  // Trigger AI auto-verification (runs only when all 3 doc types are present).
+  // Run synchronously so the client sees the final decision in the response.
+  let verification: any = null;
+  try {
+    verification = await runAutoKycVerification(provider.id);
+  } catch (err) {
+    // Non-fatal — the document is still queued for human review.
+    console.warn('[kyc-ai] auto-verify failed:', (err as any)?.message);
+  }
+
+  res.status(201).json({ success: true, data: doc, verification });
 }));
 
 // GET /api/kyc/status — My KYC status

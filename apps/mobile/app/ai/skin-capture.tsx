@@ -5,18 +5,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import IconSun from '@tabler/icons-react-native/dist/esm/icons/IconSun.mjs';
+import IconEye from '@tabler/icons-react-native/dist/esm/icons/IconEye.mjs';
+import IconDroplet from '@tabler/icons-react-native/dist/esm/icons/IconDroplet.mjs';
+import IconUser from '@tabler/icons-react-native/dist/esm/icons/IconUser.mjs';
+import IconCamera from '@tabler/icons-react-native/dist/esm/icons/IconCamera.mjs';
+import IconSparkles from '@tabler/icons-react-native/dist/esm/icons/IconSparkles.mjs';
+import IconCheck from '@tabler/icons-react-native/dist/esm/icons/IconCheck.mjs';
 import { colors } from '../../src/theme/colors';
 import { api } from '../../src/lib/api';
 import { pickImage } from '../../src/lib/upload';
 import { showAlert } from '../../src/lib/alert';
+import CurveHeader from '../../src/components/CurveHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCAN_SIZE = Math.min(SCREEN_WIDTH - 40, 340);
 
 const TIPS = [
-  { icon: '☀️', title: 'Lumière naturelle', desc: 'Face à une fenêtre' },
-  { icon: '👁️', title: 'Regard caméra', desc: 'Visage droit, yeux ouverts' },
-  { icon: '🧼', title: 'Peau nue', desc: 'Sans maquillage' },
+  { icon: IconSun, title: 'Lumière naturelle', desc: 'Face à une fenêtre' },
+  { icon: IconEye, title: 'Regard caméra', desc: 'Visage droit, yeux ouverts' },
+  { icon: IconDroplet, title: 'Peau nue', desc: 'Sans maquillage' },
 ];
 
 // Scan line animation
@@ -128,17 +136,20 @@ export default function SkinCaptureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Header */}
-        <Text style={styles.title}>Analyse de peau</Text>
-        <Text style={styles.subtitle}>
-          {scanPhase === 'idle'
-            ? 'Prenez un selfie en bonne lumière pour analyser votre peau'
-            : scanPhase === 'scanning'
-            ? 'Analyse du visage en cours...'
-            : 'Visage détecté — prête pour l\'analyse'}
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <CurveHeader title="Analyse de peau" showBack>
+        <Text style={styles.headerSubtitle}>
+          Révélez la beauté qui est déjà en vous
         </Text>
+      </CurveHeader>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Intro card */}
+        <View style={styles.introCard}>
+          <Text style={styles.introTitle}>Prêt(e) ?</Text>
+          <Text style={styles.introSubtitle}>
+            Prenez un selfie en lumière naturelle, sans maquillage
+          </Text>
+        </View>
 
         {/* Face scanner area */}
         <View style={styles.scannerContainer}>
@@ -180,12 +191,12 @@ export default function SkinCaptureScreen() {
               />
               <DetectionBadge
                 label="Carnation" value="Analyse..."
-                position={{ top: '40%', left: -10 }} delay={600}
+                position={{ top: 40, left: -10 }} delay={600}
                 visible={scanPhase === 'detected' && !analyzing}
               />
               <DetectionBadge
                 label="Hydratation" value="Analyse..."
-                position={{ bottom: '20%', right: -10 }} delay={900}
+                position={{ bottom: 20, right: -10 }} delay={900}
                 visible={scanPhase === 'detected' && !analyzing}
               />
             </View>
@@ -194,7 +205,7 @@ export default function SkinCaptureScreen() {
               {/* Empty oval guide */}
               <View style={styles.ovalGuide}>
                 <View style={styles.ovalGuideBorder} />
-                <Text style={styles.ovalGuideIcon}>👤</Text>
+                <IconUser size={48} color="rgba(255,255,255,0.6)" />
               </View>
               <Text style={styles.captureText}>Touchez pour prendre un selfie</Text>
               <View style={styles.captureHint}>
@@ -209,7 +220,7 @@ export default function SkinCaptureScreen() {
           <View style={styles.tipsRow}>
             {TIPS.map((tip, i) => (
               <View key={i} style={styles.tipCard}>
-                <Text style={styles.tipIcon}>{tip.icon}</Text>
+                <tip.icon size={20} color={colors.primary} />
                 <Text style={styles.tipTitle}>{tip.title}</Text>
                 <Text style={styles.tipDesc}>{tip.desc}</Text>
               </View>
@@ -222,7 +233,7 @@ export default function SkinCaptureScreen() {
           <>
             {/* Retake */}
             <Pressable style={styles.retakeButton} onPress={handleTakePhoto}>
-              <Text style={styles.retakeText}>📷 Reprendre la photo</Text>
+              <Text style={styles.retakeText}>Reprendre la photo</Text>
             </Pressable>
 
             {/* Consent */}
@@ -240,7 +251,7 @@ export default function SkinCaptureScreen() {
 
             {/* Analyze CTA */}
             <Pressable style={styles.analyzeButton} onPress={handleAnalyze}>
-              <Text style={styles.analyzeText}>✨ Lancer l'analyse complète</Text>
+              <Text style={styles.analyzeText}>Lancer l'analyse complète</Text>
             </Pressable>
           </>
         )}
@@ -249,10 +260,10 @@ export default function SkinCaptureScreen() {
         {analyzing && (
           <View style={styles.analyzingContainer}>
             <View style={styles.analyzingCard}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.analyzingTitle}>Analyse en cours</Text>
+              <SparkleSpinner />
+              <Text style={styles.analyzingTitle}>L'IA analyse votre peau…</Text>
               <Text style={styles.analyzingDesc}>
-                Détection de la carnation, hydratation,{'\n'}sébum, pores, taches, uniformité...
+                Détection du visage et analyse des métriques de peau
               </Text>
               <View style={styles.analyzingSteps}>
                 <AnalysisStep label="Détection du visage" done />
@@ -270,11 +281,32 @@ export default function SkinCaptureScreen() {
   );
 }
 
+// Rotating sparkles spinner
+function SparkleSpinner() {
+  const rotation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, []);
+  const rotate = rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  return (
+    <Animated.View style={{ transform: [{ rotate }], marginBottom: 16 }}>
+      <IconSparkles size={40} color={colors.accent} />
+    </Animated.View>
+  );
+}
+
 function AnalysisStep({ label, done, active }: { label: string; done: boolean; active?: boolean }) {
   return (
     <View style={styles.stepRow}>
       <View style={[styles.stepDot, done && styles.stepDotDone, active && styles.stepDotActive]}>
-        {done && <Text style={styles.stepCheck}>✓</Text>}
+        {done && <IconCheck size={14} color={colors.success} strokeWidth={3} />}
         {active && <ActivityIndicator size="small" color={colors.white} />}
       </View>
       <Text style={[styles.stepLabel, done && styles.stepLabelDone, active && styles.stepLabelActive]}>
@@ -289,8 +321,19 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20 },
 
-  title: { fontSize: 22, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
-  subtitle: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 20, marginBottom: 20 },
+  headerSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.7)' },
+
+  // Intro card
+  introCard: {
+    backgroundColor: `rgba(91, 33, 182, 0.08)`,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: `rgba(91, 33, 182, 0.15)`,
+  },
+  introTitle: { fontSize: 18, fontFamily: 'PlayfairDisplay_700Bold', color: colors.accent, marginBottom: 4 },
+  introSubtitle: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.textSecondary, lineHeight: 19 },
 
   // Scanner
   scannerContainer: { alignItems: 'center', marginBottom: 24 },
@@ -364,7 +407,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 999, borderWidth: 2, borderColor: colors.n300, borderStyle: 'dashed',
   },
-  ovalGuideIcon: { fontSize: 48, opacity: 0.3 },
   captureText: { fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.primary, marginTop: 16 },
   captureHint: {
     marginTop: 8, backgroundColor: colors.primaryGhost,
@@ -378,7 +420,6 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.card, borderRadius: 16, padding: 12,
     alignItems: 'center', borderWidth: 1, borderColor: colors.border,
   },
-  tipIcon: { fontSize: 22, marginBottom: 6 },
   tipTitle: { fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: colors.text, textAlign: 'center' },
   tipDesc: { fontSize: 10, fontFamily: 'Poppins_400Regular', color: colors.textMuted, textAlign: 'center', marginTop: 2 },
 
@@ -425,7 +466,6 @@ const styles = StyleSheet.create({
   },
   stepDotDone: { backgroundColor: colors.success, borderColor: colors.success },
   stepDotActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  stepCheck: { fontSize: 14, color: colors.white, fontFamily: 'Poppins_700Bold' },
   stepLabel: { fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.textMuted },
   stepLabelDone: { color: colors.textSecondary },
   stepLabelActive: { color: colors.accent, fontFamily: 'Poppins_600SemiBold' },

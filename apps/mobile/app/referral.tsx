@@ -3,22 +3,16 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Share,
   StyleSheet,
-  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import IconGift from '@tabler/icons-react-native/dist/esm/icons/IconGift.mjs';
 import IconCopy from '@tabler/icons-react-native/dist/esm/icons/IconCopy.mjs';
 import IconShare from '@tabler/icons-react-native/dist/esm/icons/IconShare.mjs';
 import IconUsers from '@tabler/icons-react-native/dist/esm/icons/IconUsers.mjs';
 import IconCoins from '@tabler/icons-react-native/dist/esm/icons/IconCoins.mjs';
-import IconArrowLeft from '@tabler/icons-react-native/dist/esm/icons/IconArrowLeft.mjs';
-import { router } from 'expo-router';
 import { colors } from '../src/theme/colors';
-import Button from '../src/components/Button';
-import Card from '../src/components/Card';
+import CurveHeader from '../src/components/CurveHeader';
+import { PressableScale } from '../src/components/animations';
 import { useAuth } from '../src/lib/auth-context';
 import { showAlert } from '../src/lib/alert';
 
@@ -35,12 +29,13 @@ export default function ReferralScreen() {
   const referralCode = useMemo(() => generateReferralCode(user), [user]);
 
   const handleCopyCode = () => {
-    if (Platform.OS === 'web') {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(referralCode);
-      }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(referralCode).then(() => {
+        showAlert('Code copié ✓', `${referralCode} est dans votre presse-papiers`);
+      });
+    } else {
+      showAlert('Code copié', referralCode);
     }
-    showAlert('Code copie !', `Le code ${referralCode} a ete copie dans le presse-papiers.`);
   };
 
   const handleShare = async () => {
@@ -57,57 +52,83 @@ export default function ReferralScreen() {
     {
       number: '1',
       title: 'Partagez votre code',
-      description: 'Envoyez votre code de parrainage a vos amis',
+      description: 'Envoyez votre code de parrainage à vos amies',
     },
     {
       number: '2',
-      title: "Ils s'inscrivent",
-      description: 'Vos amis creent un compte avec votre code',
+      title: 'Votre amie reçoit -10%',
+      description: 'Elle s\'inscrit avec votre code',
     },
     {
       number: '3',
-      title: 'Vous etes recompenses',
-      description: 'Recevez des credits pour chaque inscription',
+      title: 'Vous gagnez 1 000 FC',
+      description: 'Crédité à chaque inscription',
     },
   ];
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Back button */}
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <IconArrowLeft size={24} color={colors.accent} />
-      </Pressable>
+    <View style={styles.container}>
+      <CurveHeader title="Inviter des amies" showBack />
 
       <ScrollView
-        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.giftCircle}>
-            <IconGift size={40} color={colors.white} />
-          </View>
-          <Text style={styles.title}>Invitez vos amis</Text>
-          <Text style={styles.subtitle}>
-            Partagez Karysm et gagnez des recompenses pour chaque ami inscrit
+        {/* Hero card */}
+        <View style={styles.heroCard}>
+          <Text style={styles.heroTitle}>Partagez Karysm</Text>
+          <Text style={styles.heroSubtitle}>
+            Gagnez des récompenses à chaque amie invitée
           </Text>
         </View>
 
-        {/* Referral code card */}
-        <Card style={styles.codeCard}>
+        {/* Code card */}
+        <View style={styles.codeCard}>
           <Text style={styles.codeLabel}>Votre code de parrainage</Text>
           <View style={styles.codeBox}>
             <Text style={styles.codeText}>{referralCode}</Text>
           </View>
-          <Pressable onPress={handleCopyCode} style={styles.copyButton}>
-            <IconCopy size={18} color={colors.primary} />
+          <PressableScale
+            style={styles.copyButton}
+            onPress={handleCopyCode}
+          >
+            <IconCopy size={16} color={colors.primary} strokeWidth={2} />
             <Text style={styles.copyText}>Copier le code</Text>
-          </Pressable>
-        </Card>
+          </PressableScale>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsCard}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <IconUsers size={20} color={colors.primary} strokeWidth={1.8} />
+              </View>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>Amies invitées</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <IconCoins size={20} color={colors.primary} strokeWidth={1.8} />
+              </View>
+              <Text style={styles.statNumber}>0 FC</Text>
+              <Text style={styles.statLabel}>Gagnées</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Share button */}
+        <PressableScale
+          style={styles.shareBtn}
+          onPress={handleShare}
+        >
+          <IconShare size={18} color={colors.white} strokeWidth={2} />
+          <Text style={styles.shareBtnText}>Partager le code</Text>
+        </PressableScale>
 
         {/* How it works */}
-        <Text style={styles.sectionTitle}>Comment ca marche</Text>
+        <Text style={styles.sectionTitle}>Comment ça marche</Text>
         <View style={styles.stepsContainer}>
           {steps.map((step, index) => (
             <View key={step.number} style={styles.stepRow}>
@@ -127,132 +148,160 @@ export default function ReferralScreen() {
           ))}
         </View>
 
-        {/* Stats */}
-        <Card style={styles.statsCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <IconUsers size={22} color={colors.primary} />
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Amis invites</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <IconCoins size={22} color={colors.primary} />
-              <Text style={styles.statNumber}>0 FC</Text>
-              <Text style={styles.statLabel}>Gagnes</Text>
-            </View>
-          </View>
-        </Card>
-
-        {/* Share button */}
-        <View style={styles.shareButtonWrapper}>
-          <Button
-            title="Partager le code"
-            onPress={handleShare}
-            size="lg"
-            fullWidth
-            icon={<IconShare size={20} color={colors.white} />}
-          />
-        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: colors.bg,
   },
-  backButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    alignSelf: 'flex-start',
-  },
-  scroll: {
-    flex: 1,
-  },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
 
-  // Header
-  header: {
+  // Hero card
+  heroCard: {
+    marginTop: 20,
+    marginBottom: 24,
     alignItems: 'center',
-    marginTop: 8,
   },
-  giftCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
+  heroTitle: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 28,
+    fontSize: 32,
+    fontStyle: 'italic' as const,
     color: colors.accent,
     textAlign: 'center',
-    marginTop: 20,
+    marginBottom: 8,
+    letterSpacing: -0.3,
   },
-  subtitle: {
+  heroSubtitle: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: 8,
-    paddingHorizontal: 20,
     lineHeight: 21,
   },
 
   // Code card
   codeCard: {
-    marginTop: 28,
-    alignItems: 'center' as const,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
   },
   codeLabel: {
-    fontFamily: 'Poppins_600SemiBold',
-    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 12,
     color: colors.textSecondary,
+    letterSpacing: 0.3,
+    marginBottom: 12,
   },
   codeBox: {
     backgroundColor: colors.primaryGhost,
     borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 32,
-    marginTop: 12,
-    alignSelf: 'stretch' as const,
-    alignItems: 'center' as const,
+    paddingVertical: 22,
+    paddingHorizontal: 28,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    marginBottom: 14,
   },
   codeText: {
     fontFamily: 'Poppins_700Bold',
     fontSize: 28,
     color: colors.accent,
-    letterSpacing: 4,
+    letterSpacing: 2,
     textAlign: 'center',
   },
   copyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
-    paddingVertical: 8,
+    gap: 8,
+    paddingVertical: 10,
     paddingHorizontal: 16,
   },
   copyText: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 13,
     color: colors.primary,
-    marginLeft: 6,
+  },
+
+  // Stats card
+  statsCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primaryGhost,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  statNumber: {
+    fontFamily: 'Poppins_700Bold',
+    fontSize: 16,
+    color: colors.accent,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  statDivider: {
+    width: 1,
+    height: 52,
+    backgroundColor: colors.border,
+  },
+
+  // Share button
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 32,
+  },
+  shareBtnText: {
+    color: colors.white,
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // How it works
   sectionTitle: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 13,
     color: colors.accent,
-    marginTop: 32,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 16,
   },
   stepsContainer: {
@@ -260,6 +309,7 @@ const styles = StyleSheet.create({
   },
   stepRow: {
     flexDirection: 'row',
+    marginBottom: 20,
   },
   stepLeft: {
     alignItems: 'center',
@@ -281,60 +331,24 @@ const styles = StyleSheet.create({
   stepLine: {
     width: 2,
     flex: 1,
-    backgroundColor: colors.n300,
+    backgroundColor: colors.border,
     marginVertical: 4,
   },
   stepRight: {
     flex: 1,
     marginLeft: 12,
-    paddingBottom: 24,
+    paddingBottom: 8,
   },
   stepTitle: {
     fontFamily: 'Poppins_600SemiBold',
-    fontSize: 14,
+    fontSize: 13,
     color: colors.text,
+    marginBottom: 2,
   },
   stepDescription: {
     fontFamily: 'Poppins_400Regular',
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-
-  // Stats
-  statsCard: {
-    marginTop: 24,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  statNumber: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 20,
-    color: colors.accent,
-    marginTop: 8,
-  },
-  statLabel: {
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 48,
-    backgroundColor: colors.n300,
-  },
-
-  // Share button
-  shareButtonWrapper: {
-    marginTop: 32,
+    lineHeight: 17,
   },
 });
